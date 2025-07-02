@@ -1,3 +1,16 @@
 Name: public-api
 Host: 0.0.0.0
-Port: 8888
+Port: 8081
+
+# 数据库配置
+MongoDB:
+  Host: localhost:27017
+  Database: heimdall_blog
+  # Username: ""
+  # Password: ""
+
+# Redis配置
+Redis:
+  Host: localhost:6379
+  # Password: ""
+  DB: 0

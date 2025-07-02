@@ -23,8 +23,10 @@ func NewPublicLogic(ctx context.Context, svcCtx *svc.ServiceContext) *PublicLogi
 	}
 }
 
-func (l *PublicLogic) Public(req *types.Request) (resp *types.Response, err error) {
+func (l *PublicLogic) Public(req *types.TestRequest) (resp *types.TestResponse, err error) {
 	// todo: add your logic here and delete this line
-
+	resp = &types.TestResponse{
+		Message: "Hello from public API: " + req.Name,
+	}
 	return
 }

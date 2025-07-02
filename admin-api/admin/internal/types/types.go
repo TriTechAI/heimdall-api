@@ -3,10 +3,16 @@
 
 package types
 
-type Request struct {
+type BaseResponse struct {
+	Code      int    `json:"code"`
+	Message   string `json:"message"`
+	Timestamp string `json:"timestamp"`
+}
+
+type TestRequest struct {
 	Name string `path:"name,options=you|me"`
 }
 
-type Response struct {
+type TestResponse struct {
 	Message string `json:"message"`
 }

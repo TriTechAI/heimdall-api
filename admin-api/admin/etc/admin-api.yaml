@@ -1,3 +1,21 @@
 Name: admin-api
 Host: 0.0.0.0
-Port: 8888
+Port: 8080
+
+# 数据库配置
+MongoDB:
+  Host: localhost:27017
+  Database: heimdall_blog
+  # Username: ""
+  # Password: ""
+
+# Redis配置
+Redis:
+  Host: localhost:6379
+  # Password: ""
+  DB: 0
+
+# JWT配置
+Auth:
+  AccessSecret: your-secret-key-change-in-production
+  AccessExpire: 7200 # 2小时

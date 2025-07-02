@@ -23,8 +23,10 @@ func NewAdminLogic(ctx context.Context, svcCtx *svc.ServiceContext) *AdminLogic 
 	}
 }
 
-func (l *AdminLogic) Admin(req *types.Request) (resp *types.Response, err error) {
+func (l *AdminLogic) Admin(req *types.TestRequest) (resp *types.TestResponse, err error) {
 	// todo: add your logic here and delete this line
-
+	resp = &types.TestResponse{
+		Message: "Hello from admin API: " + req.Name,
+	}
 	return
 }

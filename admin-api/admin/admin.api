@@ -1,15 +1,31 @@
 syntax = "v1"
 
-type Request {
-	Name string `path:"name,options=you|me"`
-}
+// 基础响应结构
+type (
+	// 通用响应
+	BaseResponse {
+		Code      int    `json:"code"`
+		Message   string `json:"message"`
+		Timestamp string `json:"timestamp"`
+	}
+)
 
-type Response {
-	Message string `json:"message"`
-}
+// 临时测试接口，等待实际业务接口替换
+type (
+	TestRequest {
+		Name string `path:"name,options=you|me"`
+	}
+	TestResponse {
+		Message string `json:"message"`
+	}
+)
 
+@server (
+	prefix: /api/v1/admin
+)
 service admin-api {
+	@doc "测试接口"
 	@handler AdminHandler
-	get /from/:name (Request) returns (Response)
+	get /test/:name (TestRequest) returns (TestResponse)
 }
 

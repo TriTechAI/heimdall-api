@@ -15,10 +15,12 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 	server.AddRoutes(
 		[]rest.Route{
 			{
+				// 测试接口
 				Method:  http.MethodGet,
-				Path:    "/from/:name",
+				Path:    "/test/:name",
 				Handler: AdminHandler(serverCtx),
 			},
 		},
+		rest.WithPrefix("/api/v1/admin"),
 	)
 }

@@ -56,7 +56,7 @@ graph TD
 
 ## 2. 模块详细划分
 
-基于微服务架构，我们将系统划分为三个主要的 Go 模块：`admin-api`, `public-api`, 和 `common`。
+基于微服务架构，我们将系统组织为统一的 Go 模块结构，包含三个主要包：`admin-api`, `public-api`, 和 `common`。
 
 ### 2.1. `admin-api` (后台管理服务)
 
@@ -103,9 +103,9 @@ graph TD
         - 生成 `sitemap.xml` 以便搜索引擎收录。
         - 提供 RSS/Atom feed 供用户订阅。
 
-### 2.3. `common` (共享模块)
+### 2.3. `common` (共享包)
 
-- **性质**: 可被 `admin-api` 和 `public-api` 同时引用的 Go 模块，不包含任何业务逻辑。
+- **性质**: 可被 `admin-api` 和 `public-api` 同时引用的 Go 包，不包含任何业务逻辑。
 - **核心职责**: 提供跨服务复用的基础代码和定义，避免代码重复。
 - **包含内容**:
     - **数据模型 (`model/`)**: 定义与 MongoDB 集合一一对应的 Go Struct。
@@ -117,10 +117,60 @@ graph TD
     - **工具函数 (`utils/`)**: 提供通用的辅助函数，如密码处理、分页计算、Markdown渲染等。
     - **错误定义 (`errors/`)**: 定义统一的业务错误类型，方便在服务间传递和处理。
 
-## 3. 技术栈选型
+## 3. Go 模块结构设计
+
+### 3.1. 统一模块架构
+
+项目采用**统一 Go 模块**架构，所有代码位于一个 `go.mod` 文件管理下：
+
+```
+github.com/heimdall-api/
+├── go.mod                      # 统一的模块定义
+├── admin-api/                  # 管理服务包
+├── public-api/                 # 公开服务包  
+└── common/                     # 共享代码包
+```
+
+### 3.2. 架构优势
+
+**相比多模块架构的优势**:
+- ✅ **依赖管理简化**: 避免复杂的模块间版本依赖问题
+- ✅ **构建效率提升**: 统一构建，减少重复编译
+- ✅ **代码共享便利**: 直接引用内部包，无需模块发布
+- ✅ **重构友好**: 跨包重构更加安全和便捷
+- ✅ **CI/CD 简化**: 单一构建流程，测试覆盖更全面
+
+**包导入示例**:
+```go
+// 在 admin-api 中引用 common 包
+import (
+    "github.com/heimdall-api/common/model"
+    "github.com/heimdall-api/common/dao"
+)
+
+// 在 public-api 中引用 common 包  
+import (
+    "github.com/heimdall-api/common/model"
+    "github.com/heimdall-api/common/utils"
+)
+```
+
+### 3.3. 开发工作流
+
+```bash
+# 项目根目录操作
+go mod tidy                    # 整理所有依赖
+go build ./admin-api/...       # 构建管理服务
+go build ./public-api/...      # 构建公开服务  
+go test ./...                  # 运行全项目测试
+go run ./admin-api/admin       # 启动管理服务
+go run ./public-api/public     # 启动公开服务
+```
+
+## 4. 技术栈选型
 
 ### 3.1. 核心技术栈
-- **后端语言**: Go 1.21+
+- **后端语言**: Go 1.24.4+
 - **Web 框架**: go-zero
 - **数据库**: MongoDB 5.0+
 - **缓存**: Redis 6.0+

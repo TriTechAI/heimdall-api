@@ -24,8 +24,8 @@
 
 ```
 heimdall-api/
+├── go.mod                      # 统一的模块定义文件
 ├── admin-api/                  # 后台管理服务
-│   ├── go.mod
 │   └── admin/                  # goctl生成的服务代码
 │       ├── admin.go
 │       ├── admin.api
@@ -38,7 +38,6 @@ heimdall-api/
 │           ├── config/
 │           └── middleware/
 ├── public-api/                 # 前台公开服务  
-│   ├── go.mod
 │   └── public/                 # goctl生成的服务代码
 │       ├── public.go
 │       ├── public.api
@@ -50,14 +49,12 @@ heimdall-api/
 │           ├── types/
 │           ├── config/
 │           └── middleware/
-├── common/                     # 共享代码模块
+├── common/                     # 共享代码包
 │   ├── dao/                    # 数据访问层
 │   ├── model/                  # 数据模型
 │   ├── constants/              # 共享常量
 │   ├── client/                 # 第三方服务客户端
-│   ├── errors/                 # 业务错误定义
-│   └── go.mod
-├── go.work                     # Go Workspace 配置
+│   └── errors/                 # 业务错误定义
 └── [规范文档...]
 ```
 

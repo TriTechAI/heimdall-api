@@ -79,29 +79,26 @@
 - **错误定义** (`errors/`): 统一的业务错误类型
 - **工具函数** (`utils/`): 通用辅助函数
 
-## 3. Go Workspace 管理
+## 3. Go 模块管理 (统一模块架构)
 
-### 3.1. Workspace 结构
+### 3.1. 项目结构 (统一模块)
 
 ```
 heimdall-api/
-├── go.work                     # Workspace 配置文件
+├── go.mod                      # 统一的模块定义文件
 ├── admin-api/                  # 管理服务
-│   ├── go.mod                  # 模块定义
 │   └── admin/                  # goctl生成的服务代码
 │       ├── admin.go            # 服务入口
 │       ├── admin.api           # API定义
 │       ├── etc/                # 配置文件
 │       └── internal/           # 内部代码
 ├── public-api/                 # 公开服务  
-│   ├── go.mod                  # 模块定义
 │   └── public/                 # goctl生成的服务代码
 │       ├── public.go           # 服务入口
 │       ├── public.api          # API定义
 │       ├── etc/                # 配置文件
 │       └── internal/           # 内部代码
 └── common/                     # 共享模块
-    ├── go.mod                  # 模块定义
     ├── dao/                    # 数据访问层
     ├── model/                  # 数据模型
     ├── constants/              # 业务常量
@@ -110,17 +107,25 @@ heimdall-api/
     └── utils/                  # 工具函数
 ```
 
-### 3.2. 模块依赖关系
+### 3.2. 模块架构说明
 
+**统一模块架构优势**:
+- **依赖管理简化**: 所有包共享同一个 `go.mod`，依赖版本统一
+- **构建简化**: 可以在根目录进行统一构建和测试
+- **代码复用便利**: 各个服务可以直接引用 `common` 包
+- **版本控制统一**: 整个项目作为一个模块进行版本管理
+
+**包依赖关系**:
 ```
-admin-api  ──┐
-              ├──► common
-public-api ──┘
+github.com/heimdall-api
+├── admin-api/    ──┐
+│                   ├──► common/
+└── public-api/   ──┘
 ```
 
-- `admin-api` 和 `public-api` 都依赖 `common`
+- `admin-api` 和 `public-api` 都可以直接引用 `common` 包
 - 两个API服务之间**无直接依赖**
-- `common` 模块**不依赖**任何API服务
+- `common` 包**不依赖**任何API服务
 
 ### 3.3. 包导入规范
 
@@ -146,6 +151,15 @@ import (
     "github.com/heimdall-api/public-api/public/internal/svc"
     "github.com/heimdall-api/public-api/public/internal/types"
 )
+```
+
+**模块管理命令**:
+```bash
+# 在项目根目录执行
+go mod tidy              # 整理依赖
+go build ./admin-api/... # 构建管理服务
+go build ./public-api/...# 构建公开服务
+go test ./...           # 运行所有测试
 ```
 
 ## 4. 开发协作规范
