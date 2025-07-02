@@ -100,14 +100,19 @@
 
 ```json
 {
-  "data": [...], // 实际的数据数组
-  "pagination": {
-    "page": 2,           // 当前页码
-    "limit": 20,         // 每页记录数
-    "total": 156,        // 总记录数
-    "totalPages": 8,     // 总页数
-    "hasNext": true,     // 是否有下一页
-    "hasPrev": true      // 是否有上一页
-  }
+  "code": 200,
+  "message": "Success",
+  "data": {
+    "list": [...],     // 实际的数据数组
+    "pagination": {
+      "page": 2,         // 当前页码
+      "limit": 20,       // 每页记录数
+      "total": 156,      // 总记录数
+      "totalPages": 8,   // 总页数
+      "hasNext": true,   // 是否有下一页
+      "hasPrev": true    // 是否有上一页
+    }
+  },
+  "timestamp": "2024-01-01T12:00:00Z"
 }
 ``` 

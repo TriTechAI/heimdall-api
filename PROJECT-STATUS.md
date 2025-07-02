@@ -15,6 +15,7 @@
 - [x] `MONGODB-MODELING-GUIDELINES.md` - MongoDB建模规范
 - [x] `MULTI-SERVICE-ARCHITECTURE.md` - 微服务架构规范
 - [x] `BLOG-SYSTEM-CONSIDERATIONS.md` - 博客系统特殊考虑
+- [x] `CODE-REVIEW-GUIDELINES.md` - 代码审查流程和质量标准
 - [x] `CONTRIBUTING.md` - Git工作流和贡献指南
 
 ### 3. 项目基础架构
@@ -23,11 +24,35 @@
 - [x] 使用goctl生成服务基础代码
 - [x] 创建`common`模块目录结构
 
+### 4. 设计文档体系 (`design/`)
+- [x] `SYSTEM-ARCHITECTURE-AND-MODULES.md` - 系统架构和模块设计
+- [x] `DATA-MODEL-DESIGN.md` - 完整的MongoDB数据模型设计
+- [x] `SECURITY-DESIGN.md` - 安全架构和防护策略设计
+- [x] `API-INTERFACE-SPECIFICATION.md` - 完整的API接口规范文档
+
+### 5. 最近重要变更
+- [x] **安全架构调整** (2024-01): 
+  - 将Admin API从内网/VPN部署调整为公网部署
+  - 采用账号密码登录方式，强化多重安全防护
+  - 新增登录失败锁定、IP限流、操作审计等安全机制
+  - 更新了相关设计文档和规范文档
+
+### 6. 文档一致性校验和优化
+- [x] **文档冲突检查和修复** (2024-01):
+  - [x] 统一API版本控制：所有接口添加 `/api/v1` 前缀
+  - [x] 统一响应格式：分页和错误响应格式标准化
+  - [x] 统一参数命名：查询参数从 `pageSize` 改为 `limit`
+  - [x] 统一认证描述：JWT Token认证机制描述一致
+  - [x] 统一技术栈描述：Go、go-zero、MongoDB、Redis版本一致
+  - [x] 集合命名规范说明：添加兼容性考虑的说明
+  - [x] 跨文档引用一致性：确保docs和design目录间的描述统一
+
 ## 📋 **当前项目结构**
 
 ```
 heimdall-api/
 ├── docs/                       # 规范文档
+├── design/                     # 设计文档
 ├── admin-api/                  # 后台管理服务
 │   ├── go.mod
 │   └── admin/
@@ -88,6 +113,8 @@ heimdall-api/
 - [ ] 添加项目级别的Makefile
 - [ ] 配置Docker开发环境
 - [ ] 设置CI/CD流程
+- [ ] 配置代码审查自动化工具 (golangci-lint, gosec)
+- [ ] 设置GitHub PR模板和审查规则
 - [ ] 完善错误处理机制
 - [ ] 添加日志配置
 
