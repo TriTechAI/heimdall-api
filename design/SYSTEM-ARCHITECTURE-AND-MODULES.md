@@ -180,8 +180,9 @@ go run ./public-api/public     # 启动公开服务
 - **测试框架**: goconvey (BDD), mockey (Mock)
 - **API 规范**: RESTful JSON API
 - **文档生成**: goctl 自动生成 API 文档
-- **代码质量**: golangci-lint, gosec
+- **代码质量**: golangci-lint (含函数长度检查), gosec
 - **安全工具**: bcrypt (密码加密), rate limiter (API限流)
+- **函数原子化**: 单个函数不超过40行（建议）、50行（强制）
 
 ### 3.3. 第三方服务
 - **文件存储**: 本地存储 / 腾讯云COS

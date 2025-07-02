@@ -1,0 +1,122 @@
+# golangci-lint 配置文件
+# 用于确保代码质量和一致性
+
+run:
+  timeout: 5m
+  tests: true
+
+output:
+  formats:
+    - format: colored-line-number
+  print-issued-lines: true
+  print-linter-name: true
+
+linters:
+  enable:
+    # 启用的linters
+    - govet       # 官方vet工具
+    - errcheck    # 检查错误处理
+    - staticcheck # 静态分析
+    - unused      # 检查未使用的代码
+    - gosimple    # 简化代码建议
+    - ineffassign # 检查无效赋值
+    - typecheck   # 类型检查
+    - gofmt       # 代码格式检查
+    - goimports   # import检查
+    - misspell    # 拼写检查
+    - unconvert   # 检查不必要的类型转换
+    - unparam     # 检查未使用的函数参数
+    - gocritic    # 全面的代码分析
+    - funlen      # 函数长度检查
+    - gocyclo     # 循环复杂度检查
+    - nestif      # 嵌套if检查
+    - goconst     # 重复常量检查
+    - dupl        # 重复代码检查
+    - nakedret    # 检查裸返回
+    - prealloc    # 预分配检查
+    - gosec       # 安全检查
+    
+  disable: []
+
+linters-settings:
+  # 函数长度设置
+  funlen:
+    lines: 50        # 强制上限：50行
+    statements: 40   # 建议上限：40个语句
+    
+  # 循环复杂度设置
+  gocyclo:
+    min-complexity: 10
+    
+  # 嵌套if设置
+  nestif:
+    min-complexity: 5
+    
+  # 重复代码检查
+  dupl:
+    threshold: 100
+    
+  # 安全检查设置
+  gosec:
+    excludes:
+      - G404  # 允许使用弱随机数生成器（在非安全场景）
+    
+  # gocritic设置
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - style
+      - performance
+      - experimental
+    disabled-checks:
+      - hugeParam      # 对于某些业务场景可能需要大参数
+      - rangeValCopy   # 在某些情况下复制是可接受的
+
+issues:
+  # 最大问题数，0表示无限制
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  
+  # 排除目录
+  exclude-dirs:
+    - vendor/
+  
+  # 排除规则
+  exclude-rules:
+    # 排除测试文件的某些检查
+    - path: _test\.go
+      linters:
+        - funlen     # 测试函数可以更长
+        - dupl       # 测试中的重复是可接受的
+        - gosec      # 测试中的安全问题通常不重要
+        
+    # 排除生成代码的检查
+    - path: internal/types/
+      linters:
+        - unused
+        - deadcode
+        
+    # 排除goctl生成的handler代码
+    - path: internal/handler/
+      linters:
+        - funlen     # handler通常较简单，但可能超过限制
+        
+    # 排除特定的全局错误定义
+    - text: "exported var.*should have comment"
+      linters:
+        - golint
+        
+  # 忽略某些文件
+  exclude-files:
+    - ".*\\.pb\\.go$"      # protobuf生成的文件
+    - ".*\\.gen\\.go$"     # 其他生成的文件
+
+severity:
+  default-severity: error
+  rules:
+    - linters:
+        - funlen
+      severity: warning   # 函数长度问题作为警告
+    - linters:
+        - dupl
+      severity: warning   # 重复代码作为警告 

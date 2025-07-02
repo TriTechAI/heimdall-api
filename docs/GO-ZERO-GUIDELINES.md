@@ -155,7 +155,153 @@ service user {
   - `go-zero` 默认的 `httpx.OkJson` 和 `httpx.Error` 会处理大部分情况。
   - 可通过自定义中间件或改写 `httpx.SetErrorHandler` 来实现更复杂的全局错误处理逻辑（例如，将不同类型的 `error` 映射为不同的 HTTP 状态码和响应格式）。
 
-## 5. 配置与数据库
+## 5. 函数原子化规范
+
+为了提高代码的可读性、可维护性和可测试性，项目中的所有函数都必须遵循原子化设计原则。
+
+### 5.1. 函数长度限制
+
+- **建议上限**: 单个函数不超过 **40行** 代码（不包括空行和注释）
+- **强制上限**: 单个函数不超过 **50行** 代码
+- **理想长度**: 15-25行是最佳实践范围
+
+### 5.2. 原子化原则
+
+- **单一职责**: 每个函数只做一件事情，有且仅有一个改变的理由
+- **清晰命名**: 函数名应准确描述其功能，无需查看实现即可理解用途
+- **参数控制**: 函数参数不超过5个，超过时应考虑使用结构体封装
+- **返回值简洁**: 优先使用明确的返回类型，避免返回多个不相关的值
+- **嵌套控制**: 避免过深的嵌套，建议不超过4层缩进
+
+### 5.3. 函数拆分策略
+
+当函数超过40行时，应考虑以下拆分策略：
+
+#### 5.3.1. 按逻辑步骤拆分
+```go
+// 不推荐：超长函数
+func CreateUserProfile(req *CreateUserRequest) (*User, error) {
+    // 验证输入 (10行)
+    // 检查用户名重复 (8行)
+    // 生成密码哈希 (5行)
+    // 构造用户对象 (10行)
+    // 保存到数据库 (8行)
+    // 发送欢迎邮件 (10行)
+    // 记录操作日志 (5行)
+    // 返回结果处理 (5行)
+}
+
+// 推荐：拆分为多个函数
+func CreateUserProfile(req *CreateUserRequest) (*User, error) {
+    if err := validateCreateUserRequest(req); err != nil {
+        return nil, err
+    }
+    
+    if err := checkUsernameAvailability(req.Username); err != nil {
+        return nil, err
+    }
+    
+    user := buildUserFromRequest(req)
+    if err := saveUserToDatabase(user); err != nil {
+        return nil, err
+    }
+    
+    go sendWelcomeEmail(user.Email) // 异步处理
+    go logUserCreation(user.ID)     // 异步处理
+    
+    return user, nil
+}
+```
+
+#### 5.3.2. 按业务领域拆分
+```go
+// 推荐：每个函数专注于特定业务领域
+func validateCreateUserRequest(req *CreateUserRequest) error { ... }
+func checkUsernameAvailability(username string) error { ... }
+func buildUserFromRequest(req *CreateUserRequest) *User { ... }
+func saveUserToDatabase(user *User) error { ... }
+func sendWelcomeEmail(email string) { ... }
+func logUserCreation(userID string) { ... }
+```
+
+### 5.4. 例外情况
+
+在以下特殊情况下，可以适当放宽长度限制：
+
+- **常量定义函数**: 包含大量常量定义的初始化函数
+- **路由注册函数**: 集中注册大量路由的函数
+- **配置映射函数**: 处理复杂配置映射的函数
+- **数据转换函数**: 处理复杂数据结构转换的纯函数
+
+**注意**: 即使在例外情况下，也应该优先考虑拆分，只有在拆分会显著降低代码可读性时才保持整体。
+
+### 5.5. 代码质量检查
+
+- **lint检查**: 使用 `golangci-lint` 的 `funlen` 规则检查函数长度
+- **代码审查**: 在PR审查中重点关注超长函数的合理性
+- **重构提醒**: 当函数超过30行时，应主动考虑是否需要重构
+
+### 5.6. 最佳实践示例
+
+#### ✅ 好的示例 - 原子化函数
+```go
+// Logic层：用户登录逻辑
+func (l *LoginLogic) Login(req *types.LoginReq) (*types.LoginReply, error) {
+    user, err := l.validateUserCredentials(req.Username, req.Password)
+    if err != nil {
+        return nil, err
+    }
+    
+    token, err := l.generateAuthToken(user.ID)
+    if err != nil {
+        return nil, err
+    }
+    
+    l.recordLoginAttempt(user.ID, true)
+    
+    return &types.LoginReply{
+        AccessToken:  token.AccessToken,
+        AccessExpire: token.ExpiresIn,
+    }, nil
+}
+
+// 辅助函数：验证用户凭据
+func (l *LoginLogic) validateUserCredentials(username, password string) (*model.User, error) {
+    user, err := l.svcCtx.UserDAO.GetByUsername(l.ctx, username)
+    if err != nil {
+        return nil, common.ErrUserNotFound
+    }
+    
+    if !l.svcCtx.PasswordUtil.Verify(password, user.Password) {
+        return nil, common.ErrInvalidPassword
+    }
+    
+    if !user.IsActive() {
+        return nil, common.ErrUserDisabled
+    }
+    
+    return user, nil
+}
+```
+
+#### ❌ 不好的示例 - 过长函数
+```go
+// 避免：超长函数包含多个职责
+func (l *LoginLogic) Login(req *types.LoginReq) (*types.LoginReply, error) {
+    // 50+ 行的复杂逻辑，包含：
+    // - 参数验证
+    // - 用户查询
+    // - 密码验证
+    // - 权限检查
+    // - Token生成
+    // - 缓存更新
+    // - 日志记录
+    // - 响应构造
+    // ...
+}
+```
+
+## 6. 配置与数据库
 
 - **配置**:
   - 严禁在代码中硬编码任何配置项（端口、数据库地址、密钥等）。所有配置都必须在 `etc/*.yaml` 文件中定义。
@@ -165,17 +311,17 @@ service user {
   - 数据库连接对象在 `svc.ServiceContext` 中初始化并持有。
   - `logic` 层**不应**直接操作 MongoDB 驱动，而应调用 `dao` 层提供的方法来完成数据操作。
 
-## 6. 常量管理
+## 7. 常量管理
 
 为了提高代码的可维护性、可读性并避免魔法字符串 (Magic Strings)，项目中所有可复用的、具有业务含义的字符串或数字都必须定义为常量。
 
-### 6.1. 常量定义位置
+### 7.1. 常量定义位置
 
 - **共享常量**: 在 `common/constants/` 目录下定义两个服务都会使用的常量
 - **服务特有常量**: 在各自服务的 `internal/constants/` 目录下定义只有该服务使用的常量
 - **按领域分类**: 根据常量的业务领域将其分散到不同的文件中
 
-### 6.2. 常量定义示例
+### 7.2. 常量定义示例
 
 **共享常量** (`common/constants/`):
 
@@ -220,7 +366,7 @@ service user {
   )
   ```
 
-### 6.3. 引用规范
+### 7.3. 引用规范
 
 - **引用共享常量**: `import "github.com/heimdall-api/common/constants"`
 - **引用服务常量**: `import "github.com/heimdall-api/admin-api/admin/internal/constants"` 
