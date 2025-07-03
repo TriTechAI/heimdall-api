@@ -303,9 +303,104 @@ func (l *LoginLogic) Login(req *types.LoginReq) (*types.LoginReply, error) {
 
 ## 6. 配置与数据库
 
+### 6.1. 配置文件规范
+
 - **配置**:
   - 严禁在代码中硬编码任何配置项（端口、数据库地址、密钥等）。所有配置都必须在 `etc/*.yaml` 文件中定义。
   - 对于敏感信息（如密码、API Key），推荐通过环境变量加载，并在配置文件中使用 `env()` 语法。
+
+### 6.2. 配置结构体设计要点
+
+#### ⚠️ 重要：避免与go-zero内置配置字段冲突
+
+在设计自定义配置结构体时，必须避免与go-zero框架内置的配置字段名冲突。常见的冲突字段包括：
+
+- `Log` - go-zero的日志配置字段
+- `Timeout` - go-zero的超时配置字段
+- `Host` - 服务监听地址字段
+- `Port` - 服务监听端口字段
+
+**❌ 错误示例**:
+```go
+type Config struct {
+    rest.RestConf
+    Log struct {  // ❌ 与go-zero内置Log字段冲突
+        Level string
+    }
+    Timeout struct {  // ❌ 与go-zero内置Timeout字段冲突
+        Read  int
+        Write int
+    }
+}
+```
+
+**✅ 正确示例**:
+```go
+type Config struct {
+    rest.RestConf
+    
+    // 使用不同的字段名避免冲突
+    LogConfig struct {
+        Level string
+    } `json:",optional"`
+    
+    TimeoutConfig struct {
+        Read  int
+        Write int
+    } `json:",optional"`
+    
+    // 或者使用更具体的业务名称
+    ApplicationLog struct {
+        Level string
+    } `json:",optional"`
+    
+    DatabaseTimeout struct {
+        Connect int
+        Query   int
+    } `json:",optional"`
+}
+```
+
+#### 🔧 冲突解决方案
+
+1. **重命名策略**: 为自定义配置字段添加前缀或后缀
+   - `Log` → `LogConfig` 或 `ApplicationLog`
+   - `Timeout` → `TimeoutConfig` 或 `DatabaseTimeout`
+
+2. **嵌套策略**: 将相关配置分组到子结构体中
+   ```go
+   type Config struct {
+       rest.RestConf
+       
+       App struct {
+           Log struct {
+               Level string
+           }
+           Timeout struct {
+               Read  int
+               Write int
+           }
+       }
+   }
+   ```
+
+3. **可选标签**: 对自定义字段使用 `json:",optional"` 标签，避免必填验证冲突
+
+#### 🛠️ 故障排查
+
+如果遇到以下错误，通常是配置字段冲突导致的：
+- 服务启动时配置验证失败
+- 配置文件解析错误
+- 意外的配置默认值被覆盖
+
+**解决步骤**:
+1. 检查自定义配置结构体是否有与go-zero内置字段同名的字段
+2. 重命名冲突字段或调整结构体设计
+3. 更新对应的YAML配置文件中的字段名
+4. 重新生成代码并测试
+
+### 6.3. 数据库配置
+
 - **数据库**:
   - 我们使用 MongoDB 作为主数据库，通过官方的 `go.mongodb.org/mongo-driver` 与数据库交互。
   - 数据库连接对象在 `svc.ServiceContext` 中初始化并持有。

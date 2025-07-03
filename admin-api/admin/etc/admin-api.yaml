@@ -1,21 +1,151 @@
+# Heimdall Admin API 配置文件
+# 管理后台服务配置 (端口: 8080)
+
 Name: admin-api
 Host: 0.0.0.0
 Port: 8080
+Mode: dev  # dev, test, prod
+
+# 服务配置
+Service:
+  Version: "1.0.0"
+  Environment: "development"
+  LogLevel: "info"
 
 # 数据库配置
 MongoDB:
   Host: localhost:27017
-  Database: heimdall_blog
-  # Username: ""
-  # Password: ""
+  Database: heimdall_dev
+  Username: ""
+  Password: ""
+  AuthSource: admin
+  MaxPoolSize: 10
+  MinPoolSize: 0
+  ConnectTimeout: 10  # 秒
+  ServerSelectionTimeout: 10  # 秒
 
 # Redis配置
 Redis:
   Host: localhost:6379
-  # Password: ""
+  Password: ""
   DB: 0
+  MaxRetries: 3
+  PoolSize: 10
+  MinIdleConns: 1
+  DialTimeout: 5  # 秒
+  ReadTimeout: 5  # 秒
+  WriteTimeout: 5  # 秒
 
-# JWT配置
+# JWT认证配置
 Auth:
-  AccessSecret: your-secret-key-change-in-production
-  AccessExpire: 7200 # 2小时
+  AccessSecret: your-super-secret-jwt-key-please-change-in-production
+  AccessExpire: 7200    # Access Token 过期时间(秒) - 2小时
+  RefreshExpire: 604800 # Refresh Token 过期时间(秒) - 7天
+
+# 安全配置
+Security:
+  # 密码加密
+  BcryptCost: 12  # bcrypt 成本因子
+  
+  # 登录安全
+  MaxLoginAttempts: 5        # 最大登录失败次数
+  LoginLockoutDuration: 1800 # 账户锁定时间(秒) - 30分钟
+  
+  # API 限流
+  RateLimit:
+    Requests: 100  # 每分钟请求数限制
+    Burst: 10      # 突发请求数
+
+# CORS配置 (管理后台需要支持前端访问)
+CORS:
+  AllowOrigins:
+    - "http://localhost:3000"
+    - "http://localhost:8080"
+    - "https://admin.heimdall.com"
+  AllowMethods:
+    - "GET"
+    - "POST" 
+    - "PUT"
+    - "DELETE"
+    - "OPTIONS"
+  AllowHeaders:
+    - "Content-Type"
+    - "Authorization"
+    - "X-Requested-With"
+  ExposeHeaders:
+    - "Content-Length"
+  AllowCredentials: true
+  MaxAge: 86400  # 预检请求缓存时间(秒)
+
+# 文件存储配置
+Storage:
+  Type: "local"  # local, cos (腾讯云COS)
+  Local:
+    Path: "uploads"
+    URLPrefix: "http://localhost:8080/uploads"
+  # 腾讯云 COS 配置
+  COS:
+    SecretID: ""
+    SecretKey: ""
+    Region: "ap-beijing"
+    Bucket: ""
+    URLPrefix: ""
+
+# 邮件配置 (用于通知和密码重置)
+Email:
+  SMTP:
+    Host: "smtp.example.com"
+    Port: 587
+    Username: ""
+    Password: ""
+    FromName: "Heimdall Blog"
+    FromEmail: "noreply@example.com"
+
+# 监控配置
+Monitoring:
+  # Prometheus 监控
+  EnableMetrics: true
+  MetricsPort: 9090
+  
+  # 健康检查
+  HealthPath: "/health"
+  
+  # 性能追踪
+  EnableTracing: false
+  TracingEndpoint: ""
+
+# 业务配置
+Business:
+  # 分页默认值
+  DefaultPageSize: 10
+  MaxPageSize: 100
+  
+  # 文件上传限制
+  MaxFileSize: 10485760  # 10MB in bytes
+  AllowedFileTypes:
+    - "image/jpeg"
+    - "image/png"
+    - "image/gif"
+    - "image/webp"
+  
+  # 内容限制
+  MaxTitleLength: 200
+  MaxExcerptLength: 500
+  MaxContentLength: 1048576  # 1MB
+
+# 缓存配置
+Cache:
+  # JWT黑名单缓存
+  JWTBlacklist:
+    Prefix: "jwt_blacklist:"
+    TTL: 7200  # 秒
+  
+  # 用户会话缓存
+  UserSession:
+    Prefix: "user_session:"
+    TTL: 7200  # 秒
+  
+  # 登录限制缓存
+  LoginAttempts:
+    Prefix: "login_attempts:"
+    TTL: 1800  # 秒

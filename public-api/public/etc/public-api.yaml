@@ -1,16 +1,185 @@
+# Heimdall Public API 配置文件
+# 前台公开服务配置 (端口: 8081)
+
 Name: public-api
 Host: 0.0.0.0
 Port: 8081
+Mode: dev  # dev, test, prod
+
+# 服务配置
+Service:
+  Version: "1.0.0"
+  Environment: "development"
+  LogLevel: "info"
 
 # 数据库配置
 MongoDB:
   Host: localhost:27017
-  Database: heimdall_blog
-  # Username: ""
-  # Password: ""
+  Database: heimdall_dev
+  Username: ""
+  Password: ""
+  AuthSource: admin
+  MaxPoolSize: 20
+  MinPoolSize: 2
+  ConnectTimeout: 10  # 秒
+  ServerSelectionTimeout: 10  # 秒
 
 # Redis配置
 Redis:
   Host: localhost:6379
-  # Password: ""
-  DB: 0
+  Password: ""
+  DB: 1  # 使用不同的数据库，避免与admin-api冲突
+  MaxRetries: 3
+  PoolSize: 20
+  MinIdleConns: 5
+  DialTimeout: 5  # 秒
+  ReadTimeout: 5  # 秒
+  WriteTimeout: 5  # 秒
+
+# CORS配置 (公开API需要支持跨域访问)
+CORS:
+  AllowOrigins:
+    - "*"  # 公开API允许所有来源访问
+  AllowMethods:
+    - "GET"
+    - "POST"
+    - "OPTIONS"
+  AllowHeaders:
+    - "Content-Type"
+    - "X-Requested-With"
+    - "Accept"
+    - "User-Agent"
+  ExposeHeaders:
+    - "Content-Length"
+    - "X-Total-Count"
+  AllowCredentials: false  # 公开API不需要凭据
+  MaxAge: 86400  # 预检请求缓存时间(秒)
+
+# API限流配置 (公开API需要更严格的限流)
+RateLimit:
+  # 全局限流
+  Global:
+    Requests: 1000  # 每分钟请求数限制
+    Burst: 50       # 突发请求数
+  
+  # IP级别限流
+  PerIP:
+    Requests: 100   # 单IP每分钟请求数限制
+    Burst: 10       # 单IP突发请求数
+  
+  # 搜索API特殊限流
+  Search:
+    Requests: 20    # 搜索API每分钟请求数限制
+    Burst: 5        # 搜索突发请求数
+
+# 监控配置
+Monitoring:
+  # Prometheus 监控
+  EnableMetrics: true
+  MetricsPort: 9091  # 不同于admin-api的端口
+  
+  # 健康检查
+  HealthPath: "/health"
+  
+  # 性能追踪
+  EnableTracing: false
+  TracingEndpoint: ""
+
+# 业务配置
+Business:
+  # 分页默认值
+  DefaultPageSize: 10
+  MaxPageSize: 50    # 公开API限制更小的页面大小
+  
+  # 内容展示
+  ExcerptLength: 200    # 文章摘要长度
+  RecentPostsLimit: 5   # 最新文章数量限制
+  PopularPostsLimit: 10 # 热门文章数量限制
+  
+  # 搜索配置
+  SearchResultLimit: 50    # 搜索结果最大数量
+  SearchKeywordMinLength: 2  # 搜索关键词最小长度
+  
+  # 评论配置
+  CommentsPerPage: 20        # 每页评论数
+  MaxCommentLength: 1000     # 评论最大长度
+  EnableCommentApproval: true # 评论需要审核
+
+# 缓存配置
+Cache:
+  # 文章列表缓存
+  PostList:
+    Prefix: "post_list:"
+    TTL: 600  # 10分钟
+  
+  # 文章详情缓存
+  PostDetail:
+    Prefix: "post_detail:"
+    TTL: 1800  # 30分钟
+  
+  # 标签列表缓存
+  TagList:
+    Prefix: "tag_list:"
+    TTL: 3600  # 1小时
+  
+  # 站点信息缓存
+  SiteInfo:
+    Prefix: "site_info:"
+    TTL: 7200  # 2小时
+  
+  # 搜索结果缓存
+  SearchResult:
+    Prefix: "search_result:"
+    TTL: 300  # 5分钟
+  
+  # 热门文章缓存
+  PopularPosts:
+    Prefix: "popular_posts:"
+    TTL: 3600  # 1小时
+
+# SEO配置
+SEO:
+  # Sitemap配置
+  SitemapPath: "/sitemap.xml"
+  SitemapCacheTime: 86400  # 24小时
+  
+  # RSS配置
+  RSSPath: "/rss.xml"
+  RSSCacheTime: 3600   # 1小时
+  RSSItemLimit: 20     # RSS条目数量限制
+  
+  # 机器人配置
+  RobotsPath: "/robots.txt"
+  
+  # OpenGraph默认配置
+  DefaultOGImage: "https://example.com/og-image.jpg"
+  SiteName: "Heimdall Blog"
+
+# 安全配置
+Security:
+  # 防爬虫配置
+  AntiBot:
+    EnableUACheck: true      # 启用User-Agent检查
+    EnableRefererCheck: false # 禁用Referer检查(公开API)
+    
+    # 可疑行为检测
+    MaxRequestsPerSecond: 10  # 每秒最大请求数
+    SuspiciousThreshold: 5    # 可疑行为阈值
+  
+  # 内容安全
+  ContentSecurity:
+    EnableXSSFilter: true     # 启用XSS过滤
+    EnableSQLFilter: true     # 启用SQL注入过滤
+    MaxURLLength: 2048        # URL最大长度
+
+# 统计配置
+Analytics:
+  # 页面访问统计
+  EnablePageViews: true
+  PageViewCacheTime: 300  # 5分钟批量更新
+  
+  # 热门内容统计
+  PopularContentUpdateInterval: 3600  # 1小时更新一次
+  
+  # 用户行为统计
+  EnableUserBehavior: false  # 公开API默认不记录用户行为

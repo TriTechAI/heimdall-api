@@ -455,7 +455,14 @@ spec:
 
 ### 4.2. 配置管理
 
-**ConfigMap配置**:
+#### ⚠️ 重要提醒：Go-Zero配置字段冲突
+
+在设计应用配置时，必须避免与go-zero框架内置字段冲突。以下字段名已被框架占用：
+- `Log` - 框架日志配置
+- `Timeout` - 框架超时配置  
+- `Host`/`Port` - 服务监听配置
+
+**正确的ConfigMap配置**:
 ```yaml
 # k8s/config-map.yaml
 apiVersion: v1
@@ -467,12 +474,18 @@ data:
   app.yaml: |
     server:
       port: 8080
-      timeout: 30s
+      readTimeout: 30s    # 避免使用 timeout
+      writeTimeout: 30s
     cache:
       ttl: 3600
-    log:
+    # 使用 logConfig 而不是 log
+    logConfig:
       level: info
       format: json
+    # 应用层面的超时配置
+    timeoutConfig:
+      database: 10s
+      redis: 5s
 ```
 
 **Secret管理**:
