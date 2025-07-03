@@ -9,10 +9,81 @@ type BaseResponse struct {
 	Timestamp string `json:"timestamp"`
 }
 
+type ErrorResponse struct {
+	Code      string      `json:"code"`
+	Msg       string      `json:"msg"`
+	Details   interface{} `json:"details,omitempty"`
+	Timestamp string      `json:"timestamp"`
+}
+
+type LoginData struct {
+	Token        string   `json:"token"`
+	RefreshToken string   `json:"refreshToken"`
+	ExpiresIn    int      `json:"expiresIn"`
+	User         UserInfo `json:"user"`
+}
+
+type LoginRequest struct {
+	Username   string `json:"username" validate:"required"`
+	Password   string `json:"password" validate:"required"`
+	RememberMe bool   `json:"rememberMe,omitempty"`
+}
+
+type LoginResponse struct {
+	Code      int       `json:"code"`
+	Message   string    `json:"message"`
+	Data      LoginData `json:"data"`
+	Timestamp string    `json:"timestamp"`
+}
+
+type LogoutRequest struct {
+	RefreshToken string `json:"refreshToken,omitempty"`
+}
+
+type LogoutResponse struct {
+	Code      int    `json:"code"`
+	Message   string `json:"message"`
+	Timestamp string `json:"timestamp"`
+}
+
+type PaginationInfo struct {
+	Page       int  `json:"page"`
+	Limit      int  `json:"limit"`
+	Total      int  `json:"total"`
+	TotalPages int  `json:"totalPages"`
+	HasNext    bool `json:"hasNext"`
+	HasPrev    bool `json:"hasPrev"`
+}
+
+type ProfileResponse struct {
+	Code      int      `json:"code"`
+	Message   string   `json:"message"`
+	Data      UserInfo `json:"data"`
+	Timestamp string   `json:"timestamp"`
+}
+
 type TestRequest struct {
 	Name string `path:"name,options=you|me"`
 }
 
 type TestResponse struct {
 	Message string `json:"message"`
+}
+
+type UserInfo struct {
+	ID           string `json:"id"`
+	Username     string `json:"username"`
+	DisplayName  string `json:"displayName"`
+	Email        string `json:"email"`
+	Role         string `json:"role"`
+	ProfileImage string `json:"profileImage,omitempty"`
+	Bio          string `json:"bio,omitempty"`
+	Location     string `json:"location,omitempty"`
+	Website      string `json:"website,omitempty"`
+	Twitter      string `json:"twitter,omitempty"`
+	Facebook     string `json:"facebook,omitempty"`
+	Status       string `json:"status"`
+	LastLoginAt  string `json:"lastLoginAt,omitempty"`
+	CreatedAt    string `json:"createdAt"`
+	UpdatedAt    string `json:"updatedAt"`
 }

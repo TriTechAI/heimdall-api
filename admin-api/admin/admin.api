@@ -1,16 +1,138 @@
 syntax = "v1"
 
-// 基础响应结构
+info (
+	title:   "Heimdall Admin API"
+	desc:    "博客管理后台API接口"
+	author:  "Heimdall Team"
+	version: "v1.0.0"
+)
+
+// ===================================================================
+// 基础响应结构体 (Base Response Types)
+// ===================================================================
 type (
-	// 通用响应
+	// 通用成功响应
 	BaseResponse {
+		Code      int    `json:"code"`
+		Message   string `json:"message"`
+		Timestamp string `json:"timestamp"`
+	}
+	// 通用错误响应
+	ErrorResponse {
+		Code      string      `json:"code"`
+		Msg       string      `json:"msg"`
+		Details   interface{} `json:"details,omitempty"`
+		Timestamp string      `json:"timestamp"`
+	}
+	// 分页信息
+	PaginationInfo {
+		Page       int  `json:"page"`
+		Limit      int  `json:"limit"`
+		Total      int  `json:"total"`
+		TotalPages int  `json:"totalPages"`
+		HasNext    bool `json:"hasNext"`
+		HasPrev    bool `json:"hasPrev"`
+	}
+)
+
+// ===================================================================
+// 用户相关类型 (User Related Types)
+// ===================================================================
+type (
+	// 用户基础信息
+	UserInfo {
+		ID           string `json:"id"`
+		Username     string `json:"username"`
+		DisplayName  string `json:"displayName"`
+		Email        string `json:"email"`
+		Role         string `json:"role"`
+		ProfileImage string `json:"profileImage,omitempty"`
+		Bio          string `json:"bio,omitempty"`
+		Location     string `json:"location,omitempty"`
+		Website      string `json:"website,omitempty"`
+		Twitter      string `json:"twitter,omitempty"`
+		Facebook     string `json:"facebook,omitempty"`
+		Status       string `json:"status"`
+		LastLoginAt  string `json:"lastLoginAt,omitempty"`
+		CreatedAt    string `json:"createdAt"`
+		UpdatedAt    string `json:"updatedAt"`
+	}
+)
+
+// ===================================================================
+// 认证模块 (Authentication Module)
+// ===================================================================
+type (
+	// 登录请求
+	LoginRequest {
+		Username   string `json:"username" validate:"required"`
+		Password   string `json:"password" validate:"required"`
+		RememberMe bool   `json:"rememberMe,omitempty"`
+	}
+	// 登录响应
+	LoginResponse {
+		Code      int       `json:"code"`
+		Message   string    `json:"message"`
+		Data      LoginData `json:"data"`
+		Timestamp string    `json:"timestamp"`
+	}
+	// 登录响应数据
+	LoginData {
+		Token        string   `json:"token"`
+		RefreshToken string   `json:"refreshToken"`
+		ExpiresIn    int      `json:"expiresIn"`
+		User         UserInfo `json:"user"`
+	}
+	// 获取个人资料响应
+	ProfileResponse {
+		Code      int      `json:"code"`
+		Message   string   `json:"message"`
+		Data      UserInfo `json:"data"`
+		Timestamp string   `json:"timestamp"`
+	}
+	// 登出请求 (可选的请求体)
+	LogoutRequest {
+		RefreshToken string `json:"refreshToken,omitempty"`
+	}
+	// 登出响应
+	LogoutResponse {
 		Code      int    `json:"code"`
 		Message   string `json:"message"`
 		Timestamp string `json:"timestamp"`
 	}
 )
 
-// 临时测试接口，等待实际业务接口替换
+// ===================================================================
+// API 接口定义 (API Interface Definition)
+// ===================================================================
+// 公开接口 (无需认证)
+@server (
+	prefix: /api/v1/admin
+)
+service admin-api {
+	@doc "用户登录"
+	@handler LoginHandler
+	post /auth/login (LoginRequest) returns (LoginResponse)
+}
+
+// 需要认证的接口
+@server (
+	prefix: /api/v1/admin
+	jwt:    Auth
+)
+service admin-api {
+	@doc "获取当前用户信息"
+	@handler ProfileHandler
+	get /auth/profile returns (ProfileResponse)
+
+	@doc "用户登出"
+	@handler LogoutHandler
+	post /auth/logout (LogoutRequest) returns (LogoutResponse)
+}
+
+// ===================================================================
+// 临时测试接口 (将在后续任务中移除)
+// ===================================================================
 type (
 	TestRequest {
 		Name string `path:"name,options=you|me"`

@@ -35,7 +35,7 @@ public:
 # 运行测试
 test:
 	@echo "运行所有测试..."
-	go test ./... -v
+	go test ./... -v -gcflags="all=-N -l"
 
 # 整理依赖
 deps:

@@ -3,6 +3,8 @@ module github.com/heimdall-api
 go 1.24.4
 
 require (
+	github.com/bytedance/mockey v1.2.14
+	github.com/go-redis/redis/v8 v8.11.5
 	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/google/uuid v1.6.0
 	github.com/redis/go-redis/v9 v9.11.0
@@ -55,6 +57,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.24.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.3.1 // indirect
 	go.uber.org/automaxprocs v1.6.0 // indirect
+	golang.org/x/arch v0.11.0 // indirect
 	golang.org/x/net v0.35.0 // indirect
 	golang.org/x/sync v0.11.0 // indirect
 	golang.org/x/sys v0.30.0 // indirect

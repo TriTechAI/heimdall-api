@@ -15,6 +15,37 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 	server.AddRoutes(
 		[]rest.Route{
 			{
+				// 用户登录
+				Method:  http.MethodPost,
+				Path:    "/auth/login",
+				Handler: LoginHandler(serverCtx),
+			},
+		},
+		rest.WithPrefix("/api/v1/admin"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				// 用户登出
+				Method:  http.MethodPost,
+				Path:    "/auth/logout",
+				Handler: LogoutHandler(serverCtx),
+			},
+			{
+				// 获取当前用户信息
+				Method:  http.MethodGet,
+				Path:    "/auth/profile",
+				Handler: ProfileHandler(serverCtx),
+			},
+		},
+		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
+		rest.WithPrefix("/api/v1/admin"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
 				// 测试接口
 				Method:  http.MethodGet,
 				Path:    "/test/:name",
