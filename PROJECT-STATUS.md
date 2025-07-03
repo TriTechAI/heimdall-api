@@ -98,12 +98,11 @@ heimdall-api/
 #### **0.1: 开发环境与工具链 (2小时)**
 - [ ] `(#T000)` [P0][Project] **配置开发环境** *(30分钟)*
   - [ ] 验证Go 1.24.4+环境
-  - [ ] 安装MongoDB和Redis本地服务
+  - [X] 安装MongoDB和Redis本地服务,本地已使用docker启动
   - [ ] 配置VSCode/GoLand开发环境
   - **验收**: `make deps && make test` 成功执行
 
 - [ ] `(#T001)` [P0][Project] **完善项目工具链** *(90分钟)*
-  - [ ] 增强Makefile，添加db-up/db-down/db-seed命令
   - [ ] 配置golangci-lint和pre-commit hooks
   - [ ] 创建.env.example模板文件
   - **验收**: 所有make命令正常工作，代码质量检查通过
@@ -119,7 +118,6 @@ heimdall-api/
 - [ ] `(#T003)` [P0][common] **创建数据库Schema** *(90分钟)*
   - [ ] 编写MongoDB索引初始化脚本 `scripts/db/create_indexes.js`
   - [ ] 创建数据库种子数据脚本 `scripts/db/seed_data.js`
-  - [ ] 实现数据库迁移工具 `common/migration/migrator.go`
   - **依赖**: T002
   - **验收**: 数据库初始化脚本执行成功，种子数据加载正常
 
