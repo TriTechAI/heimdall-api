@@ -105,7 +105,68 @@ heimdall-api/
 - `common/constants/`: 存放所有共享常量（魔法字符串、数字等）。
 - `common/errors/`: **推荐创建**，用于定义业务错误类型。
 
-## 3. API 定义规范 (`.api` 文件)
+## 3. 文件和包命名规范
+
+为了保持代码库的一致性和可读性，所有文件和包的命名都必须遵循统一的规范。
+
+### 3.1. 文件命名规范
+
+**核心原则**: 使用全小写字母，单词之间不使用分隔符
+
+- **Go文件命名**:
+  - 使用全小写字母
+  - 多个单词直接连接，不使用下划线或连字符
+  - 文件名应简洁且有意义
+  - **正确示例**: `userdao.go`, `loginhandler.go`, `userlogic.go`, `postservice.go`
+  - **错误示例**: `user_dao.go`, `loginHandler.go`, `UserLogic.go`, `post-service.go`
+
+**具体命名规则**:
+
+- **DAO层文件**: `<entity>dao.go`
+  - `userdao.go` (用户数据访问对象)
+  - `postdao.go` (文章数据访问对象)
+  - `commentdao.go` (评论数据访问对象)
+
+- **Handler层文件**: `<action>handler.go` 或 `<entity>handler.go`
+  - `loginhandler.go` (登录处理器)
+  - `userhandler.go` (用户相关处理器)
+  - `posthandler.go` (文章相关处理器)
+
+- **Logic层文件**: `<action>logic.go` 或 `<entity>logic.go`
+  - `loginlogic.go` (登录业务逻辑)
+  - `userlogic.go` (用户业务逻辑)
+  - `postlogic.go` (文章业务逻辑)
+
+- **Model层文件**: `<entity>.go`
+  - `user.go` (用户模型)
+  - `post.go` (文章模型)
+  - `comment.go` (评论模型)
+
+- **测试文件**: `<filename>_test.go`
+  - `userdao_test.go` (用户DAO测试)
+  - `loginlogic_test.go` (登录逻辑测试)
+
+### 3.2. 包命名规范
+
+- **包名**: 使用全小写字母，简洁且有意义
+- **避免**: 下划线、连字符、大写字母、复数形式
+- **示例**: `dao`, `model`, `handler`, `logic`, `constants`, `utils`
+
+### 3.3. 兼容性说明
+
+**历史文件重命名**:
+- 对于已存在的不符合规范的文件，应逐步重命名以保持一致性
+- 重命名时需要同步更新所有相关的import语句
+- 建议使用IDE的重构功能进行安全重命名
+
+**命名规范的好处**:
+- ✅ 符合Go语言官方推荐的文件命名风格
+- ✅ 提高代码库的一致性和可读性
+- ✅ 简化文件查找和导航
+- ✅ 避免不同操作系统间的兼容性问题
+- ✅ 与Go生态系统的其他项目保持一致
+
+## 4. API 定义规范 (`.api` 文件)
 
 - **命名规范**:
   - `type` 名称使用 `PascalCase`。
@@ -146,7 +207,7 @@ service user {
 }
 ```
 
-## 4. 错误处理
+## 5. 错误处理
 
 - **Logic 层**:
   - 业务逻辑中遇到错误时，应立即 `return nil, err`，将错误向上传递。
@@ -155,7 +216,7 @@ service user {
   - `go-zero` 默认的 `httpx.OkJson` 和 `httpx.Error` 会处理大部分情况。
   - 可通过自定义中间件或改写 `httpx.SetErrorHandler` 来实现更复杂的全局错误处理逻辑（例如，将不同类型的 `error` 映射为不同的 HTTP 状态码和响应格式）。
 
-## 5. 函数原子化规范
+## 6. 函数原子化规范
 
 为了提高代码的可读性、可维护性和可测试性，项目中的所有函数都必须遵循原子化设计原则。
 
@@ -301,15 +362,15 @@ func (l *LoginLogic) Login(req *types.LoginReq) (*types.LoginReply, error) {
 }
 ```
 
-## 6. 配置与数据库
+## 7. 配置与数据库
 
-### 6.1. 配置文件规范
+### 7.1. 配置文件规范
 
 - **配置**:
   - 严禁在代码中硬编码任何配置项（端口、数据库地址、密钥等）。所有配置都必须在 `etc/*.yaml` 文件中定义。
   - 对于敏感信息（如密码、API Key），推荐通过环境变量加载，并在配置文件中使用 `env()` 语法。
 
-### 6.2. 配置结构体设计要点
+### 7.2. 配置结构体设计要点
 
 #### ⚠️ 重要：避免与go-zero内置配置字段冲突
 
@@ -399,24 +460,24 @@ type Config struct {
 3. 更新对应的YAML配置文件中的字段名
 4. 重新生成代码并测试
 
-### 6.3. 数据库配置
+### 7.3. 数据库配置
 
 - **数据库**:
   - 我们使用 MongoDB 作为主数据库，通过官方的 `go.mongodb.org/mongo-driver` 与数据库交互。
   - 数据库连接对象在 `svc.ServiceContext` 中初始化并持有。
   - `logic` 层**不应**直接操作 MongoDB 驱动，而应调用 `dao` 层提供的方法来完成数据操作。
 
-## 7. 常量管理
+## 8. 常量管理
 
 为了提高代码的可维护性、可读性并避免魔法字符串 (Magic Strings)，项目中所有可复用的、具有业务含义的字符串或数字都必须定义为常量。
 
-### 7.1. 常量定义位置
+### 8.1. 常量定义位置
 
 - **共享常量**: 在 `common/constants/` 目录下定义两个服务都会使用的常量
 - **服务特有常量**: 在各自服务的 `internal/constants/` 目录下定义只有该服务使用的常量
 - **按领域分类**: 根据常量的业务领域将其分散到不同的文件中
 
-### 7.2. 常量定义示例
+### 8.2. 常量定义示例
 
 **共享常量** (`common/constants/`):
 
@@ -461,7 +522,7 @@ type Config struct {
   )
   ```
 
-### 7.3. 引用规范
+### 8.3. 引用规范
 
 - **引用共享常量**: `import "github.com/heimdall-api/common/constants"`
 - **引用服务常量**: `import "github.com/heimdall-api/admin-api/admin/internal/constants"` 
