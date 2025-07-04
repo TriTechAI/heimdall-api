@@ -103,6 +103,100 @@ type (
 )
 
 // ===================================================================
+// 用户管理模块 (User Management Module)
+// ===================================================================
+type (
+	// 用户列表查询请求
+	UserListRequest {
+		Page     int    `form:"page,default=1,range=[1:]"` // 页码，从1开始
+		Limit    int    `form:"limit,default=10,range=[1:100]"` // 每页记录数，最大100
+		Role     string `form:"role,optional"` // 角色过滤
+		Status   string `form:"status,optional"` // 状态过滤
+		Keyword  string `form:"keyword,optional"` // 关键词搜索（用户名、邮箱、显示名）
+		SortBy   string `form:"sortBy,default=createdAt,options=username|createdAt|lastLoginAt"` // 排序字段
+		SortDesc bool   `form:"sortDesc,default=true"` // 是否降序排列
+	}
+	// 用户列表响应
+	UserListResponse {
+		Code      int          `json:"code"`
+		Message   string       `json:"message"`
+		Data      UserListData `json:"data"`
+		Timestamp string       `json:"timestamp"`
+	}
+	// 用户列表数据
+	UserListData {
+		List       []UserInfo     `json:"list"`
+		Pagination PaginationInfo `json:"pagination"`
+	}
+	// 用户详情请求
+	UserDetailRequest {
+		ID string `path:"id"`
+	}
+	// 用户详情响应
+	UserDetailResponse {
+		Code      int      `json:"code"`
+		Message   string   `json:"message"`
+		Data      UserInfo `json:"data"`
+		Timestamp string   `json:"timestamp"`
+	}
+)
+
+// ===================================================================
+// 登录日志管理模块 (Login Logs Management Module)
+// ===================================================================
+type (
+	// 登录日志查询请求
+	LoginLogsRequest {
+		Page       int    `form:"page,default=1,range=[1:]"` // 页码，从1开始
+		Limit      int    `form:"limit,default=20,range=[1:100]"` // 每页记录数，最大100
+		UserID     string `form:"userId,optional"` // 用户ID过滤
+		Username   string `form:"username,optional"` // 用户名过滤（模糊搜索）
+		Status     string `form:"status,optional,options=success|failed"` // 登录状态过滤
+		IPAddress  string `form:"ipAddress,optional"` // IP地址过滤
+		StartTime  string `form:"startTime,optional"` // 开始时间（RFC3339格式）
+		EndTime    string `form:"endTime,optional"` // 结束时间（RFC3339格式）
+		Country    string `form:"country,optional"` // 国家过滤
+		DeviceType string `form:"deviceType,optional"` // 设备类型过滤
+		Browser    string `form:"browser,optional"` // 浏览器过滤
+		SortBy     string `form:"sortBy,default=loginAt,options=loginAt|username|ipAddress|status"` // 排序字段
+		SortDesc   bool   `form:"sortDesc,default=true"` // 是否降序排列
+	}
+	// 登录日志响应
+	LoginLogsResponse {
+		Code      int           `json:"code"`
+		Message   string        `json:"message"`
+		Data      LoginLogsData `json:"data"`
+		Timestamp string        `json:"timestamp"`
+	}
+	// 登录日志数据
+	LoginLogsData {
+		List       []LoginLogInfo `json:"list"`
+		Pagination PaginationInfo `json:"pagination"`
+	}
+	// 登录日志信息
+	LoginLogInfo {
+		ID          string `json:"id"`
+		UserID      string `json:"userId,omitempty"`
+		Username    string `json:"username"`
+		LoginMethod string `json:"loginMethod"`
+		IPAddress   string `json:"ipAddress"`
+		UserAgent   string `json:"userAgent"`
+		Status      string `json:"status"`
+		FailReason  string `json:"failReason,omitempty"`
+		SessionID   string `json:"sessionId,omitempty"`
+		Country     string `json:"country,omitempty"`
+		Region      string `json:"region,omitempty"`
+		City        string `json:"city,omitempty"`
+		DeviceType  string `json:"deviceType,omitempty"`
+		Browser     string `json:"browser,omitempty"`
+		OS          string `json:"os,omitempty"`
+		LoginAt     string `json:"loginAt"`
+		LogoutAt    string `json:"logoutAt,omitempty"`
+		Duration    int64  `json:"duration,omitempty"`
+	}
+)
+
+// ===================================================================
 // API 接口定义 (API Interface Definition)
 // ===================================================================
 // 公开接口 (无需认证)
@@ -128,6 +222,18 @@ service admin-api {
 	@doc "用户登出"
 	@handler LogoutHandler
 	post /auth/logout (LogoutRequest) returns (LogoutResponse)
+
+	@doc "获取用户列表"
+	@handler GetUserListHandler
+	get /users (UserListRequest) returns (UserListResponse)
+
+	@doc "获取用户详情"
+	@handler GetUserDetailHandler
+	get /users/:id (UserDetailRequest) returns (UserDetailResponse)
+
+	@doc "获取登录日志列表"
+	@handler GetLoginLogsHandler
+	get /security/login-logs (LoginLogsRequest) returns (LoginLogsResponse)
 }
 
 // ===================================================================

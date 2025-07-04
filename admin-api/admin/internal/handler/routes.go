@@ -38,6 +38,24 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Path:    "/auth/profile",
 				Handler: ProfileHandler(serverCtx),
 			},
+			{
+				// 获取登录日志列表
+				Method:  http.MethodGet,
+				Path:    "/security/login-logs",
+				Handler: GetLoginLogsHandler(serverCtx),
+			},
+			{
+				// 获取用户列表
+				Method:  http.MethodGet,
+				Path:    "/users",
+				Handler: GetUserListHandler(serverCtx),
+			},
+			{
+				// 获取用户详情
+				Method:  http.MethodGet,
+				Path:    "/users/:id",
+				Handler: GetUserDetailHandler(serverCtx),
+			},
 		},
 		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
 		rest.WithPrefix("/api/v1/admin"),

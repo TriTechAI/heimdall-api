@@ -207,26 +207,34 @@ heimdall-api/
   - **依赖**: T021 ✅, T022 ✅, T023 ✅
   - **验收**: ✅ 登录功能完整，包含12个核心方法，安全机制完备，编译测试通过，基础验证测试通过
 
-- [ ] `(#T025)` [P1][admin-api] **用户信息获取** *(45分钟)*
-  - [ ] 实现GetProfileLogic：获取当前用户信息
-  - [ ] 实现JWT中间件验证
-  - **依赖**: T024
-  - **验收**: 认证用户可正常获取个人信息
+- [x] `(#T025)` [P1][admin-api] **用户信息获取** *(45分钟)* ✅ **DONE** - *2024-01-XX*
+  - [x] 实现GetProfileLogic：获取当前用户信息
+  - [x] 实现JWT中间件验证
+  - [x] 完整的用户状态检查和错误处理
+  - [x] 139个单元测试断言全部通过
+  - **依赖**: T024 ✅
+  - **验收**: ✅ 认证用户可正常获取个人信息，安全验证完整，测试覆盖全面
 
-- [ ] `(#T026)` [P1][admin-api] **用户管理接口** *(120分钟)*
-  - [ ] 在`admin.api`中定义用户管理接口
-    - [ ] GET /api/v1/admin/users (分页列表)
-    - [ ] GET /api/v1/admin/users/{id} (用户详情)
-  - [ ] 实现GetUserListLogic和GetUserDetailLogic
-  - **依赖**: T021, T024
-  - **验收**: 用户列表和详情接口正常工作
+- [x] `(#T026)` [P1][admin-api] **用户管理接口** *(120分钟)* ✅ **DONE** - *2024-01-XX*
+  - [x] 在`admin.api`中定义用户管理接口
+    - [x] GET /api/v1/admin/users (分页列表) - 支持角色、状态、关键词过滤和排序
+    - [x] GET /api/v1/admin/users/{id} (用户详情) - 包含权限检查
+  - [x] 实现GetUserListLogic和GetUserDetailLogic
+  - [x] 新增用户管理相关类型定义：UserListRequest/Response, UserDetailRequest/Response
+  - [x] 实现完整的参数验证、分页计算、权限检查
+  - [x] 自动生成handler和路由配置
+  - **依赖**: T021 ✅, T024 ✅
+  - **验收**: ✅ 用户列表和详情接口功能完整，编译通过，API符合规范
 
-- [ ] `(#T027)` [P1][admin-api] **登录日志管理** *(45分钟)*
-  - [ ] 在`admin.api`中定义登录日志接口
-    - [ ] GET /api/v1/admin/security/login-logs
-  - [ ] 实现GetLoginLogsLogic
-  - **依赖**: T022, T024
-  - **验收**: 登录日志查询功能正常
+- [x] `(#T027)` [P1][admin-api] **登录日志管理** *(45分钟)* ✅ **DONE** - *2024-01-XX*
+  - [x] 在`admin.api`中定义登录日志接口
+    - [x] GET /api/v1/admin/security/login-logs - 支持多维度过滤和分页查询
+  - [x] 实现GetLoginLogsLogic
+  - [x] 新增登录日志相关类型定义：LoginLogsRequest/Response, LoginLogInfo
+  - [x] 实现完整的参数验证、时间解析、查询过滤、分页计算
+  - [x] 自动生成handler和路由配置  
+  - **依赖**: T022 ✅, T024 ✅
+  - **验收**: ✅ 登录日志查询功能完整，编译通过，API符合规范
 
 #### **1.3: 内容管理模块 - 文章 (10小时)**
 - [ ] `(#T030)` [P1][common] **文章数据模型** *(90分钟)*

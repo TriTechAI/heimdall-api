@@ -23,6 +23,55 @@ type LoginData struct {
 	User         UserInfo `json:"user"`
 }
 
+type LoginLogInfo struct {
+	ID          string `json:"id"`
+	UserID      string `json:"userId,omitempty"`
+	Username    string `json:"username"`
+	LoginMethod string `json:"loginMethod"`
+	IPAddress   string `json:"ipAddress"`
+	UserAgent   string `json:"userAgent"`
+	Status      string `json:"status"`
+	FailReason  string `json:"failReason,omitempty"`
+	SessionID   string `json:"sessionId,omitempty"`
+	Country     string `json:"country,omitempty"`
+	Region      string `json:"region,omitempty"`
+	City        string `json:"city,omitempty"`
+	DeviceType  string `json:"deviceType,omitempty"`
+	Browser     string `json:"browser,omitempty"`
+	OS          string `json:"os,omitempty"`
+	LoginAt     string `json:"loginAt"`
+	LogoutAt    string `json:"logoutAt,omitempty"`
+	Duration    int64  `json:"duration,omitempty"`
+}
+
+type LoginLogsData struct {
+	List       []LoginLogInfo `json:"list"`
+	Pagination PaginationInfo `json:"pagination"`
+}
+
+type LoginLogsRequest struct {
+	Page       int    `form:"page,default=1,range=[1:]"`                                        // 页码，从1开始
+	Limit      int    `form:"limit,default=20,range=[1:100]"`                                   // 每页记录数，最大100
+	UserID     string `form:"userId,optional"`                                                  // 用户ID过滤
+	Username   string `form:"username,optional"`                                                // 用户名过滤（模糊搜索）
+	Status     string `form:"status,optional,options=success|failed"`                           // 登录状态过滤
+	IPAddress  string `form:"ipAddress,optional"`                                               // IP地址过滤
+	StartTime  string `form:"startTime,optional"`                                               // 开始时间（RFC3339格式）
+	EndTime    string `form:"endTime,optional"`                                                 // 结束时间（RFC3339格式）
+	Country    string `form:"country,optional"`                                                 // 国家过滤
+	DeviceType string `form:"deviceType,optional"`                                              // 设备类型过滤
+	Browser    string `form:"browser,optional"`                                                 // 浏览器过滤
+	SortBy     string `form:"sortBy,default=loginAt,options=loginAt|username|ipAddress|status"` // 排序字段
+	SortDesc   bool   `form:"sortDesc,default=true"`                                            // 是否降序排列
+}
+
+type LoginLogsResponse struct {
+	Code      int           `json:"code"`
+	Message   string        `json:"message"`
+	Data      LoginLogsData `json:"data"`
+	Timestamp string        `json:"timestamp"`
+}
+
 type LoginRequest struct {
 	Username   string `json:"username" validate:"required"`
 	Password   string `json:"password" validate:"required"`
@@ -70,6 +119,17 @@ type TestResponse struct {
 	Message string `json:"message"`
 }
 
+type UserDetailRequest struct {
+	ID string `path:"id"`
+}
+
+type UserDetailResponse struct {
+	Code      int      `json:"code"`
+	Message   string   `json:"message"`
+	Data      UserInfo `json:"data"`
+	Timestamp string   `json:"timestamp"`
+}
+
 type UserInfo struct {
 	ID           string `json:"id"`
 	Username     string `json:"username"`
@@ -86,4 +146,26 @@ type UserInfo struct {
 	LastLoginAt  string `json:"lastLoginAt,omitempty"`
 	CreatedAt    string `json:"createdAt"`
 	UpdatedAt    string `json:"updatedAt"`
+}
+
+type UserListData struct {
+	List       []UserInfo     `json:"list"`
+	Pagination PaginationInfo `json:"pagination"`
+}
+
+type UserListRequest struct {
+	Page     int    `form:"page,default=1,range=[1:]"`                                       // 页码，从1开始
+	Limit    int    `form:"limit,default=10,range=[1:100]"`                                  // 每页记录数，最大100
+	Role     string `form:"role,optional"`                                                   // 角色过滤
+	Status   string `form:"status,optional"`                                                 // 状态过滤
+	Keyword  string `form:"keyword,optional"`                                                // 关键词搜索（用户名、邮箱、显示名）
+	SortBy   string `form:"sortBy,default=createdAt,options=username|createdAt|lastLoginAt"` // 排序字段
+	SortDesc bool   `form:"sortDesc,default=true"`                                           // 是否降序排列
+}
+
+type UserListResponse struct {
+	Code      int          `json:"code"`
+	Message   string       `json:"message"`
+	Data      UserListData `json:"data"`
+	Timestamp string       `json:"timestamp"`
 }
