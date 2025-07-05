@@ -87,10 +87,18 @@ func (l *LoginLogic) Login(req *types.LoginRequest) (resp *types.LoginResponse, 
 	}
 
 	// 8. 登录成功，生成JWT Token
+	// 使用与go-zero JWT中间件兼容的token格式
 	jwtManager := utils.NewJWTManager(l.svcCtx.Config.Auth.AccessSecret, "heimdall-admin")
-	tokenPair, err := jwtManager.GenerateToken(user.ID.Hex(), user.Username, user.Role)
+	accessToken, err := jwtManager.GenerateGoZeroCompatibleToken(user.ID.Hex(), user.Username, user.Role)
 	if err != nil {
 		l.Logger.Errorf("生成JWT Token失败: %v", err)
+		return nil, errors.New("系统错误，请稍后重试")
+	}
+
+	// 生成refresh token（使用原有方法）
+	tokenPair, err := jwtManager.GenerateToken(user.ID.Hex(), user.Username, user.Role)
+	if err != nil {
+		l.Logger.Errorf("生成Refresh Token失败: %v", err)
 		return nil, errors.New("系统错误，请稍后重试")
 	}
 
@@ -112,8 +120,8 @@ func (l *LoginLogic) Login(req *types.LoginRequest) (resp *types.LoginResponse, 
 		Message:   "登录成功",
 		Timestamp: time.Now().Format(time.RFC3339),
 		Data: types.LoginData{
-			Token:        tokenPair.AccessToken,
-			RefreshToken: tokenPair.RefreshToken,
+			Token:        accessToken,            // 使用go-zero兼容的token
+			RefreshToken: tokenPair.RefreshToken, // 使用原有的refresh token
 			ExpiresIn:    int(tokenPair.ExpiresAt.Sub(time.Now()).Seconds()),
 			User: types.UserInfo{
 				ID:          user.ID.Hex(),
@@ -263,12 +271,13 @@ func (l *LoginLogic) checkAndLockAccount(user *model.User, username, clientIP st
 // recordLoginFailure 记录登录失败日志
 func (l *LoginLogic) recordLoginFailure(username, clientIP, reason string) {
 	loginLog := &model.LoginLog{
-		Username:   username,
-		IPAddress:  clientIP,
-		UserAgent:  "Admin Panel", // 简化处理
-		Status:     constants.LoginStatusFailed,
-		FailReason: reason,
-		LoginAt:    time.Now(),
+		Username:    username,
+		IPAddress:   clientIP,
+		UserAgent:   "Admin Panel", // 简化处理
+		LoginMethod: "password",    // 添加登录方式
+		Status:      constants.LoginStatusFailed,
+		FailReason:  reason,
+		LoginAt:     time.Now(),
 	}
 
 	if err := l.svcCtx.LoginLogDAO.Create(l.ctx, loginLog); err != nil {
@@ -279,12 +288,13 @@ func (l *LoginLogic) recordLoginFailure(username, clientIP, reason string) {
 // recordLoginSuccess 记录登录成功日志
 func (l *LoginLogic) recordLoginSuccess(user *model.User, clientIP string) {
 	loginLog := &model.LoginLog{
-		UserID:    &user.ID,
-		Username:  user.Username,
-		IPAddress: clientIP,
-		UserAgent: "Admin Panel", // 简化处理
-		Status:    constants.LoginStatusSuccess,
-		LoginAt:   time.Now(),
+		UserID:      &user.ID,
+		Username:    user.Username,
+		IPAddress:   clientIP,
+		UserAgent:   "Admin Panel", // 简化处理
+		LoginMethod: "password",    // 添加登录方式
+		Status:      constants.LoginStatusSuccess,
+		LoginAt:     time.Now(),
 	}
 
 	if err := l.svcCtx.LoginLogDAO.Create(l.ctx, loginLog); err != nil {

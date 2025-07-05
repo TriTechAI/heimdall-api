@@ -6,6 +6,11 @@ Host: 0.0.0.0
 Port: 8080
 Mode: dev  # dev, test, prod
 
+# go-zero JWT中间件配置 - 按照官方文档标准
+Auth:
+  AccessSecret: heimdall-jwt-secret-key-2024-change-in-production
+  AccessExpire: 7200  # 2小时
+
 # 服务配置
 Service:
   Version: "1.0.0"
@@ -36,10 +41,8 @@ Redis:
   ReadTimeout: 5  # 秒
   WriteTimeout: 5  # 秒
 
-# JWT认证配置
-Auth:
-  AccessSecret: your-super-secret-jwt-key-please-change-in-production
-  AccessExpire: 7200    # Access Token 过期时间(秒) - 2小时
+# JWT业务扩展配置
+JWTBusiness:
   RefreshExpire: 604800 # Refresh Token 过期时间(秒) - 7天
 
 # 安全配置

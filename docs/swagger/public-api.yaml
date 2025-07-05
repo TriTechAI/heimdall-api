@@ -1,0 +1,40 @@
+basePath: /
+consumes:
+- application/json
+info:
+  version: "1.0"
+paths:
+  /api/v1/public/test/{name}:
+    get:
+      operationId: publicHandler
+      parameters:
+      - enum:
+        - you
+        - me
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 测试接口
+produces:
+- application/json
+schemes:
+- https
+swagger: "2.0"
+x-date: "2025-07-04 23:18:09"
+x-description: This is a goctl generated swagger file.
+x-github: https://github.com/zeromicro/go-zero
+x-go-zero-doc: https://go-zero.dev/
+x-goctl-version: 1.8.4

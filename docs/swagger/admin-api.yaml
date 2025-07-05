@@ -1,0 +1,654 @@
+basePath: /
+consumes:
+- application/json
+info:
+  title: Heimdall Admin API
+  version: v1.0.0
+paths:
+  /api/v1/admin/auth/login:
+    post:
+      consumes:
+      - application/json
+      operationId: loginHandler
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            password:
+              type: string
+            rememberMe:
+              type: boolean
+            username:
+              type: string
+          required:
+          - username
+          - password
+          - rememberMe
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              data:
+                properties:
+                  expiresIn:
+                    type: integer
+                  refreshToken:
+                    type: string
+                  token:
+                    type: string
+                  user:
+                    properties:
+                      bio:
+                        type: string
+                      createdAt:
+                        type: string
+                      displayName:
+                        type: string
+                      email:
+                        type: string
+                      facebook:
+                        type: string
+                      id:
+                        type: string
+                      lastLoginAt:
+                        type: string
+                      location:
+                        type: string
+                      profileImage:
+                        type: string
+                      role:
+                        type: string
+                      status:
+                        type: string
+                      twitter:
+                        type: string
+                      updatedAt:
+                        type: string
+                      username:
+                        type: string
+                      website:
+                        type: string
+                    required:
+                    - id
+                    - username
+                    - displayName
+                    - email
+                    - role
+                    - profileImage
+                    - bio
+                    - location
+                    - website
+                    - twitter
+                    - facebook
+                    - status
+                    - lastLoginAt
+                    - createdAt
+                    - updatedAt
+                    type: object
+                required:
+                - token
+                - refreshToken
+                - expiresIn
+                - user
+                type: object
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 用户登录
+  /api/v1/admin/auth/logout:
+    post:
+      consumes:
+      - application/json
+      operationId: logoutHandler
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            refreshToken:
+              type: string
+          required:
+          - refreshToken
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 用户登出
+  /api/v1/admin/auth/profile:
+    get:
+      operationId: profileHandler
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              data:
+                properties:
+                  bio:
+                    type: string
+                  createdAt:
+                    type: string
+                  displayName:
+                    type: string
+                  email:
+                    type: string
+                  facebook:
+                    type: string
+                  id:
+                    type: string
+                  lastLoginAt:
+                    type: string
+                  location:
+                    type: string
+                  profileImage:
+                    type: string
+                  role:
+                    type: string
+                  status:
+                    type: string
+                  twitter:
+                    type: string
+                  updatedAt:
+                    type: string
+                  username:
+                    type: string
+                  website:
+                    type: string
+                required:
+                - id
+                - username
+                - displayName
+                - email
+                - role
+                - profileImage
+                - bio
+                - location
+                - website
+                - twitter
+                - facebook
+                - status
+                - lastLoginAt
+                - createdAt
+                - updatedAt
+                type: object
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 获取当前用户信息
+  /api/v1/admin/security/login-logs:
+    get:
+      operationId: getLoginLogsHandler
+      parameters:
+      - default: 1
+        description: 页码，从1开始
+        in: query
+        minimum: 1
+        name: page
+        required: true
+        type: integer
+      - default: 20
+        description: 每页记录数，最大100
+        in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        required: true
+        type: integer
+      - allowEmptyValue: true
+        description: 用户ID过滤
+        in: query
+        name: userId
+        type: string
+      - allowEmptyValue: true
+        description: 用户名过滤（模糊搜索）
+        in: query
+        name: username
+        type: string
+      - allowEmptyValue: true
+        description: 登录状态过滤
+        enum:
+        - success
+        - failed
+        in: query
+        name: status
+        type: string
+      - allowEmptyValue: true
+        description: IP地址过滤
+        in: query
+        name: ipAddress
+        type: string
+      - allowEmptyValue: true
+        description: 开始时间（RFC3339格式）
+        in: query
+        name: startTime
+        type: string
+      - allowEmptyValue: true
+        description: 结束时间（RFC3339格式）
+        in: query
+        name: endTime
+        type: string
+      - allowEmptyValue: true
+        description: 国家过滤
+        in: query
+        name: country
+        type: string
+      - allowEmptyValue: true
+        description: 设备类型过滤
+        in: query
+        name: deviceType
+        type: string
+      - allowEmptyValue: true
+        description: 浏览器过滤
+        in: query
+        name: browser
+        type: string
+      - default: loginAt
+        description: 排序字段
+        enum:
+        - loginAt
+        - username
+        - ipAddress
+        - status
+        in: query
+        name: sortBy
+        required: true
+        type: string
+      - default: true
+        description: 是否降序排列
+        in: query
+        name: sortDesc
+        required: true
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              data:
+                properties:
+                  list:
+                    items:
+                      properties:
+                        browser:
+                          type: string
+                        city:
+                          type: string
+                        country:
+                          type: string
+                        deviceType:
+                          type: string
+                        duration:
+                          type: integer
+                        failReason:
+                          type: string
+                        id:
+                          type: string
+                        ipAddress:
+                          type: string
+                        loginAt:
+                          type: string
+                        loginMethod:
+                          type: string
+                        logoutAt:
+                          type: string
+                        os:
+                          type: string
+                        region:
+                          type: string
+                        sessionId:
+                          type: string
+                        status:
+                          type: string
+                        userAgent:
+                          type: string
+                        userId:
+                          type: string
+                        username:
+                          type: string
+                      required:
+                      - id
+                      - userId
+                      - username
+                      - loginMethod
+                      - ipAddress
+                      - userAgent
+                      - status
+                      - failReason
+                      - sessionId
+                      - country
+                      - region
+                      - city
+                      - deviceType
+                      - browser
+                      - os
+                      - loginAt
+                      - logoutAt
+                      - duration
+                      type: object
+                    type: array
+                  pagination:
+                    properties:
+                      hasNext:
+                        type: boolean
+                      hasPrev:
+                        type: boolean
+                      limit:
+                        type: integer
+                      page:
+                        type: integer
+                      total:
+                        type: integer
+                      totalPages:
+                        type: integer
+                    required:
+                    - page
+                    - limit
+                    - total
+                    - totalPages
+                    - hasNext
+                    - hasPrev
+                    type: object
+                required:
+                - list
+                - pagination
+                type: object
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 获取登录日志列表
+  /api/v1/admin/test/{name}:
+    get:
+      operationId: adminHandler
+      parameters:
+      - enum:
+        - you
+        - me
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 测试接口
+  /api/v1/admin/users:
+    get:
+      operationId: getUserListHandler
+      parameters:
+      - default: 1
+        description: 页码，从1开始
+        in: query
+        minimum: 1
+        name: page
+        required: true
+        type: integer
+      - default: 10
+        description: 每页记录数，最大100
+        in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        required: true
+        type: integer
+      - allowEmptyValue: true
+        description: 角色过滤
+        in: query
+        name: role
+        type: string
+      - allowEmptyValue: true
+        description: 状态过滤
+        in: query
+        name: status
+        type: string
+      - allowEmptyValue: true
+        description: 关键词搜索（用户名、邮箱、显示名）
+        in: query
+        name: keyword
+        type: string
+      - default: createdAt
+        description: 排序字段
+        enum:
+        - username
+        - createdAt
+        - lastLoginAt
+        in: query
+        name: sortBy
+        required: true
+        type: string
+      - default: true
+        description: 是否降序排列
+        in: query
+        name: sortDesc
+        required: true
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              data:
+                properties:
+                  list:
+                    items:
+                      properties:
+                        bio:
+                          type: string
+                        createdAt:
+                          type: string
+                        displayName:
+                          type: string
+                        email:
+                          type: string
+                        facebook:
+                          type: string
+                        id:
+                          type: string
+                        lastLoginAt:
+                          type: string
+                        location:
+                          type: string
+                        profileImage:
+                          type: string
+                        role:
+                          type: string
+                        status:
+                          type: string
+                        twitter:
+                          type: string
+                        updatedAt:
+                          type: string
+                        username:
+                          type: string
+                        website:
+                          type: string
+                      required:
+                      - id
+                      - username
+                      - displayName
+                      - email
+                      - role
+                      - profileImage
+                      - bio
+                      - location
+                      - website
+                      - twitter
+                      - facebook
+                      - status
+                      - lastLoginAt
+                      - createdAt
+                      - updatedAt
+                      type: object
+                    type: array
+                  pagination:
+                    properties:
+                      hasNext:
+                        type: boolean
+                      hasPrev:
+                        type: boolean
+                      limit:
+                        type: integer
+                      page:
+                        type: integer
+                      total:
+                        type: integer
+                      totalPages:
+                        type: integer
+                    required:
+                    - page
+                    - limit
+                    - total
+                    - totalPages
+                    - hasNext
+                    - hasPrev
+                    type: object
+                required:
+                - list
+                - pagination
+                type: object
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 获取用户列表
+  /api/v1/admin/users/{id}:
+    get:
+      operationId: getUserDetailHandler
+      parameters:
+      - in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              data:
+                properties:
+                  bio:
+                    type: string
+                  createdAt:
+                    type: string
+                  displayName:
+                    type: string
+                  email:
+                    type: string
+                  facebook:
+                    type: string
+                  id:
+                    type: string
+                  lastLoginAt:
+                    type: string
+                  location:
+                    type: string
+                  profileImage:
+                    type: string
+                  role:
+                    type: string
+                  status:
+                    type: string
+                  twitter:
+                    type: string
+                  updatedAt:
+                    type: string
+                  username:
+                    type: string
+                  website:
+                    type: string
+                required:
+                - id
+                - username
+                - displayName
+                - email
+                - role
+                - profileImage
+                - bio
+                - location
+                - website
+                - twitter
+                - facebook
+                - status
+                - lastLoginAt
+                - createdAt
+                - updatedAt
+                type: object
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 获取用户详情
+produces:
+- application/json
+schemes:
+- https
+swagger: "2.0"
+x-date: "2025-07-04 23:18:09"
+x-description: This is a goctl generated swagger file.
+x-github: https://github.com/zeromicro/go-zero
+x-go-zero-doc: https://go-zero.dev/
+x-goctl-version: 1.8.4

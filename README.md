@@ -84,11 +84,28 @@ go test ./...
 
 ## 📚 文档
 
+### 🔗 API文档
+- [📖 Swagger API 文档](./docs/swagger/) - 完整的REST API接口文档
+- [🌐 在线浏览](./docs/swagger/index.html) - 可视化API文档界面
+
+### 📋 设计文档  
 - [系统架构设计](./design/SYSTEM-ARCHITECTURE-AND-MODULES.md)
 - [微服务架构规范](./docs/MULTI-SERVICE-ARCHITECTURE.md)
 - [API 接口规范](./design/API-INTERFACE-SPECIFICATION.md)
 - [数据模型设计](./design/DATA-MODEL-DESIGN.md)
 - [安全设计](./design/SECURITY-DESIGN.md)
+
+### 🔧 生成API文档
+```bash
+# 生成所有Swagger文档
+make swagger
+
+# 只生成管理后台API文档
+make swagger-admin
+
+# 只生成公开API文档
+make swagger-public
+```
 
 ## 🛠️ 技术栈
 

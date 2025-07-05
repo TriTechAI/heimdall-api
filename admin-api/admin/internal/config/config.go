@@ -11,6 +11,12 @@ import (
 type Config struct {
 	rest.RestConf
 
+	// go-zero JWT中间件需要的字段 - 按照官方文档标准
+	Auth struct {
+		AccessSecret string
+		AccessExpire int64
+	}
+
 	// 服务配置
 	Service ServiceConfig `json:",optional"`
 
@@ -20,8 +26,8 @@ type Config struct {
 	// Redis配置
 	Redis RedisConfig `json:",optional"`
 
-	// JWT认证配置
-	Auth AuthConfig `json:",optional"`
+	// JWT业务配置 (扩展配置，用于refresh token等)
+	JWTBusiness JWTBusinessConfig `json:",optional"`
 
 	// 安全配置
 	Security SecurityConfig `json:",optional"`
@@ -43,6 +49,11 @@ type Config struct {
 
 	// 缓存配置
 	Cache CacheConfig `json:",optional"`
+}
+
+// JWTBusinessConfig JWT业务扩展配置
+type JWTBusinessConfig struct {
+	RefreshExpire int64 `json:",default=604800"` // 7天
 }
 
 // ServiceConfig 服务配置
@@ -78,12 +89,8 @@ type RedisConfig struct {
 	WriteTimeout int    `json:",default=5"`
 }
 
-// AuthConfig JWT认证配置
-type AuthConfig struct {
-	AccessSecret  string `json:",default=your-secret-key"`
-	AccessExpire  int64  `json:",default=7200"`   // 2小时
-	RefreshExpire int64  `json:",default=604800"` // 7天
-}
+// 注意：AuthConfig 已移除，JWT配置现在直接在 Config.Auth 中定义
+// RefreshExpire 现在在 JWTBusinessConfig 中定义
 
 // SecurityConfig 安全配置
 type SecurityConfig struct {
@@ -229,5 +236,5 @@ func (c *Config) GetJWTExpireDuration() time.Duration {
 
 // GetRefreshTokenExpireDuration 获取刷新令牌过期时间
 func (c *Config) GetRefreshTokenExpireDuration() time.Duration {
-	return time.Duration(c.Auth.RefreshExpire) * time.Second
+	return time.Duration(c.JWTBusiness.RefreshExpire) * time.Second
 }

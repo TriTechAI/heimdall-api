@@ -67,7 +67,7 @@ type (
 	LoginRequest {
 		Username   string `json:"username" validate:"required"`
 		Password   string `json:"password" validate:"required"`
-		RememberMe bool   `json:"rememberMe,omitempty"`
+		RememberMe bool   `json:"rememberMe,optional"`
 	}
 	// 登录响应
 	LoginResponse {

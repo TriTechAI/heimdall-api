@@ -379,3 +379,61 @@ func (j *JWTManager) ExtractTokenMetadata(tokenString string) (map[string]interf
 
 	return metadata, nil
 }
+
+// GenerateGoZeroCompatibleToken 生成与go-zero JWT中间件兼容的令牌
+func (j *JWTManager) GenerateGoZeroCompatibleToken(userID, username, role string) (string, error) {
+	if userID == "" || username == "" || role == "" {
+		return "", errors.New("userID, username and role cannot be empty")
+	}
+
+	now := time.Now()
+
+	// go-zero JWT中间件期望的标准claims格式
+	// 参考go-zero源码，它期望包含标准的JWT claims
+	claims := jwt.MapClaims{
+		// 标准JWT claims
+		"iss": j.issuer,                              // 发行者
+		"sub": userID,                                // 主题（用户ID）- 这是关键字段
+		"aud": "heimdall-admin",                      // 受众
+		"exp": now.Add(AccessTokenExpiration).Unix(), // 过期时间
+		"iat": now.Unix(),                            // 签发时间
+		"nbf": now.Unix(),                            // 生效时间
+		"jti": uuid.New().String(),                   // JWT ID
+
+		// 自定义字段
+		"username": username,
+		"role":     role,
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString(j.secretKey)
+	if err != nil {
+		return "", fmt.Errorf("failed to sign go-zero compatible token: %w", err)
+	}
+
+	return tokenString, nil
+}
+
+// ValidateGoZeroCompatibleToken 验证go-zero兼容的令牌
+func (j *JWTManager) ValidateGoZeroCompatibleToken(tokenString string) (jwt.MapClaims, error) {
+	if tokenString == "" {
+		return nil, ErrInvalidToken
+	}
+
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return j.secretKey, nil
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse go-zero compatible token: %w", err)
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		return claims, nil
+	}
+
+	return nil, ErrInvalidToken
+}

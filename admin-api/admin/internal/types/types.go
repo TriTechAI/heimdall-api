@@ -75,7 +75,7 @@ type LoginLogsResponse struct {
 type LoginRequest struct {
 	Username   string `json:"username" validate:"required"`
 	Password   string `json:"password" validate:"required"`
-	RememberMe bool   `json:"rememberMe,omitempty"`
+	RememberMe bool   `json:"rememberMe,optional"`
 }
 
 type LoginResponse struct {

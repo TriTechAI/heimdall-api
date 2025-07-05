@@ -1,19 +1,22 @@
 # Heimdall API Makefile
 
-.PHONY: help build test clean admin public deps fmt lint docker
+.PHONY: help build test clean admin public deps fmt lint docker swagger swagger-admin swagger-public
 
 # 默认目标
 help:
 	@echo "Available commands:"
-	@echo "  build    - 构建所有服务"
-	@echo "  admin    - 启动管理服务 (端口: 8080)"
-	@echo "  public   - 启动公开服务 (端口: 8081)"
-	@echo "  test     - 运行所有测试"
-	@echo "  deps     - 整理依赖"
-	@echo "  fmt      - 格式化代码"
-	@echo "  lint     - 代码检查"
-	@echo "  clean    - 清理构建文件"
-	@echo "  docker   - 构建Docker镜像"
+	@echo "  build         - 构建所有服务"
+	@echo "  admin         - 启动管理服务 (端口: 8080)"
+	@echo "  public        - 启动公开服务 (端口: 8081)"
+	@echo "  test          - 运行所有测试"
+	@echo "  deps          - 整理依赖"
+	@echo "  fmt           - 格式化代码"
+	@echo "  lint          - 代码检查"
+	@echo "  clean         - 清理构建文件"
+	@echo "  docker        - 构建Docker镜像"
+	@echo "  swagger       - 生成所有Swagger文档"
+	@echo "  swagger-admin - 生成Admin API Swagger文档"
+	@echo "  swagger-public- 生成Public API Swagger文档"
 
 # 构建所有服务
 build:
@@ -25,12 +28,12 @@ build:
 # 启动管理服务
 admin:
 	@echo "启动管理服务 (端口: 8080)..."
-	go run ./admin-api/admin
+	cd admin-api/admin && go run . -f etc/admin-api.yaml
 
 # 启动公开服务
 public:
 	@echo "启动公开服务 (端口: 8081)..."
-	go run ./public-api/public
+	cd public-api/public && go run . -f etc/public-api.yaml
 
 # 运行测试
 test:
@@ -92,4 +95,22 @@ install-tools:
 	@echo "安装开发工具..."
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 	go install github.com/zeromicro/go-zero/tools/goctl@latest
-	@echo "工具安装完成" 
+	@echo "工具安装完成"
+
+# 生成所有Swagger文档
+swagger: swagger-admin swagger-public
+	@echo "所有Swagger文档生成完成"
+
+# 生成Admin API Swagger文档
+swagger-admin:
+	@echo "生成Admin API Swagger文档..."
+	@mkdir -p docs/swagger
+	goctl api swagger --api admin-api/admin/admin.api --dir docs/swagger --filename admin-api --yaml
+	@echo "Admin API Swagger文档生成完成: docs/swagger/admin-api.yaml"
+
+# 生成Public API Swagger文档
+swagger-public:
+	@echo "生成Public API Swagger文档..."
+	@mkdir -p docs/swagger
+	goctl api swagger --api public-api/public/public.api --dir docs/swagger --filename public-api --yaml
+	@echo "Public API Swagger文档生成完成: docs/swagger/public-api.yaml" 
