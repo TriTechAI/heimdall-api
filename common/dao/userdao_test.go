@@ -2,7 +2,6 @@ package dao
 
 import (
 	"context"
-	"errors"
 	"testing"
 	"time"
 
@@ -502,14 +501,17 @@ func TestUserDAO_CreateIndexes(t *testing.T) {
 		})
 
 		Convey("Should handle create indexes error", func() {
-			// Mock CreateIndexes method to return error
-			expectedErr := errors.New("create indexes failed")
-			mock := mockey.Mock((*UserDAO).CreateIndexes).Return(expectedErr).Build()
+			// Mock the entire CreateIndexes method to return error
+			expectedError := mongo.CommandError{
+				Code:    1,
+				Message: "create indexes failed",
+			}
+			mock := mockey.Mock((*UserDAO).CreateIndexes).Return(expectedError).Build()
 			defer mock.UnPatch()
 
 			err := userDAO.CreateIndexes(context.Background())
 			So(err, ShouldNotBeNil)
-			So(err.Error(), ShouldEqual, "create indexes failed")
+			So(err, ShouldEqual, expectedError)
 		})
 	})
 }

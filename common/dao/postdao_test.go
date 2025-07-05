@@ -742,14 +742,16 @@ func TestPostDAO_CreateIndexes(t *testing.T) {
 
 		Convey("Should handle index creation errors", func() {
 			// Mock CreateIndexes to return error
-			mock := mockey.Mock((*PostDAO).CreateIndexes).Return(mongo.CommandError{
+			expectedError := mongo.CommandError{
 				Code:    1,
 				Message: "index creation failed",
-			}).Build()
+			}
+			mock := mockey.Mock((*PostDAO).CreateIndexes).Return(expectedError).Build()
 			defer mock.UnPatch()
 
 			err := postDAO.CreateIndexes(context.Background())
 			So(err, ShouldNotBeNil)
+			So(err, ShouldEqual, expectedError)
 		})
 	})
 }

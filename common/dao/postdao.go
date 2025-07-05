@@ -557,7 +557,8 @@ func (d *PostDAO) buildQuery(filter model.PostFilter) bson.M {
 func (d *PostDAO) buildSort(filter model.PostFilter) bson.D {
 	sortBy := filter.SortBy
 	if sortBy == "" {
-		sortBy = "created_at"
+		// 默认按创建时间降序排列（最新的在前）
+		return bson.D{bson.E{Key: "createdAt", Value: -1}}
 	}
 
 	sortOrder := 1
