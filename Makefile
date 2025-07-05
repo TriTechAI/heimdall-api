@@ -86,8 +86,8 @@ dev: deps
 # 生成API代码
 generate:
 	@echo "重新生成API代码..."
-	cd admin-api/admin && goctl api go -api admin.api -dir . --style=goZero
-	cd public-api/public && goctl api go -api public.api -dir . --style=goZero
+	cd admin-api/admin && goctl api go -api admin.api -dir . --style=gozero
+	cd public-api/public && goctl api go -api public.api -dir . --style=gozero
 	@echo "代码生成完成"
 
 # 安装开发工具

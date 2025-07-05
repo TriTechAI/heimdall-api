@@ -1,6 +1,15 @@
 syntax = "v1"
 
-// 基础响应结构
+info (
+	title:   "Heimdall Public API"
+	desc:    "博客公开访问API接口"
+	author:  "Heimdall Team"
+	version: "v1.0.0"
+)
+
+// ===================================================================
+// 基础响应结构体 (Base Response Types)
+// ===================================================================
 type (
 	// 通用响应
 	BaseResponse {
@@ -8,9 +17,153 @@ type (
 		Message   string `json:"message"`
 		Timestamp string `json:"timestamp"`
 	}
+	// 分页信息
+	PaginationInfo {
+		Page       int  `json:"page"`
+		Limit      int  `json:"limit"`
+		Total      int  `json:"total"`
+		TotalPages int  `json:"totalPages"`
+		HasNext    bool `json:"hasNext"`
+		HasPrev    bool `json:"hasPrev"`
+	}
 )
 
-// 临时测试接口，等待实际业务接口替换
+// ===================================================================
+// 公开文章模块 (Public Post Module)
+// ===================================================================
+type (
+	// 标签信息
+	TagInfo {
+		Name string `json:"name"`
+		Slug string `json:"slug"`
+	}
+	// 作者信息（公开版本）
+	PublicAuthorInfo {
+		Username     string `json:"username"`
+		DisplayName  string `json:"displayName"`
+		ProfileImage string `json:"profileImage"`
+		Bio          string `json:"bio"`
+	}
+	// 公开文章列表查询请求
+	PublicPostListRequest {
+		Page     int    `form:"page,default=1,range=[1:]"` // 页码，从1开始
+		Limit    int    `form:"limit,default=10,range=[1:20]"` // 每页记录数，最大20
+		Tag      string `form:"tag,optional"` // 标签slug过滤
+		Author   string `form:"author,optional"` // 作者用户名过滤
+		Keyword  string `form:"keyword,optional"` // 关键词搜索（标题、摘要）
+		SortBy   string `form:"sortBy,default=publishedAt,options=publishedAt|viewCount|title"` // 排序字段
+		SortDesc bool   `form:"sortDesc,default=true"` // 是否降序排列
+	}
+	// 公开文章列表响应
+	PublicPostListResponse {
+		Code      int                `json:"code"`
+		Message   string             `json:"message"`
+		Data      PublicPostListData `json:"data"`
+		Timestamp string             `json:"timestamp"`
+	}
+	// 公开文章列表数据
+	PublicPostListData {
+		List       []PublicPostListItem `json:"list"`
+		Pagination PaginationInfo       `json:"pagination"`
+	}
+	// 公开文章列表项
+	PublicPostListItem {
+		Title         string           `json:"title"`
+		Slug          string           `json:"slug"`
+		Excerpt       string           `json:"excerpt"`
+		FeaturedImage string           `json:"featuredImage"`
+		Author        PublicAuthorInfo `json:"author"`
+		Tags          []TagInfo        `json:"tags"`
+		ReadingTime   int              `json:"readingTime"`
+		ViewCount     int64            `json:"viewCount"`
+		PublishedAt   string           `json:"publishedAt"`
+		UpdatedAt     string           `json:"updatedAt"`
+	}
+	// 公开文章详情请求
+	PublicPostDetailRequest {
+		Slug string `path:"slug"`
+	}
+	// 公开文章详情响应
+	PublicPostDetailResponse {
+		Code      int                  `json:"code"`
+		Message   string               `json:"message"`
+		Data      PublicPostDetailData `json:"data"`
+		Timestamp string               `json:"timestamp"`
+	}
+	// 公开文章详情数据
+	PublicPostDetailData {
+		Title           string           `json:"title"`
+		Slug            string           `json:"slug"`
+		Excerpt         string           `json:"excerpt"`
+		HTML            string           `json:"html"`
+		FeaturedImage   string           `json:"featuredImage"`
+		Author          PublicAuthorInfo `json:"author"`
+		Tags            []TagInfo        `json:"tags"`
+		MetaTitle       string           `json:"metaTitle"`
+		MetaDescription string           `json:"metaDescription"`
+		CanonicalURL    string           `json:"canonicalUrl"`
+		ReadingTime     int              `json:"readingTime"`
+		WordCount       int              `json:"wordCount"`
+		ViewCount       int64            `json:"viewCount"`
+		PublishedAt     string           `json:"publishedAt"`
+		UpdatedAt       string           `json:"updatedAt"`
+	}
+)
+
+// ===================================================================
+// 公开页面模块 (Public Page Module)
+// ===================================================================
+type (
+	// 公开页面详情请求
+	PublicPageDetailRequest {
+		Slug string `path:"slug"`
+	}
+	// 公开页面详情响应
+	PublicPageDetailResponse {
+		Code      int                  `json:"code"`
+		Message   string               `json:"message"`
+		Data      PublicPageDetailData `json:"data"`
+		Timestamp string               `json:"timestamp"`
+	}
+	// 公开页面详情数据
+	PublicPageDetailData {
+		Title           string           `json:"title"`
+		Slug            string           `json:"slug"`
+		HTML            string           `json:"html"`
+		Template        string           `json:"template"`
+		Author          PublicAuthorInfo `json:"author"`
+		MetaTitle       string           `json:"metaTitle"`
+		MetaDescription string           `json:"metaDescription"`
+		FeaturedImage   string           `json:"featuredImage"`
+		CanonicalURL    string           `json:"canonicalUrl"`
+		PublishedAt     string           `json:"publishedAt"`
+		UpdatedAt       string           `json:"updatedAt"`
+	}
+)
+
+// ===================================================================
+// API 接口定义 (API Interface Definition)
+// ===================================================================
+@server (
+	prefix: /api/v1/public
+)
+service public-api {
+	@doc "获取公开文章列表"
+	@handler GetPublicPostListHandler
+	get /posts (PublicPostListRequest) returns (PublicPostListResponse)
+
+	@doc "根据slug获取公开文章详情"
+	@handler GetPublicPostDetailHandler
+	get /posts/:slug (PublicPostDetailRequest) returns (PublicPostDetailResponse)
+
+	@doc "根据slug获取公开页面详情"
+	@handler GetPublicPageDetailHandler
+	get /pages/:slug (PublicPageDetailRequest) returns (PublicPageDetailResponse)
+}
+
+// ===================================================================
+// 临时测试接口 (将在后续任务中移除)
+// ===================================================================
 type (
 	TestRequest {
 		Name string `path:"name,options=you|me"`

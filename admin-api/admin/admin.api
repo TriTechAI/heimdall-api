@@ -60,6 +60,328 @@ type (
 )
 
 // ===================================================================
+// 文章管理模块 (Post Management Module)
+// ===================================================================
+type (
+	// 标签信息
+	TagInfo {
+		Name string `json:"name"`
+		Slug string `json:"slug"`
+	}
+	// 作者信息
+	AuthorInfo {
+		ID           string `json:"id"`
+		Username     string `json:"username"`
+		DisplayName  string `json:"displayName"`
+		ProfileImage string `json:"profileImage"`
+		Bio          string `json:"bio"`
+	}
+	// 文章列表查询请求
+	PostListRequest {
+		Page       int    `form:"page,default=1,range=[1:]"` // 页码，从1开始
+		Limit      int    `form:"limit,default=10,range=[1:50]"` // 每页记录数，最大50
+		Status     string `form:"status,optional,options=draft|published|scheduled|archived"` // 状态过滤
+		Type       string `form:"type,optional,options=post|page"` // 类型过滤
+		Visibility string `form:"visibility,optional,options=public|members_only|private"` // 可见性过滤
+		AuthorID   string `form:"authorId,optional"` // 作者ID过滤
+		Tag        string `form:"tag,optional"` // 标签slug过滤
+		Keyword    string `form:"keyword,optional"` // 关键词搜索（标题、摘要）
+		SortBy     string `form:"sortBy,default=updatedAt,options=createdAt|updatedAt|publishedAt|viewCount|title"` // 排序字段
+		SortDesc   bool   `form:"sortDesc,default=true"` // 是否降序排列
+	}
+	// 文章列表响应
+	PostListResponse {
+		Code      int          `json:"code"`
+		Message   string       `json:"message"`
+		Data      PostListData `json:"data"`
+		Timestamp string       `json:"timestamp"`
+	}
+	// 文章列表数据
+	PostListData {
+		List       []PostListItem `json:"list"`
+		Pagination PaginationInfo `json:"pagination"`
+	}
+	// 文章列表项
+	PostListItem {
+		ID            string     `json:"id"`
+		Title         string     `json:"title"`
+		Slug          string     `json:"slug"`
+		Excerpt       string     `json:"excerpt"`
+		FeaturedImage string     `json:"featuredImage"`
+		Type          string     `json:"type"`
+		Status        string     `json:"status"`
+		Visibility    string     `json:"visibility"`
+		Author        AuthorInfo `json:"author"`
+		Tags          []TagInfo  `json:"tags"`
+		ReadingTime   int        `json:"readingTime"`
+		ViewCount     int64      `json:"viewCount"`
+		PublishedAt   string     `json:"publishedAt,omitempty"`
+		CreatedAt     string     `json:"createdAt"`
+		UpdatedAt     string     `json:"updatedAt"`
+	}
+	// 文章详情请求
+	PostDetailRequest {
+		ID string `path:"id"`
+	}
+	// 文章详情响应
+	PostDetailResponse {
+		Code      int            `json:"code"`
+		Message   string         `json:"message"`
+		Data      PostDetailData `json:"data"`
+		Timestamp string         `json:"timestamp"`
+	}
+	// 文章详情数据
+	PostDetailData {
+		ID              string     `json:"id"`
+		Title           string     `json:"title"`
+		Slug            string     `json:"slug"`
+		Excerpt         string     `json:"excerpt"`
+		Markdown        string     `json:"markdown"`
+		HTML            string     `json:"html"`
+		FeaturedImage   string     `json:"featuredImage"`
+		Type            string     `json:"type"`
+		Status          string     `json:"status"`
+		Visibility      string     `json:"visibility"`
+		Author          AuthorInfo `json:"author"`
+		Tags            []TagInfo  `json:"tags"`
+		MetaTitle       string     `json:"metaTitle"`
+		MetaDescription string     `json:"metaDescription"`
+		CanonicalURL    string     `json:"canonicalUrl"`
+		ReadingTime     int        `json:"readingTime"`
+		WordCount       int        `json:"wordCount"`
+		ViewCount       int64      `json:"viewCount"`
+		PublishedAt     string     `json:"publishedAt,omitempty"`
+		CreatedAt       string     `json:"createdAt"`
+		UpdatedAt       string     `json:"updatedAt"`
+	}
+	// 文章创建请求
+	PostCreateRequest {
+		Title           string    `json:"title" validate:"required,min=1,max=255"`
+		Slug            string    `json:"slug,optional" validate:"max=255"`
+		Excerpt         string    `json:"excerpt,optional" validate:"max=500"`
+		Markdown        string    `json:"markdown" validate:"required"`
+		FeaturedImage   string    `json:"featuredImage,optional"`
+		Type            string    `json:"type" validate:"required,options=post|page"`
+		Status          string    `json:"status" validate:"required,options=draft|published|scheduled|archived"`
+		Visibility      string    `json:"visibility" validate:"required,options=public|members_only|private"`
+		Tags            []TagInfo `json:"tags,optional"`
+		MetaTitle       string    `json:"metaTitle,optional" validate:"max=70"`
+		MetaDescription string    `json:"metaDescription,optional" validate:"max=160"`
+		CanonicalURL    string    `json:"canonicalUrl,optional" validate:"max=255"`
+		PublishedAt     string    `json:"publishedAt,optional"`
+	}
+	// 文章创建响应
+	PostCreateResponse {
+		Code      int            `json:"code"`
+		Message   string         `json:"message"`
+		Data      PostDetailData `json:"data"`
+		Timestamp string         `json:"timestamp"`
+	}
+	// 文章更新请求
+	PostUpdateRequest {
+		ID              string    `path:"id"`
+		Title           string    `json:"title,optional" validate:"min=1,max=255"`
+		Slug            string    `json:"slug,optional" validate:"max=255"`
+		Excerpt         string    `json:"excerpt,optional" validate:"max=500"`
+		Markdown        string    `json:"markdown,optional"`
+		FeaturedImage   string    `json:"featuredImage,optional"`
+		Type            string    `json:"type,optional" validate:"options=post|page"`
+		Status          string    `json:"status,optional" validate:"options=draft|published|scheduled|archived"`
+		Visibility      string    `json:"visibility,optional" validate:"options=public|members_only|private"`
+		Tags            []TagInfo `json:"tags,optional"`
+		MetaTitle       string    `json:"metaTitle,optional" validate:"max=70"`
+		MetaDescription string    `json:"metaDescription,optional" validate:"max=160"`
+		CanonicalURL    string    `json:"canonicalUrl,optional" validate:"max=255"`
+		PublishedAt     string    `json:"publishedAt,optional"`
+	}
+	// 文章更新响应
+	PostUpdateResponse {
+		Code      int            `json:"code"`
+		Message   string         `json:"message"`
+		Data      PostDetailData `json:"data"`
+		Timestamp string         `json:"timestamp"`
+	}
+	// 文章删除请求
+	PostDeleteRequest {
+		ID string `path:"id"`
+	}
+	// 文章删除响应
+	PostDeleteResponse {
+		Code      int    `json:"code"`
+		Message   string `json:"message"`
+		Timestamp string `json:"timestamp"`
+	}
+	// 文章发布请求
+	PostPublishRequest {
+		ID          string `path:"id"`
+		PublishedAt string `json:"publishedAt,optional"`
+	}
+	// 文章发布响应
+	PostPublishResponse {
+		Code      int            `json:"code"`
+		Message   string         `json:"message"`
+		Data      PostDetailData `json:"data"`
+		Timestamp string         `json:"timestamp"`
+	}
+	// 文章取消发布请求
+	PostUnpublishRequest {
+		ID string `path:"id"`
+	}
+	// 文章取消发布响应
+	PostUnpublishResponse {
+		Code      int            `json:"code"`
+		Message   string         `json:"message"`
+		Data      PostDetailData `json:"data"`
+		Timestamp string         `json:"timestamp"`
+	}
+)
+
+// ===================================================================
+// 页面管理模块 (Page Management Module)
+// ===================================================================
+type (
+	// 页面列表查询请求
+	PageListRequest {
+		Page     int    `form:"page,default=1,range=[1:]"` // 页码，从1开始
+		Limit    int    `form:"limit,default=10,range=[1:50]"` // 每页记录数，最大50
+		Status   string `form:"status,optional,options=draft|published|scheduled"` // 状态过滤
+		Template string `form:"template,optional"` // 模板过滤
+		AuthorID string `form:"authorId,optional"` // 作者ID过滤
+		Keyword  string `form:"keyword,optional"` // 关键词搜索（标题、内容）
+		SortBy   string `form:"sortBy,default=updatedAt,options=createdAt|updatedAt|publishedAt|title"` // 排序字段
+		SortDesc bool   `form:"sortDesc,default=true"` // 是否降序排列
+	}
+	// 页面列表响应
+	PageListResponse {
+		Code      int          `json:"code"`
+		Message   string       `json:"message"`
+		Data      PageListData `json:"data"`
+		Timestamp string       `json:"timestamp"`
+	}
+	// 页面列表数据
+	PageListData {
+		List       []PageListItem `json:"list"`
+		Pagination PaginationInfo `json:"pagination"`
+	}
+	// 页面列表项
+	PageListItem {
+		ID            string     `json:"id"`
+		Title         string     `json:"title"`
+		Slug          string     `json:"slug"`
+		Author        AuthorInfo `json:"author"`
+		Status        string     `json:"status"`
+		Template      string     `json:"template"`
+		FeaturedImage string     `json:"featuredImage"`
+		PublishedAt   string     `json:"publishedAt,omitempty"`
+		CreatedAt     string     `json:"createdAt"`
+		UpdatedAt     string     `json:"updatedAt"`
+	}
+	// 页面详情请求
+	PageDetailRequest {
+		ID string `path:"id"`
+	}
+	// 页面详情响应
+	PageDetailResponse {
+		Code      int            `json:"code"`
+		Message   string         `json:"message"`
+		Data      PageDetailData `json:"data"`
+		Timestamp string         `json:"timestamp"`
+	}
+	// 页面详情数据
+	PageDetailData {
+		ID              string     `json:"id"`
+		Title           string     `json:"title"`
+		Slug            string     `json:"slug"`
+		Content         string     `json:"content"`
+		HTML            string     `json:"html"`
+		Author          AuthorInfo `json:"author"`
+		Status          string     `json:"status"`
+		Template        string     `json:"template"`
+		MetaTitle       string     `json:"metaTitle"`
+		MetaDescription string     `json:"metaDescription"`
+		FeaturedImage   string     `json:"featuredImage"`
+		CanonicalURL    string     `json:"canonicalUrl"`
+		PublishedAt     string     `json:"publishedAt,omitempty"`
+		CreatedAt       string     `json:"createdAt"`
+		UpdatedAt       string     `json:"updatedAt"`
+	}
+	// 页面创建请求
+	PageCreateRequest {
+		Title           string `json:"title" validate:"required,min=1,max=255"`
+		Slug            string `json:"slug,optional" validate:"max=255"`
+		Content         string `json:"content" validate:"required"`
+		Template        string `json:"template,optional" validate:"max=100"`
+		Status          string `json:"status" validate:"required,options=draft|published|scheduled"`
+		MetaTitle       string `json:"metaTitle,optional" validate:"max=70"`
+		MetaDescription string `json:"metaDescription,optional" validate:"max=160"`
+		FeaturedImage   string `json:"featuredImage,optional"`
+		CanonicalURL    string `json:"canonicalUrl,optional" validate:"max=255"`
+		PublishedAt     string `json:"publishedAt,optional"`
+	}
+	// 页面创建响应
+	PageCreateResponse {
+		Code      int            `json:"code"`
+		Message   string         `json:"message"`
+		Data      PageDetailData `json:"data"`
+		Timestamp string         `json:"timestamp"`
+	}
+	// 页面更新请求
+	PageUpdateRequest {
+		ID              string `path:"id"`
+		Title           string `json:"title,optional" validate:"min=1,max=255"`
+		Slug            string `json:"slug,optional" validate:"max=255"`
+		Content         string `json:"content,optional"`
+		Template        string `json:"template,optional" validate:"max=100"`
+		Status          string `json:"status,optional" validate:"options=draft|published|scheduled"`
+		MetaTitle       string `json:"metaTitle,optional" validate:"max=70"`
+		MetaDescription string `json:"metaDescription,optional" validate:"max=160"`
+		FeaturedImage   string `json:"featuredImage,optional"`
+		CanonicalURL    string `json:"canonicalUrl,optional" validate:"max=255"`
+		PublishedAt     string `json:"publishedAt,optional"`
+	}
+	// 页面更新响应
+	PageUpdateResponse {
+		Code      int            `json:"code"`
+		Message   string         `json:"message"`
+		Data      PageDetailData `json:"data"`
+		Timestamp string         `json:"timestamp"`
+	}
+	// 页面删除请求
+	PageDeleteRequest {
+		ID string `path:"id"`
+	}
+	// 页面删除响应
+	PageDeleteResponse {
+		Code      int    `json:"code"`
+		Message   string `json:"message"`
+		Timestamp string `json:"timestamp"`
+	}
+	// 页面发布请求
+	PagePublishRequest {
+		ID          string `path:"id"`
+		PublishedAt string `json:"publishedAt,optional"`
+	}
+	// 页面发布响应
+	PagePublishResponse {
+		Code      int            `json:"code"`
+		Message   string         `json:"message"`
+		Data      PageDetailData `json:"data"`
+		Timestamp string         `json:"timestamp"`
+	}
+	// 页面取消发布请求
+	PageUnpublishRequest {
+		ID string `path:"id"`
+	}
+	// 页面取消发布响应
+	PageUnpublishResponse {
+		Code      int            `json:"code"`
+		Message   string         `json:"message"`
+		Data      PageDetailData `json:"data"`
+		Timestamp string         `json:"timestamp"`
+	}
+)
+
+// ===================================================================
 // 认证模块 (Authentication Module)
 // ===================================================================
 type (
@@ -234,6 +556,68 @@ service admin-api {
 	@doc "获取登录日志列表"
 	@handler GetLoginLogsHandler
 	get /security/login-logs (LoginLogsRequest) returns (LoginLogsResponse)
+
+	// ===================================================================
+	// 文章管理接口 (Post Management APIs)
+	// ===================================================================
+	@doc "获取文章列表"
+	@handler GetPostListHandler
+	get /posts (PostListRequest) returns (PostListResponse)
+
+	@doc "创建文章"
+	@handler CreatePostHandler
+	post /posts (PostCreateRequest) returns (PostCreateResponse)
+
+	@doc "获取文章详情"
+	@handler GetPostDetailHandler
+	get /posts/:id (PostDetailRequest) returns (PostDetailResponse)
+
+	@doc "更新文章"
+	@handler UpdatePostHandler
+	put /posts/:id (PostUpdateRequest) returns (PostUpdateResponse)
+
+	@doc "删除文章"
+	@handler DeletePostHandler
+	delete /posts/:id (PostDeleteRequest) returns (PostDeleteResponse)
+
+	@doc "发布文章"
+	@handler PublishPostHandler
+	post /posts/:id/publish (PostPublishRequest) returns (PostPublishResponse)
+
+	@doc "取消发布文章"
+	@handler UnpublishPostHandler
+	post /posts/:id/unpublish (PostUnpublishRequest) returns (PostUnpublishResponse)
+
+	// ===================================================================
+	// 页面管理接口 (Page Management APIs)
+	// ===================================================================
+	@doc "获取页面列表"
+	@handler GetPageListHandler
+	get /pages (PageListRequest) returns (PageListResponse)
+
+	@doc "创建页面"
+	@handler CreatePageHandler
+	post /pages (PageCreateRequest) returns (PageCreateResponse)
+
+	@doc "获取页面详情"
+	@handler GetPageDetailHandler
+	get /pages/:id (PageDetailRequest) returns (PageDetailResponse)
+
+	@doc "更新页面"
+	@handler UpdatePageHandler
+	put /pages/:id (PageUpdateRequest) returns (PageUpdateResponse)
+
+	@doc "删除页面"
+	@handler DeletePageHandler
+	delete /pages/:id (PageDeleteRequest) returns (PageDeleteResponse)
+
+	@doc "发布页面"
+	@handler PublishPageHandler
+	post /pages/:id/publish (PagePublishRequest) returns (PagePublishResponse)
+
+	@doc "取消发布页面"
+	@handler UnpublishPageHandler
+	post /pages/:id/unpublish (PageUnpublishRequest) returns (PageUnpublishResponse)
 }
 
 // ===================================================================

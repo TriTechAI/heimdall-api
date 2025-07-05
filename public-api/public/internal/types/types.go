@@ -9,6 +9,116 @@ type BaseResponse struct {
 	Timestamp string `json:"timestamp"`
 }
 
+type PaginationInfo struct {
+	Page       int  `json:"page"`
+	Limit      int  `json:"limit"`
+	Total      int  `json:"total"`
+	TotalPages int  `json:"totalPages"`
+	HasNext    bool `json:"hasNext"`
+	HasPrev    bool `json:"hasPrev"`
+}
+
+type PublicAuthorInfo struct {
+	Username     string `json:"username"`
+	DisplayName  string `json:"displayName"`
+	ProfileImage string `json:"profileImage"`
+	Bio          string `json:"bio"`
+}
+
+type PublicPageDetailData struct {
+	Title           string           `json:"title"`
+	Slug            string           `json:"slug"`
+	HTML            string           `json:"html"`
+	Template        string           `json:"template"`
+	Author          PublicAuthorInfo `json:"author"`
+	MetaTitle       string           `json:"metaTitle"`
+	MetaDescription string           `json:"metaDescription"`
+	FeaturedImage   string           `json:"featuredImage"`
+	CanonicalURL    string           `json:"canonicalUrl"`
+	PublishedAt     string           `json:"publishedAt"`
+	UpdatedAt       string           `json:"updatedAt"`
+}
+
+type PublicPageDetailRequest struct {
+	Slug string `path:"slug"`
+}
+
+type PublicPageDetailResponse struct {
+	Code      int                  `json:"code"`
+	Message   string               `json:"message"`
+	Data      PublicPageDetailData `json:"data"`
+	Timestamp string               `json:"timestamp"`
+}
+
+type PublicPostDetailData struct {
+	Title           string           `json:"title"`
+	Slug            string           `json:"slug"`
+	Excerpt         string           `json:"excerpt"`
+	HTML            string           `json:"html"`
+	FeaturedImage   string           `json:"featuredImage"`
+	Author          PublicAuthorInfo `json:"author"`
+	Tags            []TagInfo        `json:"tags"`
+	MetaTitle       string           `json:"metaTitle"`
+	MetaDescription string           `json:"metaDescription"`
+	CanonicalURL    string           `json:"canonicalUrl"`
+	ReadingTime     int              `json:"readingTime"`
+	WordCount       int              `json:"wordCount"`
+	ViewCount       int64            `json:"viewCount"`
+	PublishedAt     string           `json:"publishedAt"`
+	UpdatedAt       string           `json:"updatedAt"`
+}
+
+type PublicPostDetailRequest struct {
+	Slug string `path:"slug"`
+}
+
+type PublicPostDetailResponse struct {
+	Code      int                  `json:"code"`
+	Message   string               `json:"message"`
+	Data      PublicPostDetailData `json:"data"`
+	Timestamp string               `json:"timestamp"`
+}
+
+type PublicPostListData struct {
+	List       []PublicPostListItem `json:"list"`
+	Pagination PaginationInfo       `json:"pagination"`
+}
+
+type PublicPostListItem struct {
+	Title         string           `json:"title"`
+	Slug          string           `json:"slug"`
+	Excerpt       string           `json:"excerpt"`
+	FeaturedImage string           `json:"featuredImage"`
+	Author        PublicAuthorInfo `json:"author"`
+	Tags          []TagInfo        `json:"tags"`
+	ReadingTime   int              `json:"readingTime"`
+	ViewCount     int64            `json:"viewCount"`
+	PublishedAt   string           `json:"publishedAt"`
+	UpdatedAt     string           `json:"updatedAt"`
+}
+
+type PublicPostListRequest struct {
+	Page     int    `form:"page,default=1,range=[1:]"`                                      // 页码，从1开始
+	Limit    int    `form:"limit,default=10,range=[1:20]"`                                  // 每页记录数，最大20
+	Tag      string `form:"tag,optional"`                                                   // 标签slug过滤
+	Author   string `form:"author,optional"`                                                // 作者用户名过滤
+	Keyword  string `form:"keyword,optional"`                                               // 关键词搜索（标题、摘要）
+	SortBy   string `form:"sortBy,default=publishedAt,options=publishedAt|viewCount|title"` // 排序字段
+	SortDesc bool   `form:"sortDesc,default=true"`                                          // 是否降序排列
+}
+
+type PublicPostListResponse struct {
+	Code      int                `json:"code"`
+	Message   string             `json:"message"`
+	Data      PublicPostListData `json:"data"`
+	Timestamp string             `json:"timestamp"`
+}
+
+type TagInfo struct {
+	Name string `json:"name"`
+	Slug string `json:"slug"`
+}
+
 type TestRequest struct {
 	Name string `path:"name,options=you|me"`
 }

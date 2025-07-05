@@ -19,6 +19,8 @@ type ServiceContext struct {
 	Redis       *redis.Client
 	UserDAO     *dao.UserDAO
 	LoginLogDAO *dao.LoginLogDAO
+	PostDAO     *dao.PostDAO
+	PageDAO     *dao.PageDAO
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -32,6 +34,8 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	// 初始化DAO
 	userDAO := dao.NewUserDAO(mongoDB)
 	loginLogDAO := dao.NewLoginLogDAO(mongoDB)
+	postDAO := dao.NewPostDAO(mongoDB)
+	pageDAO := dao.NewPageDAO(mongoDB)
 
 	return &ServiceContext{
 		Config:      c,
@@ -39,6 +43,8 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		Redis:       redisClient,
 		UserDAO:     userDAO,
 		LoginLogDAO: loginLogDAO,
+		PostDAO:     postDAO,
+		PageDAO:     pageDAO,
 	}
 }
 

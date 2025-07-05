@@ -15,6 +15,30 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 	server.AddRoutes(
 		[]rest.Route{
 			{
+				// 根据slug获取公开页面详情
+				Method:  http.MethodGet,
+				Path:    "/pages/:slug",
+				Handler: GetPublicPageDetailHandler(serverCtx),
+			},
+			{
+				// 获取公开文章列表
+				Method:  http.MethodGet,
+				Path:    "/posts",
+				Handler: GetPublicPostListHandler(serverCtx),
+			},
+			{
+				// 根据slug获取公开文章详情
+				Method:  http.MethodGet,
+				Path:    "/posts/:slug",
+				Handler: GetPublicPostDetailHandler(serverCtx),
+			},
+		},
+		rest.WithPrefix("/api/v1/public"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
 				// 测试接口
 				Method:  http.MethodGet,
 				Path:    "/test/:name",

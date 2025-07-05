@@ -39,6 +39,90 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Handler: ProfileHandler(serverCtx),
 			},
 			{
+				// 获取页面列表
+				Method:  http.MethodGet,
+				Path:    "/pages",
+				Handler: GetPageListHandler(serverCtx),
+			},
+			{
+				// 创建页面
+				Method:  http.MethodPost,
+				Path:    "/pages",
+				Handler: CreatePageHandler(serverCtx),
+			},
+			{
+				// 获取页面详情
+				Method:  http.MethodGet,
+				Path:    "/pages/:id",
+				Handler: GetPageDetailHandler(serverCtx),
+			},
+			{
+				// 更新页面
+				Method:  http.MethodPut,
+				Path:    "/pages/:id",
+				Handler: UpdatePageHandler(serverCtx),
+			},
+			{
+				// 删除页面
+				Method:  http.MethodDelete,
+				Path:    "/pages/:id",
+				Handler: DeletePageHandler(serverCtx),
+			},
+			{
+				// 发布页面
+				Method:  http.MethodPost,
+				Path:    "/pages/:id/publish",
+				Handler: PublishPageHandler(serverCtx),
+			},
+			{
+				// 取消发布页面
+				Method:  http.MethodPost,
+				Path:    "/pages/:id/unpublish",
+				Handler: UnpublishPageHandler(serverCtx),
+			},
+			{
+				// 获取文章列表
+				Method:  http.MethodGet,
+				Path:    "/posts",
+				Handler: GetPostListHandler(serverCtx),
+			},
+			{
+				// 创建文章
+				Method:  http.MethodPost,
+				Path:    "/posts",
+				Handler: CreatePostHandler(serverCtx),
+			},
+			{
+				// 获取文章详情
+				Method:  http.MethodGet,
+				Path:    "/posts/:id",
+				Handler: GetPostDetailHandler(serverCtx),
+			},
+			{
+				// 更新文章
+				Method:  http.MethodPut,
+				Path:    "/posts/:id",
+				Handler: UpdatePostHandler(serverCtx),
+			},
+			{
+				// 删除文章
+				Method:  http.MethodDelete,
+				Path:    "/posts/:id",
+				Handler: DeletePostHandler(serverCtx),
+			},
+			{
+				// 发布文章
+				Method:  http.MethodPost,
+				Path:    "/posts/:id/publish",
+				Handler: PublishPostHandler(serverCtx),
+			},
+			{
+				// 取消发布文章
+				Method:  http.MethodPost,
+				Path:    "/posts/:id/unpublish",
+				Handler: UnpublishPostHandler(serverCtx),
+			},
+			{
 				// 获取登录日志列表
 				Method:  http.MethodGet,
 				Path:    "/security/login-logs",

@@ -24,9 +24,14 @@ func TestLoginLogic_Login(t *testing.T) {
 	Convey("LoginLogic Login Tests", t, func() {
 		// 创建测试用的ServiceContext
 		cfg := config.Config{
-			Auth: config.AuthConfig{
-				AccessSecret:  "test-secret",
-				AccessExpire:  3600,
+			Auth: struct {
+				AccessSecret string
+				AccessExpire int64
+			}{
+				AccessSecret: "test-secret",
+				AccessExpire: 3600,
+			},
+			JWTBusiness: config.JWTBusinessConfig{
 				RefreshExpire: 7200,
 			},
 			Security: config.SecurityConfig{

@@ -3,6 +3,14 @@
 
 package types
 
+type AuthorInfo struct {
+	ID           string `json:"id"`
+	Username     string `json:"username"`
+	DisplayName  string `json:"displayName"`
+	ProfileImage string `json:"profileImage"`
+	Bio          string `json:"bio"`
+}
+
 type BaseResponse struct {
 	Code      int    `json:"code"`
 	Message   string `json:"message"`
@@ -95,6 +103,145 @@ type LogoutResponse struct {
 	Timestamp string `json:"timestamp"`
 }
 
+type PageCreateRequest struct {
+	Title           string `json:"title" validate:"required,min=1,max=255"`
+	Slug            string `json:"slug,optional" validate:"max=255"`
+	Content         string `json:"content" validate:"required"`
+	Template        string `json:"template,optional" validate:"max=100"`
+	Status          string `json:"status" validate:"required,options=draft|published|scheduled"`
+	MetaTitle       string `json:"metaTitle,optional" validate:"max=70"`
+	MetaDescription string `json:"metaDescription,optional" validate:"max=160"`
+	FeaturedImage   string `json:"featuredImage,optional"`
+	CanonicalURL    string `json:"canonicalUrl,optional" validate:"max=255"`
+	PublishedAt     string `json:"publishedAt,optional"`
+}
+
+type PageCreateResponse struct {
+	Code      int            `json:"code"`
+	Message   string         `json:"message"`
+	Data      PageDetailData `json:"data"`
+	Timestamp string         `json:"timestamp"`
+}
+
+type PageDeleteRequest struct {
+	ID string `path:"id"`
+}
+
+type PageDeleteResponse struct {
+	Code      int    `json:"code"`
+	Message   string `json:"message"`
+	Timestamp string `json:"timestamp"`
+}
+
+type PageDetailData struct {
+	ID              string     `json:"id"`
+	Title           string     `json:"title"`
+	Slug            string     `json:"slug"`
+	Content         string     `json:"content"`
+	HTML            string     `json:"html"`
+	Author          AuthorInfo `json:"author"`
+	Status          string     `json:"status"`
+	Template        string     `json:"template"`
+	MetaTitle       string     `json:"metaTitle"`
+	MetaDescription string     `json:"metaDescription"`
+	FeaturedImage   string     `json:"featuredImage"`
+	CanonicalURL    string     `json:"canonicalUrl"`
+	PublishedAt     string     `json:"publishedAt,omitempty"`
+	CreatedAt       string     `json:"createdAt"`
+	UpdatedAt       string     `json:"updatedAt"`
+}
+
+type PageDetailRequest struct {
+	ID string `path:"id"`
+}
+
+type PageDetailResponse struct {
+	Code      int            `json:"code"`
+	Message   string         `json:"message"`
+	Data      PageDetailData `json:"data"`
+	Timestamp string         `json:"timestamp"`
+}
+
+type PageListData struct {
+	List       []PageListItem `json:"list"`
+	Pagination PaginationInfo `json:"pagination"`
+}
+
+type PageListItem struct {
+	ID            string     `json:"id"`
+	Title         string     `json:"title"`
+	Slug          string     `json:"slug"`
+	Author        AuthorInfo `json:"author"`
+	Status        string     `json:"status"`
+	Template      string     `json:"template"`
+	FeaturedImage string     `json:"featuredImage"`
+	PublishedAt   string     `json:"publishedAt,omitempty"`
+	CreatedAt     string     `json:"createdAt"`
+	UpdatedAt     string     `json:"updatedAt"`
+}
+
+type PageListRequest struct {
+	Page     int    `form:"page,default=1,range=[1:]"`                                              // 页码，从1开始
+	Limit    int    `form:"limit,default=10,range=[1:50]"`                                          // 每页记录数，最大50
+	Status   string `form:"status,optional,options=draft|published|scheduled"`                      // 状态过滤
+	Template string `form:"template,optional"`                                                      // 模板过滤
+	AuthorID string `form:"authorId,optional"`                                                      // 作者ID过滤
+	Keyword  string `form:"keyword,optional"`                                                       // 关键词搜索（标题、内容）
+	SortBy   string `form:"sortBy,default=updatedAt,options=createdAt|updatedAt|publishedAt|title"` // 排序字段
+	SortDesc bool   `form:"sortDesc,default=true"`                                                  // 是否降序排列
+}
+
+type PageListResponse struct {
+	Code      int          `json:"code"`
+	Message   string       `json:"message"`
+	Data      PageListData `json:"data"`
+	Timestamp string       `json:"timestamp"`
+}
+
+type PagePublishRequest struct {
+	ID          string `path:"id"`
+	PublishedAt string `json:"publishedAt,optional"`
+}
+
+type PagePublishResponse struct {
+	Code      int            `json:"code"`
+	Message   string         `json:"message"`
+	Data      PageDetailData `json:"data"`
+	Timestamp string         `json:"timestamp"`
+}
+
+type PageUnpublishRequest struct {
+	ID string `path:"id"`
+}
+
+type PageUnpublishResponse struct {
+	Code      int            `json:"code"`
+	Message   string         `json:"message"`
+	Data      PageDetailData `json:"data"`
+	Timestamp string         `json:"timestamp"`
+}
+
+type PageUpdateRequest struct {
+	ID              string `path:"id"`
+	Title           string `json:"title,optional" validate:"min=1,max=255"`
+	Slug            string `json:"slug,optional" validate:"max=255"`
+	Content         string `json:"content,optional"`
+	Template        string `json:"template,optional" validate:"max=100"`
+	Status          string `json:"status,optional" validate:"options=draft|published|scheduled"`
+	MetaTitle       string `json:"metaTitle,optional" validate:"max=70"`
+	MetaDescription string `json:"metaDescription,optional" validate:"max=160"`
+	FeaturedImage   string `json:"featuredImage,optional"`
+	CanonicalURL    string `json:"canonicalUrl,optional" validate:"max=255"`
+	PublishedAt     string `json:"publishedAt,optional"`
+}
+
+type PageUpdateResponse struct {
+	Code      int            `json:"code"`
+	Message   string         `json:"message"`
+	Data      PageDetailData `json:"data"`
+	Timestamp string         `json:"timestamp"`
+}
+
 type PaginationInfo struct {
 	Page       int  `json:"page"`
 	Limit      int  `json:"limit"`
@@ -104,11 +251,174 @@ type PaginationInfo struct {
 	HasPrev    bool `json:"hasPrev"`
 }
 
+type PostCreateRequest struct {
+	Title           string    `json:"title" validate:"required,min=1,max=255"`
+	Slug            string    `json:"slug,optional" validate:"max=255"`
+	Excerpt         string    `json:"excerpt,optional" validate:"max=500"`
+	Markdown        string    `json:"markdown" validate:"required"`
+	FeaturedImage   string    `json:"featuredImage,optional"`
+	Type            string    `json:"type" validate:"required,options=post|page"`
+	Status          string    `json:"status" validate:"required,options=draft|published|scheduled|archived"`
+	Visibility      string    `json:"visibility" validate:"required,options=public|members_only|private"`
+	Tags            []TagInfo `json:"tags,optional"`
+	MetaTitle       string    `json:"metaTitle,optional" validate:"max=70"`
+	MetaDescription string    `json:"metaDescription,optional" validate:"max=160"`
+	CanonicalURL    string    `json:"canonicalUrl,optional" validate:"max=255"`
+	PublishedAt     string    `json:"publishedAt,optional"`
+}
+
+type PostCreateResponse struct {
+	Code      int            `json:"code"`
+	Message   string         `json:"message"`
+	Data      PostDetailData `json:"data"`
+	Timestamp string         `json:"timestamp"`
+}
+
+type PostDeleteRequest struct {
+	ID string `path:"id"`
+}
+
+type PostDeleteResponse struct {
+	Code      int    `json:"code"`
+	Message   string `json:"message"`
+	Timestamp string `json:"timestamp"`
+}
+
+type PostDetailData struct {
+	ID              string     `json:"id"`
+	Title           string     `json:"title"`
+	Slug            string     `json:"slug"`
+	Excerpt         string     `json:"excerpt"`
+	Markdown        string     `json:"markdown"`
+	HTML            string     `json:"html"`
+	FeaturedImage   string     `json:"featuredImage"`
+	Type            string     `json:"type"`
+	Status          string     `json:"status"`
+	Visibility      string     `json:"visibility"`
+	Author          AuthorInfo `json:"author"`
+	Tags            []TagInfo  `json:"tags"`
+	MetaTitle       string     `json:"metaTitle"`
+	MetaDescription string     `json:"metaDescription"`
+	CanonicalURL    string     `json:"canonicalUrl"`
+	ReadingTime     int        `json:"readingTime"`
+	WordCount       int        `json:"wordCount"`
+	ViewCount       int64      `json:"viewCount"`
+	PublishedAt     string     `json:"publishedAt,omitempty"`
+	CreatedAt       string     `json:"createdAt"`
+	UpdatedAt       string     `json:"updatedAt"`
+}
+
+type PostDetailRequest struct {
+	ID string `path:"id"`
+}
+
+type PostDetailResponse struct {
+	Code      int            `json:"code"`
+	Message   string         `json:"message"`
+	Data      PostDetailData `json:"data"`
+	Timestamp string         `json:"timestamp"`
+}
+
+type PostListData struct {
+	List       []PostListItem `json:"list"`
+	Pagination PaginationInfo `json:"pagination"`
+}
+
+type PostListItem struct {
+	ID            string     `json:"id"`
+	Title         string     `json:"title"`
+	Slug          string     `json:"slug"`
+	Excerpt       string     `json:"excerpt"`
+	FeaturedImage string     `json:"featuredImage"`
+	Type          string     `json:"type"`
+	Status        string     `json:"status"`
+	Visibility    string     `json:"visibility"`
+	Author        AuthorInfo `json:"author"`
+	Tags          []TagInfo  `json:"tags"`
+	ReadingTime   int        `json:"readingTime"`
+	ViewCount     int64      `json:"viewCount"`
+	PublishedAt   string     `json:"publishedAt,omitempty"`
+	CreatedAt     string     `json:"createdAt"`
+	UpdatedAt     string     `json:"updatedAt"`
+}
+
+type PostListRequest struct {
+	Page       int    `form:"page,default=1,range=[1:]"`                                                        // 页码，从1开始
+	Limit      int    `form:"limit,default=10,range=[1:50]"`                                                    // 每页记录数，最大50
+	Status     string `form:"status,optional,options=draft|published|scheduled|archived"`                       // 状态过滤
+	Type       string `form:"type,optional,options=post|page"`                                                  // 类型过滤
+	Visibility string `form:"visibility,optional,options=public|members_only|private"`                          // 可见性过滤
+	AuthorID   string `form:"authorId,optional"`                                                                // 作者ID过滤
+	Tag        string `form:"tag,optional"`                                                                     // 标签slug过滤
+	Keyword    string `form:"keyword,optional"`                                                                 // 关键词搜索（标题、摘要）
+	SortBy     string `form:"sortBy,default=updatedAt,options=createdAt|updatedAt|publishedAt|viewCount|title"` // 排序字段
+	SortDesc   bool   `form:"sortDesc,default=true"`                                                            // 是否降序排列
+}
+
+type PostListResponse struct {
+	Code      int          `json:"code"`
+	Message   string       `json:"message"`
+	Data      PostListData `json:"data"`
+	Timestamp string       `json:"timestamp"`
+}
+
+type PostPublishRequest struct {
+	ID          string `path:"id"`
+	PublishedAt string `json:"publishedAt,optional"`
+}
+
+type PostPublishResponse struct {
+	Code      int            `json:"code"`
+	Message   string         `json:"message"`
+	Data      PostDetailData `json:"data"`
+	Timestamp string         `json:"timestamp"`
+}
+
+type PostUnpublishRequest struct {
+	ID string `path:"id"`
+}
+
+type PostUnpublishResponse struct {
+	Code      int            `json:"code"`
+	Message   string         `json:"message"`
+	Data      PostDetailData `json:"data"`
+	Timestamp string         `json:"timestamp"`
+}
+
+type PostUpdateRequest struct {
+	ID              string    `path:"id"`
+	Title           string    `json:"title,optional" validate:"min=1,max=255"`
+	Slug            string    `json:"slug,optional" validate:"max=255"`
+	Excerpt         string    `json:"excerpt,optional" validate:"max=500"`
+	Markdown        string    `json:"markdown,optional"`
+	FeaturedImage   string    `json:"featuredImage,optional"`
+	Type            string    `json:"type,optional" validate:"options=post|page"`
+	Status          string    `json:"status,optional" validate:"options=draft|published|scheduled|archived"`
+	Visibility      string    `json:"visibility,optional" validate:"options=public|members_only|private"`
+	Tags            []TagInfo `json:"tags,optional"`
+	MetaTitle       string    `json:"metaTitle,optional" validate:"max=70"`
+	MetaDescription string    `json:"metaDescription,optional" validate:"max=160"`
+	CanonicalURL    string    `json:"canonicalUrl,optional" validate:"max=255"`
+	PublishedAt     string    `json:"publishedAt,optional"`
+}
+
+type PostUpdateResponse struct {
+	Code      int            `json:"code"`
+	Message   string         `json:"message"`
+	Data      PostDetailData `json:"data"`
+	Timestamp string         `json:"timestamp"`
+}
+
 type ProfileResponse struct {
 	Code      int      `json:"code"`
 	Message   string   `json:"message"`
 	Data      UserInfo `json:"data"`
 	Timestamp string   `json:"timestamp"`
+}
+
+type TagInfo struct {
+	Name string `json:"name"`
+	Slug string `json:"slug"`
 }
 
 type TestRequest struct {
