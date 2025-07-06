@@ -27,6 +27,12 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 	server.AddRoutes(
 		[]rest.Route{
 			{
+				// 修改密码
+				Method:  http.MethodPost,
+				Path:    "/auth/change-password",
+				Handler: ChangePasswordHandler(serverCtx),
+			},
+			{
 				// 用户登出
 				Method:  http.MethodPost,
 				Path:    "/auth/logout",
@@ -37,6 +43,12 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Method:  http.MethodGet,
 				Path:    "/auth/profile",
 				Handler: ProfileHandler(serverCtx),
+			},
+			{
+				// 刷新Token
+				Method:  http.MethodPost,
+				Path:    "/auth/refresh",
+				Handler: RefreshTokenHandler(serverCtx),
 			},
 			{
 				// 获取页面列表
@@ -135,10 +147,58 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Handler: GetUserListHandler(serverCtx),
 			},
 			{
+				// 创建用户
+				Method:  http.MethodPost,
+				Path:    "/users",
+				Handler: CreateUserHandler(serverCtx),
+			},
+			{
 				// 获取用户详情
 				Method:  http.MethodGet,
 				Path:    "/users/:id",
 				Handler: GetUserDetailHandler(serverCtx),
+			},
+			{
+				// 更新用户信息
+				Method:  http.MethodPut,
+				Path:    "/users/:id",
+				Handler: UpdateUserHandler(serverCtx),
+			},
+			{
+				// 删除用户
+				Method:  http.MethodDelete,
+				Path:    "/users/:id",
+				Handler: DeleteUserHandler(serverCtx),
+			},
+			{
+				// 锁定用户账户
+				Method:  http.MethodPost,
+				Path:    "/users/:id/lock",
+				Handler: LockAccountHandler(serverCtx),
+			},
+			{
+				// 重置用户密码
+				Method:  http.MethodPost,
+				Path:    "/users/:id/reset-password",
+				Handler: ResetUserPasswordHandler(serverCtx),
+			},
+			{
+				// 修改用户角色
+				Method:  http.MethodPut,
+				Path:    "/users/:id/role",
+				Handler: UpdateUserRoleHandler(serverCtx),
+			},
+			{
+				// 修改用户状态
+				Method:  http.MethodPut,
+				Path:    "/users/:id/status",
+				Handler: UpdateUserStatusHandler(serverCtx),
+			},
+			{
+				// 解锁用户账户
+				Method:  http.MethodPost,
+				Path:    "/users/:id/unlock",
+				Handler: UnlockAccountHandler(serverCtx),
 			},
 		},
 		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),

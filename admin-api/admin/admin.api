@@ -422,6 +422,52 @@ type (
 		Message   string `json:"message"`
 		Timestamp string `json:"timestamp"`
 	}
+	// Token刷新请求
+	RefreshTokenRequest {
+		RefreshToken string `json:"refreshToken" validate:"required"`
+	}
+	// Token刷新响应
+	RefreshTokenResponse {
+		Code      int       `json:"code"`
+		Message   string    `json:"message"`
+		Data      LoginData `json:"data"`
+		Timestamp string    `json:"timestamp"`
+	}
+	// 修改密码请求
+	ChangePasswordRequest {
+		CurrentPassword string `json:"currentPassword" validate:"required"`
+		NewPassword     string `json:"newPassword" validate:"required,min=8,max=50"`
+		ConfirmPassword string `json:"confirmPassword" validate:"required"`
+	}
+	// 修改密码响应
+	ChangePasswordResponse {
+		Code      int    `json:"code"`
+		Message   string `json:"message"`
+		Timestamp string `json:"timestamp"`
+	}
+	// 账户锁定请求
+	LockAccountRequest {
+		UserID       string `path:"id"`
+		LockDuration int    `json:"lockDuration" validate:"min=1,max=525600"` // 锁定时长（分钟），最大1年
+		LockReason   string `json:"lockReason,optional" validate:"max=200"`
+	}
+	// 账户锁定响应
+	LockAccountResponse {
+		Code      int    `json:"code"`
+		Message   string `json:"message"`
+		Timestamp string `json:"timestamp"`
+	}
+	// 账户解锁请求
+	UnlockAccountRequest {
+		UserID string `path:"id"`
+		Reason string `json:"reason,optional" validate:"max=200"`
+	}
+	// 账户解锁响应
+	UnlockAccountResponse {
+		Code      int    `json:"code"`
+		Message   string `json:"message"`
+		Timestamp string `json:"timestamp"`
+	}
 )
 
 // ===================================================================
@@ -460,6 +506,97 @@ type (
 		Message   string   `json:"message"`
 		Data      UserInfo `json:"data"`
 		Timestamp string   `json:"timestamp"`
+	}
+	// 用户创建请求
+	UserCreateRequest {
+		Username     string `json:"username" validate:"required,min=3,max=50,alphanum"`
+		Email        string `json:"email" validate:"required,email"`
+		Password     string `json:"password" validate:"required,min=8,max=50"`
+		DisplayName  string `json:"displayName" validate:"required,min=1,max=100"`
+		Role         string `json:"role" validate:"required,options=admin|editor|author"`
+		Status       string `json:"status,default=active,options=active|inactive|locked"`
+		ProfileImage string `json:"profileImage,optional"`
+		Bio          string `json:"bio,optional" validate:"max=500"`
+		Location     string `json:"location,optional" validate:"max=100"`
+		Website      string `json:"website,optional" validate:"max=255,url"`
+		Twitter      string `json:"twitter,optional" validate:"max=50"`
+		Facebook     string `json:"facebook,optional" validate:"max=100"`
+	}
+	// 用户创建响应
+	UserCreateResponse {
+		Code      int      `json:"code"`
+		Message   string   `json:"message"`
+		Data      UserInfo `json:"data"`
+		Timestamp string   `json:"timestamp"`
+	}
+	// 用户更新请求
+	UserUpdateRequest {
+		ID           string `path:"id"`
+		Username     string `json:"username,optional" validate:"min=3,max=50,alphanum"`
+		Email        string `json:"email,optional" validate:"email"`
+		DisplayName  string `json:"displayName,optional" validate:"min=1,max=100"`
+		Role         string `json:"role,optional" validate:"options=admin|editor|author"`
+		Status       string `json:"status,optional" validate:"options=active|inactive|locked"`
+		ProfileImage string `json:"profileImage,optional"`
+		Bio          string `json:"bio,optional" validate:"max=500"`
+		Location     string `json:"location,optional" validate:"max=100"`
+		Website      string `json:"website,optional" validate:"max=255,url"`
+		Twitter      string `json:"twitter,optional" validate:"max=50"`
+		Facebook     string `json:"facebook,optional" validate:"max=100"`
+	}
+	// 用户更新响应
+	UserUpdateResponse {
+		Code      int      `json:"code"`
+		Message   string   `json:"message"`
+		Data      UserInfo `json:"data"`
+		Timestamp string   `json:"timestamp"`
+	}
+	// 用户删除请求
+	UserDeleteRequest {
+		ID string `path:"id"`
+	}
+	// 用户删除响应
+	UserDeleteResponse {
+		Code      int    `json:"code"`
+		Message   string `json:"message"`
+		Timestamp string `json:"timestamp"`
+	}
+	// 用户状态修改请求
+	UserStatusRequest {
+		ID     string `path:"id"`
+		Status string `json:"status" validate:"required,options=active|inactive|locked"`
+		Reason string `json:"reason,optional" validate:"max=200"`
+	}
+	// 用户状态修改响应
+	UserStatusResponse {
+		Code      int    `json:"code"`
+		Message   string `json:"message"`
+		Timestamp string `json:"timestamp"`
+	}
+	// 用户角色修改请求
+	UserRoleRequest {
+		ID     string `path:"id"`
+		Role   string `json:"role" validate:"required,options=admin|editor|author"`
+		Reason string `json:"reason,optional" validate:"max=200"`
+	}
+	// 用户角色修改响应
+	UserRoleResponse {
+		Code      int    `json:"code"`
+		Message   string `json:"message"`
+		Timestamp string `json:"timestamp"`
+	}
+	// 重置用户密码请求
+	ResetUserPasswordRequest {
+		ID          string `path:"id"`
+		NewPassword string `json:"newPassword" validate:"required,min=8,max=50"`
+		ForceChange bool   `json:"forceChange,default=true"`
+		Reason      string `json:"reason,optional" validate:"max=200"`
+	}
+	// 重置用户密码响应
+	ResetUserPasswordResponse {
+		Code      int    `json:"code"`
+		Message   string `json:"message"`
+		Timestamp string `json:"timestamp"`
 	}
 )
 
@@ -545,13 +682,53 @@ service admin-api {
 	@handler LogoutHandler
 	post /auth/logout (LogoutRequest) returns (LogoutResponse)
 
+	@doc "刷新Token"
+	@handler RefreshTokenHandler
+	post /auth/refresh (RefreshTokenRequest) returns (RefreshTokenResponse)
+
+	@doc "修改密码"
+	@handler ChangePasswordHandler
+	post /auth/change-password (ChangePasswordRequest) returns (ChangePasswordResponse)
+
 	@doc "获取用户列表"
 	@handler GetUserListHandler
 	get /users (UserListRequest) returns (UserListResponse)
 
+	@doc "创建用户"
+	@handler CreateUserHandler
+	post /users (UserCreateRequest) returns (UserCreateResponse)
+
 	@doc "获取用户详情"
 	@handler GetUserDetailHandler
 	get /users/:id (UserDetailRequest) returns (UserDetailResponse)
+
+	@doc "更新用户信息"
+	@handler UpdateUserHandler
+	put /users/:id (UserUpdateRequest) returns (UserUpdateResponse)
+
+	@doc "删除用户"
+	@handler DeleteUserHandler
+	delete /users/:id (UserDeleteRequest) returns (UserDeleteResponse)
+
+	@doc "修改用户状态"
+	@handler UpdateUserStatusHandler
+	put /users/:id/status (UserStatusRequest) returns (UserStatusResponse)
+
+	@doc "修改用户角色"
+	@handler UpdateUserRoleHandler
+	put /users/:id/role (UserRoleRequest) returns (UserRoleResponse)
+
+	@doc "重置用户密码"
+	@handler ResetUserPasswordHandler
+	post /users/:id/reset-password (ResetUserPasswordRequest) returns (ResetUserPasswordResponse)
+
+	@doc "锁定用户账户"
+	@handler LockAccountHandler
+	post /users/:id/lock (LockAccountRequest) returns (LockAccountResponse)
+
+	@doc "解锁用户账户"
+	@handler UnlockAccountHandler
+	post /users/:id/unlock (UnlockAccountRequest) returns (UnlockAccountResponse)
 
 	@doc "获取登录日志列表"
 	@handler GetLoginLogsHandler

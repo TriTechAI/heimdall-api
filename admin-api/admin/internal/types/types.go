@@ -17,11 +17,35 @@ type BaseResponse struct {
 	Timestamp string `json:"timestamp"`
 }
 
+type ChangePasswordRequest struct {
+	CurrentPassword string `json:"currentPassword" validate:"required"`
+	NewPassword     string `json:"newPassword" validate:"required,min=8,max=50"`
+	ConfirmPassword string `json:"confirmPassword" validate:"required"`
+}
+
+type ChangePasswordResponse struct {
+	Code      int    `json:"code"`
+	Message   string `json:"message"`
+	Timestamp string `json:"timestamp"`
+}
+
 type ErrorResponse struct {
 	Code      string      `json:"code"`
 	Msg       string      `json:"msg"`
 	Details   interface{} `json:"details,omitempty"`
 	Timestamp string      `json:"timestamp"`
+}
+
+type LockAccountRequest struct {
+	UserID       string `path:"id"`
+	LockDuration int    `json:"lockDuration" validate:"min=1,max=525600"` // 锁定时长（分钟），最大1年
+	LockReason   string `json:"lockReason,optional" validate:"max=200"`
+}
+
+type LockAccountResponse struct {
+	Code      int    `json:"code"`
+	Message   string `json:"message"`
+	Timestamp string `json:"timestamp"`
 }
 
 type LoginData struct {
@@ -416,6 +440,30 @@ type ProfileResponse struct {
 	Timestamp string   `json:"timestamp"`
 }
 
+type RefreshTokenRequest struct {
+	RefreshToken string `json:"refreshToken" validate:"required"`
+}
+
+type RefreshTokenResponse struct {
+	Code      int       `json:"code"`
+	Message   string    `json:"message"`
+	Data      LoginData `json:"data"`
+	Timestamp string    `json:"timestamp"`
+}
+
+type ResetUserPasswordRequest struct {
+	ID          string `path:"id"`
+	NewPassword string `json:"newPassword" validate:"required,min=8,max=50"`
+	ForceChange bool   `json:"forceChange,default=true"`
+	Reason      string `json:"reason,optional" validate:"max=200"`
+}
+
+type ResetUserPasswordResponse struct {
+	Code      int    `json:"code"`
+	Message   string `json:"message"`
+	Timestamp string `json:"timestamp"`
+}
+
 type TagInfo struct {
 	Name string `json:"name"`
 	Slug string `json:"slug"`
@@ -427,6 +475,49 @@ type TestRequest struct {
 
 type TestResponse struct {
 	Message string `json:"message"`
+}
+
+type UnlockAccountRequest struct {
+	UserID string `path:"id"`
+	Reason string `json:"reason,optional" validate:"max=200"`
+}
+
+type UnlockAccountResponse struct {
+	Code      int    `json:"code"`
+	Message   string `json:"message"`
+	Timestamp string `json:"timestamp"`
+}
+
+type UserCreateRequest struct {
+	Username     string `json:"username" validate:"required,min=3,max=50,alphanum"`
+	Email        string `json:"email" validate:"required,email"`
+	Password     string `json:"password" validate:"required,min=8,max=50"`
+	DisplayName  string `json:"displayName" validate:"required,min=1,max=100"`
+	Role         string `json:"role" validate:"required,options=admin|editor|author"`
+	Status       string `json:"status,default=active,options=active|inactive|locked"`
+	ProfileImage string `json:"profileImage,optional"`
+	Bio          string `json:"bio,optional" validate:"max=500"`
+	Location     string `json:"location,optional" validate:"max=100"`
+	Website      string `json:"website,optional" validate:"max=255,url"`
+	Twitter      string `json:"twitter,optional" validate:"max=50"`
+	Facebook     string `json:"facebook,optional" validate:"max=100"`
+}
+
+type UserCreateResponse struct {
+	Code      int      `json:"code"`
+	Message   string   `json:"message"`
+	Data      UserInfo `json:"data"`
+	Timestamp string   `json:"timestamp"`
+}
+
+type UserDeleteRequest struct {
+	ID string `path:"id"`
+}
+
+type UserDeleteResponse struct {
+	Code      int    `json:"code"`
+	Message   string `json:"message"`
+	Timestamp string `json:"timestamp"`
 }
 
 type UserDetailRequest struct {
@@ -478,4 +569,50 @@ type UserListResponse struct {
 	Message   string       `json:"message"`
 	Data      UserListData `json:"data"`
 	Timestamp string       `json:"timestamp"`
+}
+
+type UserRoleRequest struct {
+	ID     string `path:"id"`
+	Role   string `json:"role" validate:"required,options=admin|editor|author"`
+	Reason string `json:"reason,optional" validate:"max=200"`
+}
+
+type UserRoleResponse struct {
+	Code      int    `json:"code"`
+	Message   string `json:"message"`
+	Timestamp string `json:"timestamp"`
+}
+
+type UserStatusRequest struct {
+	ID     string `path:"id"`
+	Status string `json:"status" validate:"required,options=active|inactive|locked"`
+	Reason string `json:"reason,optional" validate:"max=200"`
+}
+
+type UserStatusResponse struct {
+	Code      int    `json:"code"`
+	Message   string `json:"message"`
+	Timestamp string `json:"timestamp"`
+}
+
+type UserUpdateRequest struct {
+	ID           string `path:"id"`
+	Username     string `json:"username,optional" validate:"min=3,max=50,alphanum"`
+	Email        string `json:"email,optional" validate:"email"`
+	DisplayName  string `json:"displayName,optional" validate:"min=1,max=100"`
+	Role         string `json:"role,optional" validate:"options=admin|editor|author"`
+	Status       string `json:"status,optional" validate:"options=active|inactive|locked"`
+	ProfileImage string `json:"profileImage,optional"`
+	Bio          string `json:"bio,optional" validate:"max=500"`
+	Location     string `json:"location,optional" validate:"max=100"`
+	Website      string `json:"website,optional" validate:"max=255,url"`
+	Twitter      string `json:"twitter,optional" validate:"max=50"`
+	Facebook     string `json:"facebook,optional" validate:"max=100"`
+}
+
+type UserUpdateResponse struct {
+	Code      int      `json:"code"`
+	Message   string   `json:"message"`
+	Data      UserInfo `json:"data"`
+	Timestamp string   `json:"timestamp"`
 }

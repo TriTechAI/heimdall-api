@@ -215,59 +215,75 @@ func (d *LoginLogDAO) buildQueryFilter(filter map[string]interface{}) bson.M {
 	}
 
 	for key, value := range filter {
-		switch key {
-		case "userId":
-			if value != nil {
-				if objectID, ok := value.(primitive.ObjectID); ok {
-					query["userId"] = objectID
-				} else if strID, ok := value.(string); ok && strID != "" {
-					if objectID, err := primitive.ObjectIDFromHex(strID); err == nil {
-						query["userId"] = objectID
-					}
-				}
-			}
-		case "username":
-			if value != nil && value != "" {
-				query["username"] = bson.M{"$regex": value, "$options": "i"}
-			}
-		case "status":
-			if value != nil && value != "" {
-				query["status"] = value
-			}
-		case "ipAddress":
-			if value != nil && value != "" {
-				query["ipAddress"] = value
-			}
-		case "startTime":
-			if startTime, ok := value.(time.Time); ok {
-				if query["loginAt"] == nil {
-					query["loginAt"] = bson.M{}
-				}
-				query["loginAt"].(bson.M)["$gte"] = startTime
-			}
-		case "endTime":
-			if endTime, ok := value.(time.Time); ok {
-				if query["loginAt"] == nil {
-					query["loginAt"] = bson.M{}
-				}
-				query["loginAt"].(bson.M)["$lte"] = endTime
-			}
-		case "country":
-			if value != nil && value != "" {
-				query["country"] = value
-			}
-		case "deviceType":
-			if value != nil && value != "" {
-				query["deviceType"] = value
-			}
-		case "browser":
-			if value != nil && value != "" {
-				query["browser"] = value
-			}
-		}
+		d.applyFilterCondition(query, key, value)
 	}
 
 	return query
+}
+
+// applyFilterCondition 应用单个过滤条件
+func (d *LoginLogDAO) applyFilterCondition(query bson.M, key string, value interface{}) {
+	switch key {
+	case "userId":
+		d.applyUserIDFilter(query, value)
+	case "username":
+		d.applyStringFilter(query, "username", value, true) // 模糊匹配
+	case "status":
+		d.applyStringFilter(query, "status", value, false) // 精确匹配
+	case "ipAddress":
+		d.applyStringFilter(query, "ipAddress", value, false) // 精确匹配
+	case "startTime":
+		d.applyTimeFilter(query, "$gte", value)
+	case "endTime":
+		d.applyTimeFilter(query, "$lte", value)
+	case "country":
+		d.applyStringFilter(query, "country", value, false) // 精确匹配
+	case "deviceType":
+		d.applyStringFilter(query, "deviceType", value, false) // 精确匹配
+	case "browser":
+		d.applyStringFilter(query, "browser", value, false) // 精确匹配
+	}
+}
+
+// applyUserIDFilter 应用用户ID过滤
+func (d *LoginLogDAO) applyUserIDFilter(query bson.M, value interface{}) {
+	if value == nil {
+		return
+	}
+
+	if objectID, ok := value.(primitive.ObjectID); ok {
+		query["userId"] = objectID
+	} else if strID, ok := value.(string); ok && strID != "" {
+		if objectID, err := primitive.ObjectIDFromHex(strID); err == nil {
+			query["userId"] = objectID
+		}
+	}
+}
+
+// applyStringFilter 应用字符串过滤
+func (d *LoginLogDAO) applyStringFilter(query bson.M, field string, value interface{}, fuzzy bool) {
+	if value == nil || value == "" {
+		return
+	}
+
+	if fuzzy {
+		query[field] = bson.M{"$regex": value, "$options": "i"}
+	} else {
+		query[field] = value
+	}
+}
+
+// applyTimeFilter 应用时间过滤
+func (d *LoginLogDAO) applyTimeFilter(query bson.M, operator string, value interface{}) {
+	timeValue, ok := value.(time.Time)
+	if !ok {
+		return
+	}
+
+	if query["loginAt"] == nil {
+		query["loginAt"] = bson.M{}
+	}
+	query["loginAt"].(bson.M)[operator] = timeValue
 }
 
 // buildSortCondition 构建排序条件

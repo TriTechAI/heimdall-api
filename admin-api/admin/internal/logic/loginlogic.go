@@ -77,11 +77,14 @@ func (l *LoginLogic) validateRequest(req *types.LoginRequest) error {
 	return nil
 }
 
-// getClientIP 获取客户端IP地址
+// getClientIP 从context中获取客户端IP地址
 func (l *LoginLogic) getClientIP() string {
-	// 这里简化处理，实际应该从HTTP头中获取
-	// 在go-zero中可以通过logx.FromContext获取
-	return "127.0.0.1" // 临时固定值
+	if ip, ok := l.ctx.Value("client_ip").(string); ok && ip != "" {
+		return ip
+	}
+	// 兜底方案：如果无法从context获取，返回unknown
+	l.Logger.Error("无法从context获取客户端IP，使用unknown作为兜底")
+	return "unknown"
 }
 
 // checkLoginAttempts 检查登录失败次数限制
@@ -91,19 +94,21 @@ func (l *LoginLogic) checkLoginAttempts(username, clientIP string) error {
 
 	// 获取当前失败次数
 	result := l.svcCtx.Redis.Get(l.ctx, key)
-	if result.Err() != nil && result.Err() != redis.Nil {
+	if result.Err() != nil && !errors.Is(result.Err(), redis.Nil) {
 		l.Logger.Errorf("获取登录失败次数失败: %v", result.Err())
-		return nil // 不因为Redis错误阻止登录
+		// Redis故障时采用严格安全策略：拒绝登录
+		return errors.New("安全服务暂时不可用，请稍后再试")
 	}
 
-	if result.Err() == redis.Nil {
+	if errors.Is(result.Err(), redis.Nil) {
 		return nil // 没有失败记录
 	}
 
 	attempts, err := strconv.Atoi(result.Val())
 	if err != nil {
 		l.Logger.Errorf("解析登录失败次数失败: %v", err)
-		return nil
+		// 数据格式错误时采用严格策略
+		return errors.New("安全验证数据异常，请联系管理员")
 	}
 
 	// 检查是否超过最大失败次数
@@ -139,16 +144,30 @@ func (l *LoginLogic) checkUserStatus(user *model.User) error {
 // incrementLoginAttempts 增加登录失败次数
 func (l *LoginLogic) incrementLoginAttempts(username, clientIP string) {
 	key := fmt.Sprintf("%s%s:%s", l.svcCtx.Config.Cache.LoginAttempts.Prefix, username, clientIP)
+	ttl := time.Duration(l.svcCtx.Config.Cache.LoginAttempts.TTL) * time.Second
 
+	// 使用Redis Pipeline确保原子性
+	pipe := l.svcCtx.Redis.TxPipeline()
+	
 	// 增加计数
-	result := l.svcCtx.Redis.Incr(l.ctx, key)
-	if result.Err() != nil {
-		l.Logger.Errorf("增加登录失败次数失败: %v", result.Err())
+	incrCmd := pipe.Incr(l.ctx, key)
+	
+	// 设置过期时间
+	pipe.Expire(l.ctx, key, ttl)
+	
+	// 执行管道操作
+	_, err := pipe.Exec(l.ctx)
+	if err != nil {
+		l.Logger.Errorf("原子操作增加登录失败次数失败: %v", err)
 		return
 	}
 
-	// 设置过期时间
-	l.svcCtx.Redis.Expire(l.ctx, key, time.Duration(l.svcCtx.Config.Cache.LoginAttempts.TTL)*time.Second)
+	// 检查计数结果（用于日志记录）
+	if incrCmd.Err() != nil {
+		l.Logger.Errorf("获取递增结果失败: %v", incrCmd.Err())
+	} else {
+		l.Logger.Infof("用户 %s IP %s 登录失败次数: %d", username, clientIP, incrCmd.Val())
+	}
 }
 
 // clearLoginAttempts 清除登录失败次数
@@ -240,52 +259,58 @@ func (l *LoginLogic) authenticateUser(username, password, clientIP string) (*mod
 		return nil, errors.New("系统错误，请稍后重试")
 	}
 
-	// 验证用户存在性
+	// 始终执行密码验证，以防止时间差异攻击
+	var authenticationFailed bool
+	var failureReason string
+
 	if user == nil {
-		l.recordLoginFailure(username, clientIP, "用户不存在")
+		// 用户不存在，但仍然执行虚拟密码验证
+		authenticationFailed = true
+		failureReason = "用户不存在"
+		// 执行虚拟密码验证，保持相同的执行时间
+		l.performDummyPasswordCheck(password)
+	} else {
+		// 用户存在，检查用户状态
+		if err := l.checkUserStatus(user); err != nil {
+			authenticationFailed = true
+			failureReason = err.Error()
+			// 执行虚拟密码验证，保持相同的执行时间
+			l.performDummyPasswordCheck(password)
+		} else {
+			// 验证密码
+			if err := utils.VerifyPassword(password, user.PasswordHash); err != nil {
+				authenticationFailed = true
+				failureReason = "密码错误"
+			}
+		}
+	}
+
+	// 统一处理认证失败情况
+	if authenticationFailed {
+		// 记录失败日志
+		l.recordLoginFailure(username, clientIP, failureReason)
 		l.incrementLoginAttempts(username, clientIP)
+		
+		// 如果用户存在且是密码错误，更新用户登录失败计数
+		if user != nil && failureReason == "密码错误" {
+			if err := l.svcCtx.UserDAO.IncrementLoginFailCount(l.ctx, user.ID.Hex()); err != nil {
+				l.Logger.Errorf("更新用户登录失败次数失败: %v", err)
+			}
+		}
+		
+		// 统一返回相同的错误消息，防止用户枚举
 		return nil, errors.New("用户名或密码错误")
-	}
-
-	// 检查用户状态
-	if err := l.checkUserStatus(user); err != nil {
-		l.recordLoginFailure(user.Username, clientIP, err.Error())
-		return nil, err
-	}
-
-	// 验证密码
-	if err := l.verifyPassword(user, password, clientIP); err != nil {
-		return nil, err
 	}
 
 	return user, nil
 }
 
-// verifyPassword 验证密码
-func (l *LoginLogic) verifyPassword(user *model.User, password, clientIP string) error {
-	if utils.VerifyPassword(password, user.PasswordHash) != nil {
-		// 处理密码错误
-		l.handlePasswordError(user, clientIP)
-		return errors.New("用户名或密码错误")
-	}
-	return nil
-}
-
-// handlePasswordError 处理密码错误
-func (l *LoginLogic) handlePasswordError(user *model.User, clientIP string) {
-	// 记录失败日志并增加失败次数
-	l.recordLoginFailure(user.Username, clientIP, "密码错误")
-	l.incrementLoginAttempts(user.Username, clientIP)
-
-	// 增加用户的登录失败计数
-	if err := l.svcCtx.UserDAO.IncrementLoginFailCount(l.ctx, user.ID.Hex()); err != nil {
-		l.Logger.Errorf("更新用户登录失败次数失败: %v", err)
-	}
-
-	// 检查是否需要锁定账户
-	if err := l.checkAndLockAccount(user, user.Username, clientIP); err != nil {
-		l.Logger.Errorf("锁定账户检查失败: %v", err)
-	}
+// performDummyPasswordCheck 执行虚拟密码检查，防止时间差异攻击
+func (l *LoginLogic) performDummyPasswordCheck(password string) {
+	// 使用固定的哈希值进行虚拟验证，确保执行时间与真实密码验证相同
+	// 这个哈希值对应密码 "dummy_password_for_timing_attack_prevention"
+	dummyHash := "$2a$12$KTGlrWkOKRASHE7e9hKzI.zyPmhNnD8sHk7wLZqN4KRCz3TnQKl8m"
+	utils.VerifyPassword(password, dummyHash)
 }
 
 // TokenPair 令牌对结构

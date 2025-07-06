@@ -7,12 +7,9 @@ import (
 	"net/http"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
-
 	"github.com/heimdall-api/admin-api/admin/internal/svc"
 	"github.com/heimdall-api/admin-api/admin/internal/types"
-	"github.com/heimdall-api/common/constants"
-	"github.com/heimdall-api/common/model"
+	"github.com/heimdall-api/common/cache"
 	"github.com/heimdall-api/common/utils"
 
 	"github.com/zeromicro/go-zero/core/logx"
@@ -37,55 +34,43 @@ func (l *LogoutLogic) Logout(req *types.LogoutRequest) (resp *types.LogoutRespon
 	// 1. 获取当前用户信息
 	userID, err := l.getUserIDFromContext()
 	if err != nil {
-		l.Logger.Errorf("获取用户ID失败: %v", err)
 		return nil, err
 	}
 
 	// 2. 获取当前访问token
 	accessToken, err := l.getAccessTokenFromContext()
 	if err != nil {
-		l.Logger.Errorf("获取访问token失败: %v", err)
 		return nil, err
 	}
 
-	// 3. 提取access token信息
-	accessTokenID, err := l.extractTokenID(accessToken)
-	if err != nil {
-		l.Logger.Errorf("提取access token ID失败: %v", err)
-		return nil, err
+	// 3. 将访问token加入黑名单
+	if err := l.blacklistAccessToken(accessToken); err != nil {
+		l.Logger.Errorf("将访问token加入黑名单失败: %v", err)
+		return nil, errors.New("登出失败，请稍后重试")
 	}
 
-	// 4. 将access token加入黑名单
-	if err := l.addTokenToBlacklist(accessTokenID, accessToken); err != nil {
-		l.Logger.Errorf("将access token加入黑名单失败: %v", err)
-		return nil, err
-	}
-
-	// 5. 处理refresh token（如果提供）
+	// 4. 处理refresh token（如果提供）
 	if req.RefreshToken != "" {
-		if err := l.handleRefreshToken(req.RefreshToken); err != nil {
-			l.Logger.Errorf("处理refresh token失败: %v", err)
+		if err := l.blacklistRefreshToken(req.RefreshToken); err != nil {
+			l.Logger.Errorf("将刷新token加入黑名单失败: %v", err)
 			// refresh token处理失败不影响整个登出流程
 		}
 	}
 
-	// 6. 清除用户会话缓存
-	if err := l.clearUserSession(userID, accessTokenID); err != nil {
-		l.Logger.Errorf("清除用户会话失败: %v", err)
-		// 会话清理失败不影响登出
+	// 5. 清除用户会话
+	sessionID := l.extractSessionID(accessToken)
+	if sessionID != "" {
+		l.clearUserSession(userID, sessionID)
 	}
 
-	// 7. 记录登出日志
-	go l.recordLogoutLog(userID, accessTokenID)
-
-	// 8. 构造成功响应
+	// 6. 构造成功响应
 	resp = &types.LogoutResponse{
 		Code:      200,
 		Message:   "登出成功",
 		Timestamp: time.Now().Format(time.RFC3339),
 	}
 
-	l.Logger.Infof("用户登出成功: userID=%s, tokenID=%s", userID, accessTokenID)
+	l.Logger.Infof("用户登出成功: userID=%s", userID)
 	return resp, nil
 }
 
@@ -110,11 +95,7 @@ func (l *LogoutLogic) getAccessTokenFromContext() (string, error) {
 	if req, ok := l.ctx.Value("httpRequest").(*http.Request); ok {
 		authHeader := req.Header.Get("Authorization")
 		if authHeader != "" {
-			token, err := utils.ParseAuthHeader(authHeader)
-			if err != nil {
-				return "", fmt.Errorf("解析Authorization头失败: %w", err)
-			}
-			return token, nil
+			return utils.ParseAuthHeader(authHeader)
 		}
 	}
 
@@ -128,108 +109,71 @@ func (l *LogoutLogic) getAccessTokenFromContext() (string, error) {
 	return "", errors.New("无法获取访问token")
 }
 
-// extractTokenID 提取token ID
-func (l *LogoutLogic) extractTokenID(tokenString string) (string, error) {
+// blacklistAccessToken 将访问token加入黑名单
+func (l *LogoutLogic) blacklistAccessToken(tokenString string) error {
+	// 提取token ID和剩余时间
 	jwtManager := utils.NewJWTManager(l.svcCtx.Config.Auth.AccessSecret, "heimdall-admin")
 	tokenID, err := jwtManager.ExtractTokenIDFromToken(tokenString)
 	if err != nil {
-		return "", fmt.Errorf("提取token ID失败: %w", err)
+		return fmt.Errorf("提取token ID失败: %w", err)
 	}
-	return tokenID, nil
-}
 
-// addTokenToBlacklist 将token加入黑名单
-func (l *LogoutLogic) addTokenToBlacklist(tokenID, tokenString string) error {
-	// 计算token剩余有效时间
-	jwtManager := utils.NewJWTManager(l.svcCtx.Config.Auth.AccessSecret, "heimdall-admin")
 	remainingTime, err := jwtManager.GetTokenRemainingTime(tokenString)
 	if err != nil {
-		// 如果token已过期，直接返回成功
 		if errors.Is(err, utils.ErrTokenExpired) {
-			return nil
+			return nil // token已过期，无需加入黑名单
 		}
 		return fmt.Errorf("获取token剩余时间失败: %w", err)
 	}
 
-	// 将token ID加入黑名单，过期时间与token剩余时间一致
-	blacklistKey := utils.GenerateBlacklistKey(tokenID)
-	return l.svcCtx.Redis.Set(l.ctx, blacklistKey, "1", remainingTime).Err()
+	// 使用缓存服务加入黑名单
+	blacklistCache := cache.NewJWTBlacklistCache(l.svcCtx.Redis, "jwt:blacklist:")
+	return blacklistCache.AddToken(l.ctx, tokenID, remainingTime)
 }
 
-// handleRefreshToken 处理refresh token
-func (l *LogoutLogic) handleRefreshToken(refreshToken string) error {
-	// 提取refresh token ID
+// blacklistRefreshToken 将刷新token加入黑名单
+func (l *LogoutLogic) blacklistRefreshToken(tokenString string) error {
+	// 提取token ID和剩余时间
 	jwtManager := utils.NewJWTManager(l.svcCtx.Config.Auth.AccessSecret, "heimdall-admin")
-	refreshTokenID, err := jwtManager.ExtractTokenIDFromToken(refreshToken)
+	tokenID, err := jwtManager.ExtractTokenIDFromToken(tokenString)
 	if err != nil {
 		return fmt.Errorf("提取refresh token ID失败: %w", err)
 	}
 
-	// 将refresh token加入黑名单
-	remainingTime, err := jwtManager.GetTokenRemainingTime(refreshToken)
+	remainingTime, err := jwtManager.GetTokenRemainingTime(tokenString)
 	if err != nil {
 		if errors.Is(err, utils.ErrTokenExpired) {
-			return nil
+			return nil // token已过期，无需加入黑名单
 		}
 		return fmt.Errorf("获取refresh token剩余时间失败: %w", err)
 	}
 
-	blacklistKey := utils.GenerateBlacklistKey(refreshTokenID)
-	return l.svcCtx.Redis.Set(l.ctx, blacklistKey, "1", remainingTime).Err()
+	// 使用缓存服务加入黑名单
+	blacklistCache := cache.NewJWTBlacklistCache(l.svcCtx.Redis, "jwt:blacklist:")
+	return blacklistCache.AddToken(l.ctx, tokenID, remainingTime)
 }
 
-// clearUserSession 清除用户会话缓存
-func (l *LogoutLogic) clearUserSession(userID, tokenID string) error {
-	sessionKey := utils.GenerateSessionKey(userID, tokenID)
-	return l.svcCtx.Redis.Del(l.ctx, sessionKey).Err()
-}
-
-// recordLogoutLog 记录登出日志
-func (l *LogoutLogic) recordLogoutLog(userID, tokenID string) {
-	// 转换userID为ObjectID
-	objectID, err := primitive.ObjectIDFromHex(userID)
+// extractSessionID 从token中提取会话ID
+func (l *LogoutLogic) extractSessionID(tokenString string) string {
+	jwtManager := utils.NewJWTManager(l.svcCtx.Config.Auth.AccessSecret, "heimdall-admin")
+	tokenID, err := jwtManager.ExtractTokenIDFromToken(tokenString)
 	if err != nil {
-		l.Logger.Errorf("转换用户ID失败: userID=%s, error=%v", userID, err)
+		l.Logger.Errorf("提取token ID失败: %v", err)
+		return ""
+	}
+	// 使用tokenID作为sessionID
+	sessionID := tokenID
+	return sessionID
+}
+
+// clearUserSession 清除用户会话
+func (l *LogoutLogic) clearUserSession(userID, sessionID string) {
+	if sessionID == "" {
 		return
 	}
 
-	// 创建登出日志
-	logoutLog := &model.LoginLog{
-		UserID:      &objectID,  // 使用ObjectID指针
-		LoginMethod: "username", // 使用有效的登录方式
-		IPAddress:   l.getClientIP(),
-		UserAgent:   l.getUserAgent(),
-		Status:      constants.LoginStatusSuccess,
-		SessionID:   tokenID,
-		LoginAt:     time.Now(),
-		LogoutAt:    &[]time.Time{time.Now()}[0], // 设置登出时间
+	sessionCache := cache.NewSessionCache(l.svcCtx.Redis, "session:")
+	if err := sessionCache.DeleteSession(l.ctx, sessionID); err != nil {
+		l.Logger.Errorf("删除用户会话失败: userID=%s, sessionID=%s, error=%v", userID, sessionID, err)
 	}
-
-	// 异步记录日志，不影响主流程
-	if err := l.svcCtx.LoginLogDAO.Create(l.ctx, logoutLog); err != nil {
-		l.Logger.Errorf("记录登出日志失败: userID=%s, error=%v", userID, err)
-	}
-}
-
-// getClientIP 获取客户端IP
-func (l *LogoutLogic) getClientIP() string {
-	if req, ok := l.ctx.Value("httpRequest").(*http.Request); ok {
-		// 尝试从代理头获取真实IP
-		if forwarded := req.Header.Get("X-Forwarded-For"); forwarded != "" {
-			return forwarded
-		}
-		if realIP := req.Header.Get("X-Real-IP"); realIP != "" {
-			return realIP
-		}
-		return req.RemoteAddr
-	}
-	return "unknown"
-}
-
-// getUserAgent 获取用户代理
-func (l *LogoutLogic) getUserAgent() string {
-	if req, ok := l.ctx.Value("httpRequest").(*http.Request); ok {
-		return req.Header.Get("User-Agent")
-	}
-	return "unknown"
 }

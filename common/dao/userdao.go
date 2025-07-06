@@ -169,6 +169,29 @@ func (d *UserDAO) Delete(ctx context.Context, id string) error {
 
 // List 获取用户列表
 func (d *UserDAO) List(ctx context.Context, filter map[string]interface{}, page, limit int) ([]*model.User, int64, error) {
+	// 验证和标准化分页参数
+	page, limit = d.validatePaginationParams(page, limit)
+
+	// 构建查询条件
+	query := d.buildListQuery(filter)
+
+	// 获取总数
+	total, err := d.collection.CountDocuments(ctx, query)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// 执行查询并返回结果
+	users, err := d.executeListQuery(ctx, query, filter, page, limit)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return users, total, nil
+}
+
+// validatePaginationParams 验证和标准化分页参数
+func (d *UserDAO) validatePaginationParams(page, limit int) (int, int) {
 	if page < 1 {
 		page = 1
 	}
@@ -178,68 +201,83 @@ func (d *UserDAO) List(ctx context.Context, filter map[string]interface{}, page,
 	if limit > 100 {
 		limit = 100
 	}
+	return page, limit
+}
 
-	// 构建查询条件
+// buildListQuery 构建用户列表查询条件
+func (d *UserDAO) buildListQuery(filter map[string]interface{}) bson.M {
 	query := bson.M{}
-	if filter != nil {
-		for key, value := range filter {
-			switch key {
-			case "role":
-				if value != nil && value != "" {
-					query["role"] = value
-				}
-			case "status":
-				if value != nil && value != "" {
-					query["status"] = value
-				}
-			case "keyword":
-				if value != nil && value != "" {
-					keyword := value.(string)
-					query["$or"] = []bson.M{
-						{"username": bson.M{"$regex": keyword, "$options": "i"}},
-						{"email": bson.M{"$regex": keyword, "$options": "i"}},
-						{"displayName": bson.M{"$regex": keyword, "$options": "i"}},
-					}
+	if filter == nil {
+		return query
+	}
+
+	for key, value := range filter {
+		switch key {
+		case "role":
+			if value != nil && value != "" {
+				query["role"] = value
+			}
+		case "status":
+			if value != nil && value != "" {
+				query["status"] = value
+			}
+		case "keyword":
+			if value != nil && value != "" {
+				keyword := value.(string)
+				query["$or"] = []bson.M{
+					{"username": bson.M{"$regex": keyword, "$options": "i"}},
+					{"email": bson.M{"$regex": keyword, "$options": "i"}},
+					{"displayName": bson.M{"$regex": keyword, "$options": "i"}},
 				}
 			}
 		}
 	}
 
-	// 获取总数
-	total, err := d.collection.CountDocuments(ctx, query)
-	if err != nil {
-		return nil, 0, err
+	return query
+}
+
+// buildListSort 构建用户列表排序条件
+func (d *UserDAO) buildListSort(filter map[string]interface{}) bson.D {
+	// 默认按创建时间降序
+	sort := bson.D{bson.E{Key: "createdAt", Value: -1}}
+
+	if filter == nil {
+		return sort
 	}
 
+	if sortBy, exists := filter["sortBy"]; exists && sortBy != "" {
+		sortDesc := false
+		if desc, ok := filter["sortDesc"]; ok {
+			sortDesc = desc.(bool)
+		}
+
+		sortOrder := 1
+		if sortDesc {
+			sortOrder = -1
+		}
+
+		switch sortBy {
+		case "username":
+			sort = bson.D{bson.E{Key: "username", Value: sortOrder}}
+		case "createdAt":
+			sort = bson.D{bson.E{Key: "createdAt", Value: sortOrder}}
+		case "lastLoginAt":
+			sort = bson.D{bson.E{Key: "lastLoginAt", Value: sortOrder}}
+		default:
+			sort = bson.D{bson.E{Key: "createdAt", Value: -1}}
+		}
+	}
+
+	return sort
+}
+
+// executeListQuery 执行用户列表查询
+func (d *UserDAO) executeListQuery(ctx context.Context, query bson.M, filter map[string]interface{}, page, limit int) ([]*model.User, error) {
 	// 计算跳过的文档数
 	skip := (page - 1) * limit
 
 	// 构建排序条件
-	sort := bson.D{bson.E{Key: "createdAt", Value: -1}} // 默认按创建时间降序
-	if filter != nil {
-		if sortBy, exists := filter["sortBy"]; exists && sortBy != "" {
-			sortDesc := false
-			if desc, ok := filter["sortDesc"]; ok {
-				sortDesc = desc.(bool)
-			}
-
-			sortOrder := 1
-			if sortDesc {
-				sortOrder = -1
-			}
-
-			switch sortBy {
-			case "username":
-				sort = bson.D{bson.E{Key: "username", Value: sortOrder}}
-			case "createdAt":
-				sort = bson.D{bson.E{Key: "createdAt", Value: sortOrder}}
-			case "lastLoginAt":
-				sort = bson.D{bson.E{Key: "lastLoginAt", Value: sortOrder}}
-			default:
-				sort = bson.D{bson.E{Key: "createdAt", Value: -1}}
-			}
-		}
-	}
+	sort := d.buildListSort(filter)
 
 	// 构建查询选项
 	opts := options.Find().
@@ -249,24 +287,33 @@ func (d *UserDAO) List(ctx context.Context, filter map[string]interface{}, page,
 
 	cursor, err := d.collection.Find(ctx, query, opts)
 	if err != nil {
-		return nil, 0, err
+		return nil, err
 	}
 	defer cursor.Close(ctx)
+
+	return d.decodeUserCursor(ctx, cursor)
+}
+
+// decodeUserCursor 解码用户游标数据
+func (d *UserDAO) decodeUserCursor(ctx context.Context, cursor *mongo.Cursor) ([]*model.User, error) {
+	if cursor == nil {
+		return []*model.User{}, nil
+	}
 
 	var users []*model.User
 	for cursor.Next(ctx) {
 		var user model.User
 		if err := cursor.Decode(&user); err != nil {
-			return nil, 0, err
+			return nil, err
 		}
 		users = append(users, &user)
 	}
 
 	if err := cursor.Err(); err != nil {
-		return nil, 0, err
+		return nil, err
 	}
 
-	return users, total, nil
+	return users, nil
 }
 
 // UpdateLoginInfo 更新登录信息
