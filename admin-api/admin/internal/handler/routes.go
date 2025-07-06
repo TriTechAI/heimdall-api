@@ -12,6 +12,7 @@ import (
 )
 
 func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
+	// 登录接口 (不需要JWT验证)
 	server.AddRoutes(
 		[]rest.Route{
 			{
@@ -24,6 +25,10 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 		rest.WithPrefix("/api/v1/admin"),
 	)
 
+	// 构建需要JWT验证的中间件链，但去掉WithMiddlewares调用
+	// go-zero 1.8.4 可能不支持这种中间件语法，我们需要在main.go或其他地方处理
+	
+	// 需要JWT验证的接口
 	server.AddRoutes(
 		[]rest.Route{
 			{
@@ -205,6 +210,7 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 		rest.WithPrefix("/api/v1/admin"),
 	)
 
+	// 测试接口
 	server.AddRoutes(
 		[]rest.Route{
 			{

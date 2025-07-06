@@ -10,17 +10,24 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/heimdall-api/admin-api/admin/internal/config"
+	"github.com/heimdall-api/admin-api/admin/internal/middleware"
 	"github.com/heimdall-api/common/dao"
 )
 
 type ServiceContext struct {
-	Config      config.Config
-	MongoDB     *mongo.Database
-	Redis       *redis.Client
-	UserDAO     *dao.UserDAO
-	LoginLogDAO *dao.LoginLogDAO
-	PostDAO     *dao.PostDAO
-	PageDAO     *dao.PageDAO
+	Config               config.Config
+	MongoDB              *mongo.Database
+	Redis                *redis.Client
+	UserDAO              *dao.UserDAO
+	LoginLogDAO          *dao.LoginLogDAO
+	PostDAO              *dao.PostDAO
+	PageDAO              *dao.PageDAO
+	TagDAO               *dao.TagDAO
+	
+	// 中间件
+	JWTBlacklistMiddleware *middleware.JWTBlacklistMiddleware
+	IPRateLimitMiddleware  *middleware.IPRateLimitMiddleware
+	AuditMiddleware        *middleware.AuditMiddleware
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -36,15 +43,55 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	loginLogDAO := dao.NewLoginLogDAO(mongoDB)
 	postDAO := dao.NewPostDAO(mongoDB)
 	pageDAO := dao.NewPageDAO(mongoDB)
+	tagDAO := dao.NewTagDAO(mongoDB)
+
+	// 初始化中间件
+	var jwtBlacklistMiddleware *middleware.JWTBlacklistMiddleware
+	var ipRateLimitMiddleware *middleware.IPRateLimitMiddleware
+	var auditMiddleware *middleware.AuditMiddleware
+
+	// JWT黑名单中间件
+	if c.Middleware.JWTBlacklist.Enabled {
+		jwtBlacklistMiddleware = middleware.NewJWTBlacklistMiddleware(
+			redisClient,
+			c.Auth.AccessSecret,
+			"heimdall-admin",
+		)
+	}
+
+	// IP限流中间件
+	if c.Middleware.RateLimit.Enabled {
+		rateLimitConfig := middleware.RateLimitConfig{
+			GeneralRPS:   c.Middleware.RateLimit.GeneralRPS,
+			GeneralBurst: c.Middleware.RateLimit.GeneralBurst,
+			LoginRPS:     c.Middleware.RateLimit.LoginRPS,
+			LoginBurst:   c.Middleware.RateLimit.LoginBurst,
+			CreateRPS:    c.Middleware.RateLimit.CreateRPS,
+			CreateBurst:  c.Middleware.RateLimit.CreateBurst,
+			Window:       time.Minute, // 固定1分钟窗口
+			LoginWindow:  5 * time.Minute, // 登录5分钟窗口
+			CreateWindow: time.Minute, // 创建操作1分钟窗口
+		}
+		ipRateLimitMiddleware = middleware.NewIPRateLimitMiddleware(redisClient, rateLimitConfig)
+	}
+
+	// 操作审计中间件
+	if c.Middleware.Audit.Enabled {
+		auditMiddleware = middleware.NewAuditMiddleware(redisClient)
+	}
 
 	return &ServiceContext{
-		Config:      c,
-		MongoDB:     mongoDB,
-		Redis:       redisClient,
-		UserDAO:     userDAO,
-		LoginLogDAO: loginLogDAO,
-		PostDAO:     postDAO,
-		PageDAO:     pageDAO,
+		Config:                 c,
+		MongoDB:                mongoDB,
+		Redis:                  redisClient,
+		UserDAO:                userDAO,
+		LoginLogDAO:            loginLogDAO,
+		PostDAO:                postDAO,
+		PageDAO:                pageDAO,
+		TagDAO:                 tagDAO,
+		JWTBlacklistMiddleware: jwtBlacklistMiddleware,
+		IPRateLimitMiddleware:  ipRateLimitMiddleware,
+		AuditMiddleware:        auditMiddleware,
 	}
 }
 

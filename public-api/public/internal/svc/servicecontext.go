@@ -18,6 +18,7 @@ type ServiceContext struct {
 	PostDAO *dao.PostDAO
 	UserDAO *dao.UserDAO
 	PageDAO *dao.PageDAO
+	TagDAO  *dao.TagDAO
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -68,6 +69,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	postDAO := dao.NewPostDAO(database)
 	userDAO := dao.NewUserDAO(database)
 	pageDAO := dao.NewPageDAO(database)
+	tagDAO := dao.NewTagDAO(database)
 
 	return &ServiceContext{
 		Config:  c,
@@ -75,5 +77,6 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		PostDAO: postDAO,
 		UserDAO: userDAO,
 		PageDAO: pageDAO,
+		TagDAO:  tagDAO,
 	}
 }

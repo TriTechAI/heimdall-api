@@ -32,6 +32,9 @@ type Config struct {
 	// 安全配置
 	Security SecurityConfig `json:",optional"`
 
+	// 中间件配置
+	Middleware MiddlewareConfig `json:",optional"`
+
 	// CORS配置
 	CORS CORSConfig `json:",optional"`
 
@@ -104,6 +107,39 @@ type SecurityConfig struct {
 type RateLimitConfig struct {
 	Requests int `json:",default=100"` // 每分钟请求数
 	Burst    int `json:",default=10"`  // 突发请求数
+}
+
+// MiddlewareConfig 中间件配置
+type MiddlewareConfig struct {
+	// JWT黑名单检查
+	JWTBlacklist JWTBlacklistConfig `json:",optional"`
+	
+	// IP限流
+	RateLimit RateLimitMiddlewareConfig `json:",optional"`
+	
+	// 操作审计
+	Audit AuditConfig `json:",optional"`
+}
+
+// JWTBlacklistConfig JWT黑名单中间件配置
+type JWTBlacklistConfig struct {
+	Enabled bool `json:",default=true"`
+}
+
+// RateLimitMiddlewareConfig 限流中间件配置
+type RateLimitMiddlewareConfig struct {
+	Enabled      bool `json:",default=true"`
+	GeneralRPS   int  `json:",default=100"`  // 普通请求每秒限制
+	GeneralBurst int  `json:",default=200"`  // 普通请求突发限制
+	LoginRPS     int  `json:",default=5"`    // 登录请求每秒限制
+	LoginBurst   int  `json:",default=10"`   // 登录请求突发限制
+	CreateRPS    int  `json:",default=10"`   // 创建操作每秒限制
+	CreateBurst  int  `json:",default=20"`   // 创建操作突发限制
+}
+
+// AuditConfig 审计中间件配置
+type AuditConfig struct {
+	Enabled bool `json:",default=true"`
 }
 
 // CORSConfig CORS配置
