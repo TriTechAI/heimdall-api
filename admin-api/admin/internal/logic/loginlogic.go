@@ -33,109 +33,34 @@ func NewLoginLogic(ctx context.Context, svcCtx *svc.ServiceContext) *LoginLogic 
 }
 
 func (l *LoginLogic) Login(req *types.LoginRequest) (resp *types.LoginResponse, err error) {
-	// 1. 参数验证
+	// 1. 基础验证和准备
 	if err := l.validateRequest(req); err != nil {
 		return nil, err
 	}
-
-	// 2. 获取客户端IP地址
 	clientIP := l.getClientIP()
 
-	// 3. 检查登录失败次数限制
+	// 2. 安全检查
 	if err := l.checkLoginAttempts(req.Username, clientIP); err != nil {
 		return nil, err
 	}
 
-	// 4. 获取用户信息
-	user, err := l.svcCtx.UserDAO.GetByUsername(l.ctx, req.Username)
+	// 3. 用户认证
+	user, err := l.authenticateUser(req.Username, req.Password, clientIP)
 	if err != nil {
-		l.Logger.Errorf("获取用户信息失败: %v", err)
-		return nil, errors.New("系统错误，请稍后重试")
-	}
-
-	// 5. 验证用户存在性和状态
-	if user == nil {
-		// 记录失败日志并增加失败次数
-		l.recordLoginFailure(req.Username, clientIP, "用户不存在")
-		l.incrementLoginAttempts(req.Username, clientIP)
-		return nil, errors.New("用户名或密码错误")
-	}
-
-	// 6. 检查用户状态
-	if err := l.checkUserStatus(user); err != nil {
-		l.recordLoginFailure(user.Username, clientIP, err.Error())
 		return nil, err
 	}
 
-	// 7. 验证密码
-	if utils.VerifyPassword(req.Password, user.PasswordHash) != nil {
-		// 记录失败日志并增加失败次数
-		l.recordLoginFailure(user.Username, clientIP, "密码错误")
-		l.incrementLoginAttempts(req.Username, clientIP)
-
-		// 增加用户的登录失败计数
-		if err := l.svcCtx.UserDAO.IncrementLoginFailCount(l.ctx, user.ID.Hex()); err != nil {
-			l.Logger.Errorf("更新用户登录失败次数失败: %v", err)
-		}
-
-		// 检查是否需要锁定账户
-		if err := l.checkAndLockAccount(user, req.Username, clientIP); err != nil {
-			return nil, err
-		}
-
-		return nil, errors.New("用户名或密码错误")
-	}
-
-	// 8. 登录成功，生成JWT Token
-	// 使用与go-zero JWT中间件兼容的token格式
-	jwtManager := utils.NewJWTManager(l.svcCtx.Config.Auth.AccessSecret, "heimdall-admin")
-	accessToken, err := jwtManager.GenerateGoZeroCompatibleToken(user.ID.Hex(), user.Username, user.Role)
+	// 4. 生成令牌
+	tokens, err := l.generateTokens(user)
 	if err != nil {
-		l.Logger.Errorf("生成JWT Token失败: %v", err)
-		return nil, errors.New("系统错误，请稍后重试")
+		return nil, err
 	}
 
-	// 生成refresh token（使用原有方法）
-	tokenPair, err := jwtManager.GenerateToken(user.ID.Hex(), user.Username, user.Role)
-	if err != nil {
-		l.Logger.Errorf("生成Refresh Token失败: %v", err)
-		return nil, errors.New("系统错误，请稍后重试")
-	}
+	// 5. 登录后处理
+	l.handleLoginSuccess(user, clientIP)
 
-	// 9. 清除登录失败次数缓存
-	l.clearLoginAttempts(req.Username, clientIP)
-
-	// 10. 更新用户登录信息
-	if err := l.svcCtx.UserDAO.UpdateLoginInfo(l.ctx, user.ID.Hex(), clientIP); err != nil {
-		l.Logger.Errorf("更新用户登录信息失败: %v", err)
-		// 这个错误不阻止登录流程
-	}
-
-	// 11. 记录成功登录日志
-	l.recordLoginSuccess(user, clientIP)
-
-	// 12. 构造响应
-	resp = &types.LoginResponse{
-		Code:      200,
-		Message:   "登录成功",
-		Timestamp: time.Now().Format(time.RFC3339),
-		Data: types.LoginData{
-			Token:        accessToken,            // 使用go-zero兼容的token
-			RefreshToken: tokenPair.RefreshToken, // 使用原有的refresh token
-			ExpiresIn:    int(tokenPair.ExpiresAt.Sub(time.Now()).Seconds()),
-			User: types.UserInfo{
-				ID:          user.ID.Hex(),
-				Username:    user.Username,
-				Email:       user.Email,
-				DisplayName: user.DisplayName,
-				Role:        user.Role,
-				Status:      user.Status,
-				CreatedAt:   user.CreatedAt.Format(time.RFC3339),
-			},
-		},
-	}
-
-	return resp, nil
+	// 6. 构造响应
+	return l.buildLoginResponse(user, tokens), nil
 }
 
 // validateRequest 验证登录请求参数
@@ -299,5 +224,136 @@ func (l *LoginLogic) recordLoginSuccess(user *model.User, clientIP string) {
 
 	if err := l.svcCtx.LoginLogDAO.Create(l.ctx, loginLog); err != nil {
 		l.Logger.Errorf("记录登录成功日志失败: %v", err)
+	}
+}
+
+// ===============================
+// 新增的原子化方法
+// ===============================
+
+// authenticateUser 用户认证
+func (l *LoginLogic) authenticateUser(username, password, clientIP string) (*model.User, error) {
+	// 获取用户信息
+	user, err := l.svcCtx.UserDAO.GetByUsername(l.ctx, username)
+	if err != nil {
+		l.Logger.Errorf("获取用户信息失败: %v", err)
+		return nil, errors.New("系统错误，请稍后重试")
+	}
+
+	// 验证用户存在性
+	if user == nil {
+		l.recordLoginFailure(username, clientIP, "用户不存在")
+		l.incrementLoginAttempts(username, clientIP)
+		return nil, errors.New("用户名或密码错误")
+	}
+
+	// 检查用户状态
+	if err := l.checkUserStatus(user); err != nil {
+		l.recordLoginFailure(user.Username, clientIP, err.Error())
+		return nil, err
+	}
+
+	// 验证密码
+	if err := l.verifyPassword(user, password, clientIP); err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
+// verifyPassword 验证密码
+func (l *LoginLogic) verifyPassword(user *model.User, password, clientIP string) error {
+	if utils.VerifyPassword(password, user.PasswordHash) != nil {
+		// 处理密码错误
+		l.handlePasswordError(user, clientIP)
+		return errors.New("用户名或密码错误")
+	}
+	return nil
+}
+
+// handlePasswordError 处理密码错误
+func (l *LoginLogic) handlePasswordError(user *model.User, clientIP string) {
+	// 记录失败日志并增加失败次数
+	l.recordLoginFailure(user.Username, clientIP, "密码错误")
+	l.incrementLoginAttempts(user.Username, clientIP)
+
+	// 增加用户的登录失败计数
+	if err := l.svcCtx.UserDAO.IncrementLoginFailCount(l.ctx, user.ID.Hex()); err != nil {
+		l.Logger.Errorf("更新用户登录失败次数失败: %v", err)
+	}
+
+	// 检查是否需要锁定账户
+	if err := l.checkAndLockAccount(user, user.Username, clientIP); err != nil {
+		l.Logger.Errorf("锁定账户检查失败: %v", err)
+	}
+}
+
+// TokenPair 令牌对结构
+type TokenPair struct {
+	AccessToken  string
+	RefreshToken string
+	ExpiresIn    int
+}
+
+// generateTokens 生成令牌
+func (l *LoginLogic) generateTokens(user *model.User) (*TokenPair, error) {
+	jwtManager := utils.NewJWTManager(l.svcCtx.Config.Auth.AccessSecret, "heimdall-admin")
+
+	// 生成访问令牌
+	accessToken, err := jwtManager.GenerateGoZeroCompatibleToken(user.ID.Hex(), user.Username, user.Role)
+	if err != nil {
+		l.Logger.Errorf("生成JWT Token失败: %v", err)
+		return nil, errors.New("系统错误，请稍后重试")
+	}
+
+	// 生成刷新令牌
+	tokenPair, err := jwtManager.GenerateToken(user.ID.Hex(), user.Username, user.Role)
+	if err != nil {
+		l.Logger.Errorf("生成Refresh Token失败: %v", err)
+		return nil, errors.New("系统错误，请稍后重试")
+	}
+
+	return &TokenPair{
+		AccessToken:  accessToken,
+		RefreshToken: tokenPair.RefreshToken,
+		ExpiresIn:    int(tokenPair.ExpiresAt.Sub(time.Now()).Seconds()),
+	}, nil
+}
+
+// handleLoginSuccess 处理登录成功后的操作
+func (l *LoginLogic) handleLoginSuccess(user *model.User, clientIP string) {
+	// 清除登录失败次数缓存
+	l.clearLoginAttempts(user.Username, clientIP)
+
+	// 更新用户登录信息
+	if err := l.svcCtx.UserDAO.UpdateLoginInfo(l.ctx, user.ID.Hex(), clientIP); err != nil {
+		l.Logger.Errorf("更新用户登录信息失败: %v", err)
+		// 这个错误不阻止登录流程
+	}
+
+	// 记录成功登录日志
+	l.recordLoginSuccess(user, clientIP)
+}
+
+// buildLoginResponse 构建登录响应
+func (l *LoginLogic) buildLoginResponse(user *model.User, tokens *TokenPair) *types.LoginResponse {
+	return &types.LoginResponse{
+		Code:      200,
+		Message:   "登录成功",
+		Timestamp: time.Now().Format(time.RFC3339),
+		Data: types.LoginData{
+			Token:        tokens.AccessToken,
+			RefreshToken: tokens.RefreshToken,
+			ExpiresIn:    tokens.ExpiresIn,
+			User: types.UserInfo{
+				ID:          user.ID.Hex(),
+				Username:    user.Username,
+				Email:       user.Email,
+				DisplayName: user.DisplayName,
+				Role:        user.Role,
+				Status:      user.Status,
+				CreatedAt:   user.CreatedAt.Format(time.RFC3339),
+			},
+		},
 	}
 }
