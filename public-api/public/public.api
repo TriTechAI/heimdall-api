@@ -46,13 +46,13 @@ type (
 	}
 	// 公开文章列表查询请求
 	PublicPostListRequest {
-		Page     int    `form:"page,default=1,range=[1:]"` // 页码，从1开始
-		Limit    int    `form:"limit,default=10,range=[1:20]"` // 每页记录数，最大20
-		Tag      string `form:"tag,optional"` // 标签slug过滤
-		Author   string `form:"author,optional"` // 作者用户名过滤
-		Keyword  string `form:"keyword,optional"` // 关键词搜索（标题、摘要）
+		Page     int    `form:"page,default=1,range=[1:]"`                                      // 页码，从1开始
+		Limit    int    `form:"limit,default=10,range=[1:20]"`                                  // 每页记录数，最大20
+		Tag      string `form:"tag,optional"`                                                   // 标签slug过滤
+		Author   string `form:"author,optional"`                                                // 作者用户名过滤
+		Keyword  string `form:"keyword,optional"`                                               // 关键词搜索（标题、摘要）
 		SortBy   string `form:"sortBy,default=publishedAt,options=publishedAt|viewCount|title"` // 排序字段
-		SortDesc bool   `form:"sortDesc,default=true"` // 是否降序排列
+		SortDesc bool   `form:"sortDesc,default=true"`                                          // 是否降序排列
 	}
 	// 公开文章列表响应
 	PublicPostListResponse {
@@ -142,6 +142,63 @@ type (
 )
 
 // ===================================================================
+// 公开标签模块 (Public Tag Module)
+// ===================================================================
+type (
+	// 公开标签列表请求
+	PublicTagListRequest {
+		Page     int    `form:"page,default=1,range=[1:]"`                                 // 页码，从1开始
+		Limit    int    `form:"limit,default=20,range=[1:50]"`                             // 每页记录数，最大50
+		SortBy   string `form:"sortBy,default=postCount,options=name|postCount|createdAt"` // 排序字段
+		SortDesc bool   `form:"sortDesc,default=true"`                                     // 是否降序排列
+	}
+	// 公开标签列表响应
+	PublicTagListResponse {
+		Code      int               `json:"code"`
+		Message   string            `json:"message"`
+		Data      PublicTagListData `json:"data"`
+		Timestamp string            `json:"timestamp"`
+	}
+	// 公开标签列表数据
+	PublicTagListData {
+		List       []PublicTagInfo `json:"list"`
+		Pagination PaginationInfo  `json:"pagination"`
+	}
+	// 公开标签信息
+	PublicTagInfo {
+		ID          string `json:"id"`
+		Name        string `json:"name"`
+		Slug        string `json:"slug"`
+		Description string `json:"description"`
+		Color       string `json:"color"`
+		PostCount   int    `json:"postCount"`
+		CreatedAt   string `json:"createdAt"`
+	}
+	// 公开标签详情请求
+	PublicTagDetailRequest {
+		Slug string `path:"slug"`
+	}
+	// 公开标签详情响应
+	PublicTagDetailResponse {
+		Code      int                 `json:"code"`
+		Message   string              `json:"message"`
+		Data      PublicTagDetailData `json:"data"`
+		Timestamp string              `json:"timestamp"`
+	}
+	// 公开标签详情数据
+	PublicTagDetailData {
+		ID          string               `json:"id"`
+		Name        string               `json:"name"`
+		Slug        string               `json:"slug"`
+		Description string               `json:"description"`
+		Color       string               `json:"color"`
+		PostCount   int                  `json:"postCount"`
+		CreatedAt   string               `json:"createdAt"`
+		RecentPosts []PublicPostListItem `json:"recentPosts"`
+	}
+)
+
+// ===================================================================
 // API 接口定义 (API Interface Definition)
 // ===================================================================
 @server (
@@ -151,14 +208,22 @@ service public-api {
 	@doc "获取公开文章列表"
 	@handler GetPublicPostListHandler
 	get /posts (PublicPostListRequest) returns (PublicPostListResponse)
-
+	
 	@doc "根据slug获取公开文章详情"
 	@handler GetPublicPostDetailHandler
 	get /posts/:slug (PublicPostDetailRequest) returns (PublicPostDetailResponse)
-
+	
 	@doc "根据slug获取公开页面详情"
 	@handler GetPublicPageDetailHandler
 	get /pages/:slug (PublicPageDetailRequest) returns (PublicPageDetailResponse)
+	
+	@doc "获取公开标签列表"
+	@handler GetPublicTagListHandler
+	get /tags (PublicTagListRequest) returns (PublicTagListResponse)
+	
+	@doc "根据slug获取公开标签详情"
+	@handler GetPublicTagDetailHandler
+	get /tags/:slug (PublicTagDetailRequest) returns (PublicTagDetailResponse)
 }
 
 // ===================================================================
@@ -181,4 +246,3 @@ service public-api {
 	@handler PublicHandler
 	get /test/:name (TestRequest) returns (TestResponse)
 }
-
