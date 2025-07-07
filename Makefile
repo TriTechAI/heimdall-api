@@ -1,6 +1,6 @@
 # Heimdall API Makefile
 
-.PHONY: help build test clean admin public deps fmt lint docker swagger swagger-admin swagger-public
+.PHONY: help build test test-unit test-e2e clean admin public deps fmt lint docker swagger swagger-admin swagger-public
 
 # 默认目标
 help:
@@ -9,6 +9,8 @@ help:
 	@echo "  admin         - 启动管理服务 (端口: 8080)"
 	@echo "  public        - 启动公开服务 (端口: 8081)"
 	@echo "  test          - 运行所有测试"
+	@echo "  test-unit     - 运行单元测试"
+	@echo "  test-e2e      - 运行端到端测试"
 	@echo "  deps          - 整理依赖"
 	@echo "  fmt           - 格式化代码"
 	@echo "  lint          - 代码检查"
@@ -35,10 +37,19 @@ public:
 	@echo "启动公开服务 (端口: 8081)..."
 	cd public-api/public && go run . -f etc/public-api.yaml
 
-# 运行测试
-test:
-	@echo "运行所有测试..."
-	go test ./... -v -gcflags="all=-N -l"
+# 运行所有测试
+test: test-unit test-e2e
+
+# 运行单元测试
+test-unit:
+	@echo "运行单元测试..."
+	go test ./common/... ./admin-api/... ./public-api/... -v -gcflags="all=-N -l"
+
+# 运行E2E测试
+test-e2e:
+	@echo "运行端到端测试..."
+	@echo "请确保MongoDB和Redis已启动"
+	cd test/e2e && go test -v -timeout=10m .
 
 # 整理依赖
 deps:
