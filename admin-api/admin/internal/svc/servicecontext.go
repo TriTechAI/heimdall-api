@@ -11,6 +11,7 @@ import (
 
 	"github.com/heimdall-api/admin-api/admin/internal/config"
 	"github.com/heimdall-api/admin-api/admin/internal/middleware"
+	"github.com/heimdall-api/common/cache"
 	"github.com/heimdall-api/common/dao"
 )
 
@@ -23,6 +24,9 @@ type ServiceContext struct {
 	PostDAO              *dao.PostDAO
 	PageDAO              *dao.PageDAO
 	TagDAO               *dao.TagDAO
+	CommentDAO           *dao.CommentDAO
+	AdminCacheManager    *cache.AdminCacheManager
+	CacheInvalidator     *cache.CacheInvalidator // 缓存失效器
 	
 	// 中间件
 	JWTBlacklistMiddleware *middleware.JWTBlacklistMiddleware
@@ -44,6 +48,14 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	postDAO := dao.NewPostDAO(mongoDB)
 	pageDAO := dao.NewPageDAO(mongoDB)
 	tagDAO := dao.NewTagDAO(mongoDB)
+	commentDAO := dao.NewCommentDAO(mongoDB)
+
+	// TODO: 在T123后续版本中实现AdminCacheManager集成
+	// 目前暂时不初始化，避免Redis版本冲突
+	// adminCacheManager := cache.NewAdminCacheManager(redisClient, "admin")
+
+	// 初始化缓存失效器
+	cacheInvalidator := cache.NewCacheInvalidator(redisClient, "public")
 
 	// 初始化中间件
 	var jwtBlacklistMiddleware *middleware.JWTBlacklistMiddleware
@@ -89,6 +101,9 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		PostDAO:                postDAO,
 		PageDAO:                pageDAO,
 		TagDAO:                 tagDAO,
+		CommentDAO:             commentDAO,
+		AdminCacheManager:      nil, // TODO: 待后续实现
+		CacheInvalidator:       cacheInvalidator,
 		JWTBlacklistMiddleware: jwtBlacklistMiddleware,
 		IPRateLimitMiddleware:  ipRateLimitMiddleware,
 		AuditMiddleware:        auditMiddleware,

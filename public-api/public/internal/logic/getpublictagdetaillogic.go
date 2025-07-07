@@ -34,6 +34,14 @@ func (l *GetPublicTagDetailLogic) GetPublicTagDetail(req *types.PublicTagDetailR
 		return l.errorResponse(utils.StatusBadRequest, err.Error()), nil
 	}
 
+	// 尝试从缓存获取数据
+	var cachedResult types.PublicTagDetailResponse
+	err = l.svcCtx.ContentCacheManager.GetTagDetail(l.ctx, req.Slug, &cachedResult)
+	if err == nil {
+		return &cachedResult, nil
+	}
+
+	// 缓存未命中，从数据库查询
 	// 根据slug获取标签详情
 	tag, err := l.svcCtx.TagDAO.GetBySlug(l.ctx, req.Slug)
 	if err != nil {
@@ -57,12 +65,22 @@ func (l *GetPublicTagDetailLogic) GetPublicTagDetail(req *types.PublicTagDetailR
 	// 构建响应数据
 	tagDetail := l.buildTagDetail(tag, recentPosts)
 
-	return &types.PublicTagDetailResponse{
+	// 构建响应
+	response := &types.PublicTagDetailResponse{
 		Code:      utils.StatusOK,
 		Message:   "Success",
 		Data:      tagDetail,
 		Timestamp: time.Now().Format(time.RFC3339),
-	}, nil
+	}
+
+	// 设置缓存（异步执行，失败不影响响应）
+	go func() {
+		if err := l.svcCtx.ContentCacheManager.SetTagDetail(context.Background(), req.Slug, response); err != nil {
+			l.Errorf("Failed to set tag detail cache: %v", err)
+		}
+	}()
+
+	return response, nil
 }
 
 // validateRequest 验证请求参数

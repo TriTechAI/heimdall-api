@@ -35,6 +35,14 @@ func (l *GetPublicTagListLogic) GetPublicTagList(req *types.PublicTagListRequest
 		return l.errorResponse(utils.StatusBadRequest, err.Error()), nil
 	}
 
+	// 尝试从缓存获取数据
+	var cachedResult types.PublicTagListResponse
+	err = l.svcCtx.ContentCacheManager.GetTagList(l.ctx, req.Page, req.Limit, req.SortBy, req.SortDesc, &cachedResult)
+	if err == nil {
+		return &cachedResult, nil
+	}
+
+	// 缓存未命中，从数据库查询
 	// 构建查询过滤器
 	filter := l.buildTagFilter(req)
 
@@ -49,12 +57,22 @@ func (l *GetPublicTagListLogic) GetPublicTagList(req *types.PublicTagListRequest
 	tagInfos := l.buildTagInfos(tags)
 	pagination := l.buildPagination(req.Page, req.Limit, total)
 
-	return &types.PublicTagListResponse{
+	// 构建响应
+	response := &types.PublicTagListResponse{
 		Code:      utils.StatusOK,
 		Message:   "Success",
 		Data:      types.PublicTagListData{List: tagInfos, Pagination: pagination},
 		Timestamp: time.Now().Format(time.RFC3339),
-	}, nil
+	}
+
+	// 设置缓存（异步执行，失败不影响响应）
+	go func() {
+		if err := l.svcCtx.ContentCacheManager.SetTagList(context.Background(), req.Page, req.Limit, req.SortBy, req.SortDesc, response); err != nil {
+			l.Errorf("Failed to set tag list cache: %v", err)
+		}
+	}()
+
+	return response, nil
 }
 
 // validateRequest 验证请求参数

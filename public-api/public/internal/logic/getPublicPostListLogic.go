@@ -34,19 +34,35 @@ func (l *GetPublicPostListLogic) GetPublicPostList(req *types.PublicPostListRequ
 		return nil, err
 	}
 
-	// 2. 构建查询过滤器
+	// 2. 构建缓存过滤器参数
+	filters := map[string]interface{}{
+		"tag":      req.Tag,
+		"author":   req.Author,
+		"sortBy":   req.SortBy,
+		"sortDesc": req.SortDesc,
+	}
+
+	// 3. 尝试从缓存获取数据
+	var cachedResult types.PublicPostListResponse
+	err = l.svcCtx.ContentCacheManager.GetPostList(l.ctx, req.Page, req.Limit, filters, &cachedResult)
+	if err == nil {
+		return &cachedResult, nil
+	}
+
+	// 4. 缓存未命中，从数据库查询
+	// 构建查询过滤器
 	filter, err := l.buildPostFilter(req)
 	if err != nil {
 		return nil, err
 	}
 
-	// 3. 查询文章列表
+	// 查询文章列表
 	posts, total, err := l.queryPosts(filter, req.Page, req.Limit)
 	if err != nil {
 		return nil, fmt.Errorf("获取文章列表失败: %w", err)
 	}
 
-	// 4. 构建响应数据
+	// 构建响应数据
 	postItems, err := l.buildPostItems(posts)
 	if err != nil {
 		return nil, fmt.Errorf("构建文章列表失败: %w", err)
@@ -56,7 +72,16 @@ func (l *GetPublicPostListLogic) GetPublicPostList(req *types.PublicPostListRequ
 	pagination := l.buildPagination(req.Page, req.Limit, int(total))
 
 	// 6. 构建响应
-	return l.buildResponse(postItems, pagination), nil
+	response := l.buildResponse(postItems, pagination)
+
+	// 7. 设置缓存（异步执行，失败不影响响应）
+	go func() {
+		if err := l.svcCtx.ContentCacheManager.SetPostList(context.Background(), req.Page, req.Limit, filters, response); err != nil {
+			l.Errorf("Failed to set post list cache: %v", err)
+		}
+	}()
+
+	return response, nil
 }
 
 // validateRequest 验证请求参数

@@ -35,18 +35,32 @@ func (l *GetPublicPostDetailLogic) GetPublicPostDetail(req *types.PublicPostDeta
 		return nil, err
 	}
 
-	// 2. 获取文章
+	// 2. 尝试从缓存获取数据
+	var cachedResult types.PublicPostDetailResponse
+	err = l.svcCtx.ContentCacheManager.GetPostDetail(l.ctx, req.Slug, &cachedResult)
+	if err == nil {
+		// 缓存命中，增加浏览计数
+		go func() {
+			if err := l.svcCtx.ContentCacheManager.IncrementViewCount(context.Background(), "post", req.Slug); err != nil {
+				l.Errorf("Failed to increment view count: %v", err)
+			}
+		}()
+		return &cachedResult, nil
+	}
+
+	// 3. 缓存未命中，从数据库查询
+	// 获取文章
 	post, err := l.getPostBySlug(req.Slug)
 	if err != nil {
 		return nil, fmt.Errorf("获取文章失败: %w", err)
 	}
 
-	// 3. 验证文章可见性
+	// 验证文章可见性
 	if err := l.validatePostVisibility(post); err != nil {
 		return nil, err
 	}
 
-	// 4. 获取作者信息
+	// 获取作者信息
 	author, err := l.getAuthorInfo(post.AuthorID.Hex())
 	if err != nil {
 		return nil, fmt.Errorf("获取作者信息失败: %w", err)
@@ -59,7 +73,16 @@ func (l *GetPublicPostDetailLogic) GetPublicPostDetail(req *types.PublicPostDeta
 	postDetail := l.buildPostDetail(post, author)
 
 	// 7. 构建响应
-	return l.buildResponse(postDetail), nil
+	response := l.buildResponse(postDetail)
+
+	// 8. 设置缓存（异步执行，失败不影响响应）
+	go func() {
+		if err := l.svcCtx.ContentCacheManager.SetPostDetail(context.Background(), req.Slug, response); err != nil {
+			l.Errorf("Failed to set post detail cache: %v", err)
+		}
+	}()
+
+	return response, nil
 }
 
 // validateRequest 验证请求参数

@@ -67,7 +67,8 @@ type MongoDBConfig struct {
 
 // RedisConfig Redis配置
 type RedisConfig struct {
-	Host         string `json:",default=localhost:6379"`
+	Host         string `json:",default=localhost"`
+	Port         int    `json:",default=6379"`
 	Password     string `json:",optional"`
 	DB           int    `json:",default=1"`
 	MaxRetries   int    `json:",default=3"`

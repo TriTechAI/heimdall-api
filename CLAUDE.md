@@ -147,6 +147,12 @@ go test ./common/dao -v
 - Service-specific constants: `internal/constants/`
 - Group by business domain (user, post, tag, etc.)
 
+### Configuration Guidelines
+- Never hardcode configuration values in code
+- Use YAML configuration files in `etc/` directories
+- Avoid naming conflicts with go-zero built-in config fields (`Log`, `Timeout`, `Host`, `Port`)
+- Use prefixed names like `LogConfig`, `TimeoutConfig`, or `ApplicationLog`
+
 ## Security Considerations
 
 ### Authentication
@@ -160,6 +166,75 @@ go test ./common/dao -v
 - Account locking after failed login attempts
 - Password strength requirements
 - Login attempt logging and monitoring
+
+## API Design Guidelines
+
+### RESTful Principles
+- **Resource-oriented**: URLs represent resources (`/users`, `/posts`, `/posts/{postId}/comments`)
+- **HTTP methods**: Use standard verbs (GET, POST, PUT, PATCH, DELETE)
+- **Stateless**: Each request contains all necessary information (JWT tokens)
+
+### URL Structure
+- **Plural nouns**: Use `/users`, `/posts` for collections
+- **Path variables**: `/users/{userId}` for individual resources
+- **Lowercase**: All URL paths in lowercase
+- **Version control**: All APIs prefixed with `/api/v1`
+
+### Request/Response Format
+- **JSON only**: All requests and responses use JSON format
+- **camelCase**: JSON fields use camelCase naming (`userId`, `firstName`, `createdAt`)
+- **Content-Type**: Always `application/json`
+
+### Response Codes
+- **GET**: `200 OK` with resource or array (empty array `[]` if no results)
+- **POST**: `201 Created` with created resource
+- **PUT/PATCH**: `200 OK` with updated resource
+- **DELETE**: `204 No Content` with empty body
+
+### Error Response Format
+```json
+{
+  "code": "unique_error_code",
+  "msg": "Human-readable error message",
+  "details": {
+    "field": "Specific field that caused error"
+  }
+}
+```
+
+### Common HTTP Status Codes
+- `400`: Bad Request (validation errors)
+- `401`: Unauthorized (missing/invalid token)
+- `403`: Forbidden (insufficient permissions)
+- `404`: Not Found (resource doesn't exist)
+- `409`: Conflict (resource already exists)
+- `500`: Internal Server Error
+
+### Authentication
+- **JWT tokens**: Use `Authorization: Bearer <token>` header
+- **go-zero annotation**: Use `@server(jwt: Auth)` in .api files
+
+### Pagination
+- **Query parameters**: `page` (default 1), `limit` (default 10, max 100)
+- **Response format**:
+```json
+{
+  "code": 200,
+  "message": "Success",
+  "data": {
+    "list": [...],
+    "pagination": {
+      "page": 2,
+      "limit": 20,
+      "total": 156,
+      "totalPages": 8,
+      "hasNext": true,
+      "hasPrev": true
+    }
+  },
+  "timestamp": "2024-01-01T12:00:00Z"
+}
+```
 
 ## API Documentation
 
@@ -217,3 +292,29 @@ open docs/swagger/index.html
 - Cache frequently accessed data
 - Use Redis for session and rate limiting
 - Monitor database query performance
+
+## Testing Framework and Best Practices
+
+### Testing Tools
+- **GoConvey** (`github.com/smartystreets/goconvey/convey`): BDD-style testing framework
+- **Mockey** (`github.com/bytedance/mockey`): Runtime patching for mocking without interfaces
+- **MongoDB Testing** (`go.mongodb.org/mongo-driver/mongo/integration/mtest`): For database integration tests
+- **Redis Testing** (`github.com/alicebob/miniredis/v2`): In-memory Redis for cache testing
+
+### TDD Approach
+- Follow Red-Green-Refactor cycle
+- Write tests first, then implement logic
+- Use mocking to isolate units under test
+- Separate unit tests from integration tests
+
+### Test Organization
+- Logic tests: `*_test.go` files alongside logic files  
+- DAO tests: `common/dao/*_test.go` for database operations
+- Model tests: `common/model/*_test.go` for validation methods
+- Service isolation: Each service's tests must run independently
+
+### Mocking Strategy
+- Use `mockey` for runtime patching - no interfaces required
+- Mock DAO methods in logic layer tests
+- Use in-memory databases for integration tests
+- Ensure proper cleanup with `defer Unpatch()`
