@@ -40,6 +40,8 @@ Redis:
   DialTimeout: 5  # 秒
   ReadTimeout: 5  # 秒
   WriteTimeout: 5  # 秒
+  ReadTimeout: 5  # 秒
+  WriteTimeout: 5  # 秒
 
 # JWT业务扩展配置
 JWTBusiness:

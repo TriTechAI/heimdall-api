@@ -26,7 +26,8 @@ MongoDB:
 
 # Redis配置
 Redis:
-  Host: localhost:6379
+  Host: localhost
+  Port: 6379
   Password: ""
   DB: 1  # 使用不同的数据库，避免与admin-api冲突
   MaxRetries: 3
