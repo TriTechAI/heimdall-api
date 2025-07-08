@@ -47,3 +47,4 @@ Starting server at 0.0.0.0:8081...
 {"@timestamp":"2025-07-08T20:11:57.403+08:00","caller":"stat/metrics.go:210","content":"(public-api) - qps: 0.0/s, drops: 0, avg time: 0.0ms, med: 0.0ms, 90th: 0.0ms, 99th: 0.0ms, 99.9th: 0.0ms","level":"stat"}
 {"@timestamp":"2025-07-08T20:12:11.876+08:00","caller":"stat/usage.go:61","content":"CPU: 0m, MEMORY: Alloc=2.5Mi, TotalAlloc=2.5Mi, Sys=13.5Mi, NumGC=0","level":"stat"}
 {"@timestamp":"2025-07-08T20:12:11.907+08:00","caller":"load/sheddingstat.go:61","content":"(api) shedding_stat [1m], cpu: 0, total: 0, pass: 0, drop: 0","level":"stat"}
+{"@timestamp":"2025-07-08T20:12:57.402+08:00","caller":"stat/metrics.go:210","content":"(public-api) - qps: 0.0/s, drops: 0, avg time: 0.0ms, med: 0.0ms, 90th: 0.0ms, 99th: 0.0ms, 99.9th: 0.0ms","level":"stat"}
