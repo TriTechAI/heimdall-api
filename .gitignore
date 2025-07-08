@@ -1,6 +1,6 @@
 # If you prefer the allow list template instead of the deny list, see community template:
 # https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
-#
+
 # Binaries for programs and plugins
 *.exe
 *.exe~
@@ -24,9 +24,88 @@ profile.cov
 go.work
 go.work.sum
 
-# env file
+# Environment files
 .env
+.env.local
+.env.production
+.env.development
+*.env
 
-# Editor/IDE
+# Log files
+*.log
+logs/
+log/
+
+# Build artifacts and binaries
+bin/
+build/
+dist/
+*/admin
+*/public
+admin
+public
+
+# Editor/IDE files
 .idea/
 .vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+/tmp/
+temp/
+
+# Database files (local development)
+*.db
+*.sqlite
+*.sqlite3
+
+# Cache and session files
+.cache/
+*.cache
+session/
+sessions/
+
+# Go-Zero specific
+*.api.bak
+
+# Docker
+.dockerignore.bak
+docker-compose.override.yml
+
+# Testing
+test-results/
+*.test.log
+
+# Profiling and debugging
+*.prof
+*.pprof
+*.trace
+
+# Security and secrets (extra protection)
+*.key
+*.pem
+*.p12
+*.pfx
+secrets/
+.secrets/
+
+# Node.js (if any frontend tools)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
