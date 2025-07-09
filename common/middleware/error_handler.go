@@ -20,13 +20,13 @@ func ErrorHandlerMiddleware() func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// 设置响应头
 			w.Header().Set("Content-Type", "application/json; charset=utf-8")
-			
+
 			// 创建自定义ResponseWriter来捕获错误
 			wrapper := &responseWrapper{
 				ResponseWriter: w,
 				statusCode:     http.StatusOK,
 			}
-			
+
 			// 执行下一个处理器
 			next.ServeHTTP(wrapper, r)
 		})
@@ -64,9 +64,9 @@ func (w *responseWrapper) Write(data []byte) (int, error) {
 // HandleError 统一错误处理函数
 func HandleError(w http.ResponseWriter, r *http.Request, err error) {
 	logx.WithContext(r.Context()).Errorf("Request error: %v", err)
-	
+
 	var bizError *errors.BusinessError
-	
+
 	// 检查是否为业务错误
 	if errors.IsBusinessError(err) {
 		bizError, _ = errors.AsBusinessError(err)
@@ -74,10 +74,10 @@ func HandleError(w http.ResponseWriter, r *http.Request, err error) {
 		// 包装为内部错误
 		bizError = errors.WrapInternalError(err)
 	}
-	
+
 	// 根据错误码确定HTTP状态码
 	httpStatus := getHTTPStatusFromErrorCode(bizError.GetCode())
-	
+
 	// 构造错误响应
 	errorResponse := ErrorResponse{
 		Code:      bizError.GetCode(),
@@ -85,7 +85,7 @@ func HandleError(w http.ResponseWriter, r *http.Request, err error) {
 		Details:   bizError.GetDetails(),
 		Timestamp: time.Now().Format(time.RFC3339),
 	}
-	
+
 	// 返回错误响应
 	httpx.WriteJson(w, httpStatus, errorResponse)
 }
@@ -93,10 +93,10 @@ func HandleError(w http.ResponseWriter, r *http.Request, err error) {
 // HandleBusinessError 处理业务错误
 func HandleBusinessError(w http.ResponseWriter, r *http.Request, bizError *errors.BusinessError) {
 	logx.WithContext(r.Context()).Errorf("Business error: %s - %s", bizError.GetCode(), bizError.GetMsg())
-	
+
 	// 根据错误码确定HTTP状态码
 	httpStatus := getHTTPStatusFromErrorCode(bizError.GetCode())
-	
+
 	// 构造错误响应
 	errorResponse := ErrorResponse{
 		Code:      bizError.GetCode(),
@@ -104,7 +104,7 @@ func HandleBusinessError(w http.ResponseWriter, r *http.Request, bizError *error
 		Details:   bizError.GetDetails(),
 		Timestamp: time.Now().Format(time.RFC3339),
 	}
-	
+
 	// 返回错误响应
 	httpx.WriteJson(w, httpStatus, errorResponse)
 }
@@ -117,7 +117,7 @@ func HandleSuccess(w http.ResponseWriter, r *http.Request, data interface{}) {
 		Data:      data,
 		Timestamp: time.Now().Format(time.RFC3339),
 	}
-	
+
 	httpx.WriteJson(w, http.StatusOK, successResponse)
 }
 
@@ -151,51 +151,51 @@ func getHTTPStatusFromErrorCode(errorCode string) int {
 	// 成功
 	case errors.CodeSuccess:
 		return http.StatusOK
-		
+
 	// 客户端错误 4xx
 	case errors.CodeInvalidRequest, errors.CodeValidationFailed:
 		return http.StatusBadRequest
-		
-	case errors.CodeUnauthorized, errors.CodeAuthFailed, errors.CodeTokenInvalid, 
-		 errors.CodeTokenExpired, errors.CodeLoginFailed, errors.CodePasswordIncorrect:
+
+	case errors.CodeUnauthorized, errors.CodeAuthFailed, errors.CodeTokenInvalid,
+		errors.CodeTokenExpired, errors.CodeLoginFailed, errors.CodePasswordIncorrect:
 		return http.StatusUnauthorized
-		
-	case errors.CodeForbidden, errors.CodePermissionDenied, errors.CodeUserDisabled, 
-		 errors.CodeUserLocked:
+
+	case errors.CodeForbidden, errors.CodePermissionDenied, errors.CodeUserDisabled,
+		errors.CodeUserLocked:
 		return http.StatusForbidden
-		
-	case errors.CodeNotFound, errors.CodeUserNotFound, errors.CodePostNotFound, 
-		 errors.CodePageNotFound, errors.CodeCommentNotFound, errors.CodeTagNotFound,
-		 errors.CodeMediaNotFound, errors.CodeSettingNotFound:
+
+	case errors.CodeNotFound, errors.CodeUserNotFound, errors.CodePostNotFound,
+		errors.CodePageNotFound, errors.CodeCommentNotFound, errors.CodeTagNotFound,
+		errors.CodeMediaNotFound, errors.CodeSettingNotFound:
 		return http.StatusNotFound
-		
+
 	case errors.CodeMethodNotAllowed:
 		return http.StatusMethodNotAllowed
-		
-	case errors.CodeConflict, errors.CodeUserExists, errors.CodeUsernameExists, 
-		 errors.CodeEmailExists, errors.CodeSlugExists, errors.CodeTagExists:
+
+	case errors.CodeConflict, errors.CodeUserExists, errors.CodeUsernameExists,
+		errors.CodeEmailExists, errors.CodeSlugExists, errors.CodeTagExists:
 		return http.StatusConflict
-		
+
 	case errors.CodeTooManyRequests, errors.CodeTooManyAttempts:
 		return http.StatusTooManyRequests
-		
+
 	case errors.CodeContentTooLong, errors.CodeFileTooLarge, errors.CodeTooManyTags:
 		return http.StatusRequestEntityTooLarge
-		
+
 	case errors.CodeFileTypeNotAllowed:
 		return http.StatusUnsupportedMediaType
-		
+
 	// 服务器错误 5xx
 	case errors.CodeInternalError, errors.CodeDatabaseError, errors.CodeCacheError,
-		 errors.CodeExternalServiceError, errors.CodeBusinessLogicError:
+		errors.CodeExternalServiceError, errors.CodeBusinessLogicError:
 		return http.StatusInternalServerError
-		
+
 	case errors.CodeServiceUnavailable:
 		return http.StatusServiceUnavailable
-		
+
 	case errors.CodeTimeout:
 		return http.StatusGatewayTimeout
-		
+
 	// 默认为内部服务器错误
 	default:
 		return http.StatusInternalServerError
@@ -267,7 +267,7 @@ func RecoveryMiddleware() func(http.Handler) http.Handler {
 					WriteInternalError(w, r)
 				}
 			}()
-			
+
 			next.ServeHTTP(w, r)
 		})
 	}

@@ -78,30 +78,30 @@ func (cm *CacheManager) Delete(ctx context.Context, keys ...string) error {
 func (cm *CacheManager) DeletePattern(ctx context.Context, pattern string) error {
 	// 构建完整的模式
 	fullPattern := cm.buildKey(pattern)
-	
+
 	// 使用SCAN命令获取匹配的键
 	var cursor uint64
 	var keys []string
-	
+
 	for {
 		result, newCursor, err := cm.client.Scan(ctx, cursor, fullPattern, 100).Result()
 		if err != nil {
 			return fmt.Errorf("failed to scan keys: %w", err)
 		}
-		
+
 		keys = append(keys, result...)
 		cursor = newCursor
-		
+
 		if cursor == 0 {
 			break
 		}
 	}
-	
+
 	// 如果有匹配的键，则删除它们
 	if len(keys) > 0 {
 		return cm.client.Del(ctx, keys...).Err()
 	}
-	
+
 	return nil
 }
 
@@ -131,30 +131,30 @@ func (cm *CacheManager) GetOrSet(ctx context.Context, key string, dest interface
 	if err == nil {
 		return nil // 缓存存在且获取成功
 	}
-	
+
 	// 如果是Redis连接错误，直接返回错误
 	if err != redis.Nil {
 		return fmt.Errorf("cache get error: %w", err)
 	}
-	
+
 	// 缓存不存在，调用setter获取数据
 	value, err := setter()
 	if err != nil {
 		return fmt.Errorf("setter function error: %w", err)
 	}
-	
+
 	// 设置缓存
 	if err := cm.Set(ctx, key, value, ttl); err != nil {
 		// 设置缓存失败不影响数据返回，只记录错误
 		// 在生产环境中可以添加日志记录
 	}
-	
+
 	// 将获取的值赋给dest
 	data, err := json.Marshal(value)
 	if err != nil {
 		return fmt.Errorf("failed to marshal value: %w", err)
 	}
-	
+
 	return json.Unmarshal(data, dest)
 }
 
@@ -215,7 +215,7 @@ func (cm *CacheManager) SetMultiple(ctx context.Context, items map[string]interf
 		if err != nil {
 			return fmt.Errorf("failed to marshal cache value for key %s: %w", key, err)
 		}
-		
+
 		cacheKey := cm.buildKey(key)
 		pipe.Set(ctx, cacheKey, data, ttl)
 	}
@@ -240,7 +240,7 @@ func (cm *CacheManager) Clear(ctx context.Context) error {
 	if cm.prefix == "" {
 		return fmt.Errorf("cannot clear cache without prefix - too dangerous")
 	}
-	
+
 	pattern := cm.prefix + ":*"
 	return cm.DeletePattern(ctx, pattern)
 }
@@ -253,7 +253,7 @@ func (cm *CacheManager) GetStats(ctx context.Context) (map[string]interface{}, e
 	}
 
 	stats := make(map[string]interface{})
-	
+
 	// 解析INFO命令结果
 	lines := strings.Split(info, "\r\n")
 	for _, line := range lines {
@@ -268,9 +268,9 @@ func (cm *CacheManager) GetStats(ctx context.Context) (map[string]interface{}, e
 	// 添加连接池统计
 	poolStats := cm.client.PoolStats()
 	stats["pool_stats"] = map[string]interface{}{
-		"hits":       poolStats.Hits,
-		"misses":     poolStats.Misses,
-		"timeouts":   poolStats.Timeouts,
+		"hits":        poolStats.Hits,
+		"misses":      poolStats.Misses,
+		"timeouts":    poolStats.Timeouts,
 		"total_conns": poolStats.TotalConns,
 		"idle_conns":  poolStats.IdleConns,
 		"stale_conns": poolStats.StaleConns,

@@ -37,8 +37,95 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Path:    "/tags/:slug",
 				Handler: GetPublicTagDetailHandler(serverCtx),
 			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/posts/:postSlug/comments",
+				Handler: GetPublicCommentListHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/posts/:postSlug/comments",
+				Handler: CreateCommentHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/comments/:commentId/replies",
+				Handler: GetCommentRepliesHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/comments/:commentId/replies",
+				Handler: CreateReplyHandler(serverCtx),
+			},
 		},
 		rest.WithPrefix("/api/v1/public"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				Method:  http.MethodGet,
+				Path:    "/site/info",
+				Handler: SiteInfoHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/site/navigation",
+				Handler: NavigationMenuHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/site/settings",
+				Handler: PublicSettingsHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/posts/popular",
+				Handler: PopularPostsHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/posts/recent",
+				Handler: RecentPostsHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/posts/trending",
+				Handler: TrendingPostsHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/posts/:slug/related",
+				Handler: RelatedPostsHandler(serverCtx),
+			},
+		},
+		rest.WithPrefix("/api/v1/public"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				Method:  http.MethodGet,
+				Path:    "/robotstxt",
+				Handler: RobotsHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/sitemapxml",
+				Handler: SitemapHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/rssxml",
+				Handler: RSSFeedHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/feedjson",
+				Handler: JSONFeedHandler(serverCtx),
+			},
+		},
+		rest.WithPrefix("/"),
 	)
 
 	server.AddRoutes(

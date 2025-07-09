@@ -22,7 +22,7 @@ func LoginHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 
 		// 提取客户端真实IP地址
 		clientIP := utils.GetClientIP(r)
-		
+
 		// 将IP地址添加到context中
 		ctx := context.WithValue(r.Context(), "client_ip", clientIP)
 

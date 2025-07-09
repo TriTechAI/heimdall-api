@@ -36,6 +36,30 @@ func (l *CreateTagLogic) CreateTag(req *types.TagCreateRequest) (resp *types.Tag
 	}
 
 	// 创建标签模型
+	tag := l.buildTagModel(req)
+
+	// 检查slug合法性
+	if err := l.checkSlugAvailability(tag.Slug); err != nil {
+		return nil, err
+	}
+
+	// 验证标签数据
+	if err := tag.Validate(); err != nil {
+		l.Errorf("标签数据验证失败: %v", err)
+		return nil, fmt.Errorf("标签数据验证失败: %v", err)
+	}
+
+	// 创建标签
+	if err := l.createTag(tag); err != nil {
+		return nil, err
+	}
+
+	// 构建响应
+	return l.buildCreateResponse(tag), nil
+}
+
+// buildTagModel 构建标签模型
+func (l *CreateTagLogic) buildTagModel(req *types.TagCreateRequest) *model.TagModel {
 	tag := &model.TagModel{
 		Name:            strings.TrimSpace(req.Name),
 		Description:     strings.TrimSpace(req.Description),
@@ -56,32 +80,35 @@ func (l *CreateTagLogic) CreateTag(req *types.TagCreateRequest) (resp *types.Tag
 	// 设置默认值
 	tag.PrepareForCreation()
 
-	// 检查slug是否已存在
-	existingTag, err := l.svcCtx.TagDAO.GetBySlug(l.ctx, tag.Slug)
+	return tag
+}
+
+// checkSlugAvailability 检查slug是否可用
+func (l *CreateTagLogic) checkSlugAvailability(slug string) error {
+	existingTag, err := l.svcCtx.TagDAO.GetBySlug(l.ctx, slug)
 	if err == nil && existingTag != nil {
-		l.Errorf("标签slug已存在: %s", tag.Slug)
-		return nil, fmt.Errorf("标签标识符 '%s' 已存在，请使用其他标识符", tag.Slug)
+		l.Errorf("标签slug已存在: %s", slug)
+		return fmt.Errorf("标签标识符 '%s' 已存在，请使用其他标识符", slug)
 	}
+	return nil
+}
 
-	// 验证标签数据
-	if err := tag.Validate(); err != nil {
-		l.Errorf("标签数据验证失败: %v", err)
-		return nil, fmt.Errorf("标签数据验证失败: %v", err)
-	}
-
-	// 创建标签
+// createTag 创建标签
+func (l *CreateTagLogic) createTag(tag *model.TagModel) error {
 	if err := l.svcCtx.TagDAO.Create(l.ctx, tag); err != nil {
 		l.Errorf("创建标签失败: %v", err)
-		return nil, fmt.Errorf("创建标签失败: %v", err)
+		return fmt.Errorf("创建标签失败: %v", err)
 	}
-
 	l.Infof("标签创建成功: %s (ID: %s)", tag.Name, tag.ID.Hex())
+	return nil
+}
 
-	// 构建响应
-	resp = &types.TagCreateResponse{
+// buildCreateResponse 构建创建响应
+func (l *CreateTagLogic) buildCreateResponse(tag *model.TagModel) *types.TagCreateResponse {
+	return &types.TagCreateResponse{
 		Code:      200,
 		Message:   "标签创建成功",
-		Timestamp: time.Now().Format(time.RFC3339),
+		Timestamp: time.Now().Format(constants.DefaultTimeFormat),
 		Data: types.TagDetailInfo{
 			ID:              tag.ID.Hex(),
 			Name:            tag.Name,
@@ -93,12 +120,10 @@ func (l *CreateTagLogic) CreateTag(req *types.TagCreateRequest) (resp *types.Tag
 			MetaDescription: tag.MetaDescription,
 			PostCount:       tag.PostCount,
 			Visibility:      tag.Visibility,
-			CreatedAt:       tag.CreatedAt.Format(time.RFC3339),
-			UpdatedAt:       tag.UpdatedAt.Format(time.RFC3339),
+			CreatedAt:       tag.CreatedAt.Format(constants.DefaultTimeFormat),
+			UpdatedAt:       tag.UpdatedAt.Format(constants.DefaultTimeFormat),
 		},
 	}
-
-	return resp, nil
 }
 
 // validateCreateRequest 验证创建请求

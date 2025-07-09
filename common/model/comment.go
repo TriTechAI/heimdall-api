@@ -12,24 +12,24 @@ import (
 
 // Comment 评论模型
 type Comment struct {
-	ID           primitive.ObjectID  `bson:"_id,omitempty" json:"id"`
-	PostID       primitive.ObjectID  `bson:"postId" json:"postId"`               // 所属文章ID
-	ParentID     *primitive.ObjectID `bson:"parentId,omitempty" json:"parentId"` // 父评论ID（支持嵌套）
-	Content      string              `bson:"content" json:"content"`             // 评论内容
-	AuthorName   string              `bson:"authorName" json:"authorName"`       // 作者姓名
-	AuthorEmail  string              `bson:"authorEmail" json:"authorEmail"`     // 作者邮箱
-	AuthorWebsite string             `bson:"authorWebsite,omitempty" json:"authorWebsite"` // 作者网站
-	AuthorIP     string              `bson:"authorIP" json:"authorIP"`           // 作者IP地址
-	UserAgent    string              `bson:"userAgent,omitempty" json:"userAgent"` // 用户代理
-	Status       string              `bson:"status" json:"status"`               // 评论状态
-	Visibility   string              `bson:"visibility" json:"visibility"`       // 可见性
-	Type         string              `bson:"type" json:"type"`                   // 评论类型
-	Level        int                 `bson:"level" json:"level"`                 // 嵌套层级
-	ReplyCount   int                 `bson:"replyCount" json:"replyCount"`       // 回复数量
-	LikeCount    int                 `bson:"likeCount" json:"likeCount"`         // 点赞数量
-	CreatedAt    time.Time           `bson:"createdAt" json:"createdAt"`         // 创建时间
-	UpdatedAt    time.Time           `bson:"updatedAt" json:"updatedAt"`         // 更新时间
-	ApprovedAt   *time.Time          `bson:"approvedAt,omitempty" json:"approvedAt"` // 审核通过时间
+	ID            primitive.ObjectID  `bson:"_id,omitempty" json:"id"`
+	PostID        primitive.ObjectID  `bson:"postId" json:"postId"`                         // 所属文章ID
+	ParentID      *primitive.ObjectID `bson:"parentId,omitempty" json:"parentId"`           // 父评论ID（支持嵌套）
+	Content       string              `bson:"content" json:"content"`                       // 评论内容
+	AuthorName    string              `bson:"authorName" json:"authorName"`                 // 作者姓名
+	AuthorEmail   string              `bson:"authorEmail" json:"authorEmail"`               // 作者邮箱
+	AuthorWebsite string              `bson:"authorWebsite,omitempty" json:"authorWebsite"` // 作者网站
+	AuthorIP      string              `bson:"authorIP" json:"authorIP"`                     // 作者IP地址
+	UserAgent     string              `bson:"userAgent,omitempty" json:"userAgent"`         // 用户代理
+	Status        string              `bson:"status" json:"status"`                         // 评论状态
+	Visibility    string              `bson:"visibility" json:"visibility"`                 // 可见性
+	Type          string              `bson:"type" json:"type"`                             // 评论类型
+	Level         int                 `bson:"level" json:"level"`                           // 嵌套层级
+	ReplyCount    int                 `bson:"replyCount" json:"replyCount"`                 // 回复数量
+	LikeCount     int                 `bson:"likeCount" json:"likeCount"`                   // 点赞数量
+	CreatedAt     time.Time           `bson:"createdAt" json:"createdAt"`                   // 创建时间
+	UpdatedAt     time.Time           `bson:"updatedAt" json:"updatedAt"`                   // 更新时间
+	ApprovedAt    *time.Time          `bson:"approvedAt,omitempty" json:"approvedAt"`       // 审核通过时间
 }
 
 // CommentCreateRequest 评论创建请求
@@ -54,39 +54,39 @@ type CommentUpdateRequest struct {
 
 // CommentFilter 评论过滤器
 type CommentFilter struct {
-	PostID       string    `json:"postId,omitempty"`
-	ParentID     string    `json:"parentId,omitempty"`
-	AuthorEmail  string    `json:"authorEmail,omitempty"`
-	AuthorIP     string    `json:"authorIP,omitempty"`
-	Status       string    `json:"status,omitempty"`
-	Visibility   string    `json:"visibility,omitempty"`
-	Type         string    `json:"type,omitempty"`
-	Level        int       `json:"level,omitempty"`
-	Keyword      string    `json:"keyword,omitempty"`
-	StartTime    time.Time `json:"startTime,omitempty"`
-	EndTime      time.Time `json:"endTime,omitempty"`
-	SortBy       string    `json:"sortBy,omitempty"`
-	SortDesc     bool      `json:"sortDesc,omitempty"`
+	PostID      string    `json:"postId,omitempty"`
+	ParentID    string    `json:"parentId,omitempty"`
+	AuthorEmail string    `json:"authorEmail,omitempty"`
+	AuthorIP    string    `json:"authorIP,omitempty"`
+	Status      string    `json:"status,omitempty"`
+	Visibility  string    `json:"visibility,omitempty"`
+	Type        string    `json:"type,omitempty"`
+	Level       int       `json:"level,omitempty"`
+	Keyword     string    `json:"keyword,omitempty"`
+	StartTime   time.Time `json:"startTime,omitempty"`
+	EndTime     time.Time `json:"endTime,omitempty"`
+	SortBy      string    `json:"sortBy,omitempty"`
+	SortDesc    bool      `json:"sortDesc,omitempty"`
 }
 
 // CommentListItem 评论列表项
 type CommentListItem struct {
-	ID            string                `json:"id"`
-	PostID        string                `json:"postId"`
-	ParentID      string                `json:"parentId,omitempty"`
-	Content       string                `json:"content"`
-	AuthorName    string                `json:"authorName"`
-	AuthorEmail   string                `json:"authorEmail"`
-	AuthorWebsite string                `json:"authorWebsite,omitempty"`
-	Status        string                `json:"status"`
-	Type          string                `json:"type"`
-	Level         int                   `json:"level"`
-	ReplyCount    int                   `json:"replyCount"`
-	LikeCount     int                   `json:"likeCount"`
-	CreatedAt     time.Time             `json:"createdAt"`
-	UpdatedAt     time.Time             `json:"updatedAt"`
-	ApprovedAt    *time.Time            `json:"approvedAt,omitempty"`
-	Replies       []*CommentListItem    `json:"replies,omitempty"` // 子评论
+	ID            string             `json:"id"`
+	PostID        string             `json:"postId"`
+	ParentID      string             `json:"parentId,omitempty"`
+	Content       string             `json:"content"`
+	AuthorName    string             `json:"authorName"`
+	AuthorEmail   string             `json:"authorEmail"`
+	AuthorWebsite string             `json:"authorWebsite,omitempty"`
+	Status        string             `json:"status"`
+	Type          string             `json:"type"`
+	Level         int                `json:"level"`
+	ReplyCount    int                `json:"replyCount"`
+	LikeCount     int                `json:"likeCount"`
+	CreatedAt     time.Time          `json:"createdAt"`
+	UpdatedAt     time.Time          `json:"updatedAt"`
+	ApprovedAt    *time.Time         `json:"approvedAt,omitempty"`
+	Replies       []*CommentListItem `json:"replies,omitempty"` // 子评论
 }
 
 // CommentDetailResponse 评论详情响应
@@ -406,7 +406,7 @@ func NewCommentFromCreateRequest(req *CommentCreateRequest, authorIP string) (*C
 	}
 
 	var comment *Comment
-	
+
 	// 处理回复评论
 	if req.ParentID != "" {
 		parentObjID, err := primitive.ObjectIDFromHex(req.ParentID)
@@ -482,19 +482,19 @@ func maskEmail(email string) string {
 	if email == "" {
 		return ""
 	}
-	
+
 	parts := strings.Split(email, "@")
 	if len(parts) != 2 {
 		return email
 	}
-	
+
 	username := parts[0]
 	domain := parts[1]
-	
+
 	if len(username) <= 2 {
 		return email // 太短不处理
 	}
-	
+
 	maskedUsername := string(username[0]) + "***" + string(username[len(username)-1])
 	return maskedUsername + "@" + domain
 }

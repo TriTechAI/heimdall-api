@@ -168,6 +168,258 @@ type PublicTagDetailData struct {
 	RecentPosts []PublicPostListItem `json:"recentPosts"`
 }
 
+type PublicCommentListRequest struct {
+	PostSlug string `path:"postSlug"`                                             // 文章slug
+	Page     int    `form:"page,default=1,range=[1:]"`                            // 页码，从1开始
+	Limit    int    `form:"limit,default=20,range=[1:50]"`                        // 每页记录数，最大50
+	SortBy   string `form:"sortBy,default=createdAt,options=createdAt|likeCount"` // 排序字段
+	SortDesc bool   `form:"sortDesc,default=false"`                               // 是否降序排列
+}
+
+type PublicCommentListResponse struct {
+	Code      int                   `json:"code"`
+	Message   string                `json:"message"`
+	Data      PublicCommentListData `json:"data"`
+	Timestamp string                `json:"timestamp"`
+}
+
+type PublicCommentListData struct {
+	List       []PublicCommentInfo `json:"list"`
+	Pagination PaginationInfo      `json:"pagination"`
+}
+
+type PublicCommentInfo struct {
+	ID            string              `json:"id"`
+	Content       string              `json:"content"`
+	AuthorName    string              `json:"authorName"`
+	AuthorWebsite string              `json:"authorWebsite"`
+	Level         int                 `json:"level"`
+	ReplyCount    int                 `json:"replyCount"`
+	LikeCount     int                 `json:"likeCount"`
+	CreatedAt     string              `json:"createdAt"`
+	Replies       []PublicCommentInfo `json:"replies"`
+}
+
+type CreateCommentRequest struct {
+	PostSlug      string `path:"postSlug"`                                                // 文章slug
+	ParentID      string `json:"parentId,optional"`                                       // 父评论ID（回复时使用）
+	Content       string `json:"content" validate:"required,min=1,max=1000"`              // 评论内容
+	AuthorName    string `json:"authorName" validate:"required,min=1,max=100"`            // 作者姓名
+	AuthorEmail   string `json:"authorEmail" validate:"required,email,max=255"`           // 作者邮箱
+	AuthorWebsite string `json:"authorWebsite,optional" validate:"omitempty,url,max=255"` // 作者网站
+}
+
+type CreateCommentResponse struct {
+	Code      int               `json:"code"`
+	Message   string            `json:"message"`
+	Data      CreateCommentData `json:"data"`
+	Timestamp string            `json:"timestamp"`
+}
+
+type CreateCommentData struct {
+	ID        string `json:"id"`
+	Content   string `json:"content"`
+	Status    string `json:"status"`
+	CreatedAt string `json:"createdAt"`
+	Message   string `json:"message"`
+}
+
+type GetCommentRepliesRequest struct {
+	CommentID string `path:"commentId"`                     // 评论ID
+	Page      int    `form:"page,default=1,range=[1:]"`     // 页码，从1开始
+	Limit     int    `form:"limit,default=10,range=[1:30]"` // 每页记录数，最大30
+}
+
+type GetCommentRepliesResponse struct {
+	Code      int                   `json:"code"`
+	Message   string                `json:"message"`
+	Data      PublicCommentListData `json:"data"`
+	Timestamp string                `json:"timestamp"`
+}
+
+type CreateReplyRequest struct {
+	CommentID     string `path:"commentId"`                                               // 父评论ID
+	Content       string `json:"content" validate:"required,min=1,max=1000"`              // 回复内容
+	AuthorName    string `json:"authorName" validate:"required,min=1,max=100"`            // 作者姓名
+	AuthorEmail   string `json:"authorEmail" validate:"required,email,max=255"`           // 作者邮箱
+	AuthorWebsite string `json:"authorWebsite,optional" validate:"omitempty,url,max=255"` // 作者网站
+}
+
+type CreateReplyResponse struct {
+	Code      int               `json:"code"`
+	Message   string            `json:"message"`
+	Data      CreateCommentData `json:"data"`
+	Timestamp string            `json:"timestamp"`
+}
+
+type RobotsRequest struct {
+}
+
+type SitemapRequest struct {
+}
+
+type RSSFeedRequest struct {
+}
+
+type JSONFeedRequest struct {
+}
+
+type SiteInfoRequest struct {
+}
+
+type SiteInfoResponse struct {
+	Code      int          `json:"code"`
+	Message   string       `json:"message"`
+	Data      SiteInfoData `json:"data"`
+	Timestamp string       `json:"timestamp"`
+}
+
+type SiteInfoData struct {
+	Title       string      `json:"title"`
+	Description string      `json:"description"`
+	Keywords    string      `json:"keywords"`
+	Author      string      `json:"author"`
+	Logo        string      `json:"logo"`
+	Favicon     string      `json:"favicon"`
+	Language    string      `json:"language"`
+	Timezone    string      `json:"timezone"`
+	Domain      string      `json:"domain"`
+	Email       string      `json:"email"`
+	Social      SocialLinks `json:"social"`
+	SEO         SEOSettings `json:"seo"`
+}
+
+type SocialLinks struct {
+	Twitter  string `json:"twitter"`
+	GitHub   string `json:"github"`
+	LinkedIn string `json:"linkedin"`
+	WeChat   string `json:"wechat"`
+	Email    string `json:"email"`
+}
+
+type SEOSettings struct {
+	MetaTitle       string `json:"metaTitle"`
+	MetaDescription string `json:"metaDescription"`
+	MetaKeywords    string `json:"metaKeywords"`
+	OgTitle         string `json:"ogTitle"`
+	OgDescription   string `json:"ogDescription"`
+	OgImage         string `json:"ogImage"`
+	TwitterCard     string `json:"twitterCard"`
+	TwitterCreator  string `json:"twitterCreator"`
+}
+
+type NavigationMenuRequest struct {
+	Type string `form:"type,default=header,options=header|footer"` // 菜单类型
+}
+
+type NavigationMenuResponse struct {
+	Code      int                `json:"code"`
+	Message   string             `json:"message"`
+	Data      NavigationMenuData `json:"data"`
+	Timestamp string             `json:"timestamp"`
+}
+
+type NavigationMenuData struct {
+	Items []NavigationItem `json:"items"`
+}
+
+type NavigationItem struct {
+	ID       string           `json:"id"`
+	Label    string           `json:"label"`
+	URL      string           `json:"url"`
+	Icon     string           `json:"icon"`
+	Target   string           `json:"target"`
+	Order    int              `json:"order"`
+	Parent   string           `json:"parent"`
+	Children []NavigationItem `json:"children"`
+}
+
+type PublicSettingsRequest struct {
+}
+
+type PublicSettingsResponse struct {
+	Code      int                `json:"code"`
+	Message   string             `json:"message"`
+	Data      PublicSettingsData `json:"data"`
+	Timestamp string             `json:"timestamp"`
+}
+
+type PublicSettingsData struct {
+	AllowComments     bool `json:"allowComments"`
+	AllowRegistration bool `json:"allowRegistration"`
+	RequireApproval   bool `json:"requireApproval"`
+	EnableRSS         bool `json:"enableRSS"`
+	EnableJSONFeed    bool `json:"enableJSONFeed"`
+	EnableSitemap     bool `json:"enableSitemap"`
+	PostsPerPage      int  `json:"postsPerPage"`
+	CommentsPerPage   int  `json:"commentsPerPage"`
+	MaxCommentDepth   int  `json:"maxCommentDepth"`
+	CommentTimeout    int  `json:"commentTimeout"`
+}
+
+type PopularPostsRequest struct {
+	Limit int `form:"limit,default=10,range=[1:20]"` // 返回数量，最大20
+	Days  int `form:"days,default=30,range=[1:365]"` // 统计天数，最大365天
+}
+
+type PopularPostsResponse struct {
+	Code      int              `json:"code"`
+	Message   string           `json:"message"`
+	Data      PopularPostsData `json:"data"`
+	Timestamp string           `json:"timestamp"`
+}
+
+type PopularPostsData struct {
+	Posts []PublicPostListItem `json:"posts"`
+}
+
+type RecentPostsRequest struct {
+	Limit int `form:"limit,default=10,range=[1:20]"` // 返回数量，最大20
+}
+
+type RecentPostsResponse struct {
+	Code      int             `json:"code"`
+	Message   string          `json:"message"`
+	Data      RecentPostsData `json:"data"`
+	Timestamp string          `json:"timestamp"`
+}
+
+type RecentPostsData struct {
+	Posts []PublicPostListItem `json:"posts"`
+}
+
+type TrendingPostsRequest struct {
+	Limit int `form:"limit,default=10,range=[1:20]"` // 返回数量，最大20
+	Days  int `form:"days,default=7,range=[1:30]"`   // 统计天数，最大30天
+}
+
+type TrendingPostsResponse struct {
+	Code      int               `json:"code"`
+	Message   string            `json:"message"`
+	Data      TrendingPostsData `json:"data"`
+	Timestamp string            `json:"timestamp"`
+}
+
+type TrendingPostsData struct {
+	Posts []PublicPostListItem `json:"posts"`
+}
+
+type RelatedPostsRequest struct {
+	Slug  string `path:"slug"`                         // 文章slug
+	Limit int    `form:"limit,default=5,range=[1:10]"` // 返回数量，最大10
+}
+
+type RelatedPostsResponse struct {
+	Code      int              `json:"code"`
+	Message   string           `json:"message"`
+	Data      RelatedPostsData `json:"data"`
+	Timestamp string           `json:"timestamp"`
+}
+
+type RelatedPostsData struct {
+	Posts []PublicPostListItem `json:"posts"`
+}
+
 type TestRequest struct {
 	Name string `path:"name,options=you|me"`
 }

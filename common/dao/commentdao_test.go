@@ -17,7 +17,7 @@ import (
 func TestCommentDAO(t *testing.T) {
 	mockey.PatchConvey("CommentDAO单元测试", t, func() {
 		ctx := context.Background()
-		
+
 		// Mock the collection to avoid nil pointer errors
 		mockCollection := &mongo.Collection{}
 		dao := &CommentDAO{
@@ -186,7 +186,7 @@ func TestCommentDAO(t *testing.T) {
 
 			Convey("正常获取评论列表", func() {
 				mockey.Mock((*mongo.Collection).CountDocuments).Return(int64(10), nil).Build()
-				
+
 				mockCursor := &mongo.Cursor{}
 				mockey.Mock((*mongo.Collection).Find).Return(mockCursor, nil).Build()
 				mockey.Mock((*mongo.Cursor).All).To(func(ctx context.Context, results interface{}) error {
@@ -243,7 +243,7 @@ func TestCommentDAO(t *testing.T) {
 
 			Convey("正常获取文章评论", func() {
 				mockey.Mock((*mongo.Collection).CountDocuments).Return(int64(5), nil).Build()
-				
+
 				mockCursor := &mongo.Cursor{}
 				mockey.Mock((*mongo.Collection).Find).Return(mockCursor, nil).Build()
 				mockey.Mock((*mongo.Cursor).All).To(func(ctx context.Context, results interface{}) error {

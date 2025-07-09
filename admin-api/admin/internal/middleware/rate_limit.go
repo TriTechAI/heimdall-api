@@ -24,13 +24,13 @@ type RateLimitConfig struct {
 	Window       time.Duration // 时间窗口
 
 	// 登录接口特殊限流
-	LoginRPS   int           // 登录请求每秒限制
-	LoginBurst int           // 登录请求突发限制
+	LoginRPS    int           // 登录请求每秒限制
+	LoginBurst  int           // 登录请求突发限制
 	LoginWindow time.Duration // 登录时间窗口
 
 	// API创建操作限流
-	CreateRPS   int           // 创建操作每秒限制
-	CreateBurst int           // 创建操作突发限制
+	CreateRPS    int           // 创建操作每秒限制
+	CreateBurst  int           // 创建操作突发限制
 	CreateWindow time.Duration // 创建操作时间窗口
 }
 
@@ -52,7 +52,7 @@ func NewIPRateLimitMiddleware(redis *redis.Client, config RateLimitConfig) *IPRa
 	if config.Window == 0 {
 		config.Window = time.Minute // 默认1分钟窗口
 	}
-	
+
 	// 登录接口默认配置
 	if config.LoginRPS == 0 {
 		config.LoginRPS = 5 // 每秒5次登录尝试
@@ -179,8 +179,8 @@ func (m *IPRateLimitMiddleware) selectLimitConfig(path, method string) cache.Rat
 	}
 
 	// POST创建操作限流
-	if method == "POST" && (strings.Contains(path, "/posts") || 
-		strings.Contains(path, "/users") || 
+	if method == "POST" && (strings.Contains(path, "/posts") ||
+		strings.Contains(path, "/users") ||
 		strings.Contains(path, "/pages")) {
 		return cache.RateLimitConfig{
 			Limit:  m.config.CreateRPS,
@@ -201,7 +201,7 @@ func (m *IPRateLimitMiddleware) selectLimitConfig(path, method string) cache.Rat
 func (m *IPRateLimitMiddleware) checkRateLimit(ctx context.Context, clientIP, path string, config cache.RateLimitConfig) (allowed bool, remaining int, resetTime int64, err error) {
 	// 构建限流键
 	key := fmt.Sprintf("%s:%s", clientIP, m.normalizePathForRateLimit(path))
-	
+
 	// 执行限流检查
 	var result *cache.RateLimitResult
 	if strings.Contains(path, "/auth/login") {
@@ -211,11 +211,11 @@ func (m *IPRateLimitMiddleware) checkRateLimit(ctx context.Context, clientIP, pa
 		// 其他使用固定窗口
 		result, err = m.cache.CheckRateLimitFixed(ctx, key, config)
 	}
-	
+
 	if err != nil {
 		return false, 0, 0, err
 	}
-	
+
 	return result.Allowed, result.Remaining, result.ResetAt.Unix(), nil
 }
 
@@ -223,7 +223,7 @@ func (m *IPRateLimitMiddleware) checkRateLimit(ctx context.Context, clientIP, pa
 func (m *IPRateLimitMiddleware) normalizePathForRateLimit(path string) string {
 	// 将路径中的ID参数标准化，避免每个不同ID都创建新的限流键
 	// 例如：/api/v1/admin/users/123 -> /api/v1/admin/users/{id}
-	
+
 	parts := strings.Split(path, "/")
 	for i, part := range parts {
 		// 检查是否为ID参数（纯数字或类似ObjectID格式）
@@ -231,7 +231,7 @@ func (m *IPRateLimitMiddleware) normalizePathForRateLimit(path string) string {
 			parts[i] = "{id}"
 		}
 	}
-	
+
 	return strings.Join(parts, "/")
 }
 
@@ -241,7 +241,7 @@ func (m *IPRateLimitMiddleware) looksLikeID(s string) bool {
 	if _, err := strconv.Atoi(s); err == nil {
 		return true
 	}
-	
+
 	// 检查是否为MongoDB ObjectID格式（24位十六进制）
 	if len(s) == 24 {
 		for _, c := range s {
@@ -251,7 +251,7 @@ func (m *IPRateLimitMiddleware) looksLikeID(s string) bool {
 		}
 		return true
 	}
-	
+
 	return false
 }
 
@@ -266,12 +266,12 @@ func (m *IPRateLimitMiddleware) setRateLimitHeaders(w http.ResponseWriter, limit
 func (m *IPRateLimitMiddleware) writeErrorResponse(w http.ResponseWriter, message string, statusCode int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
-	
+
 	response := map[string]interface{}{
 		"code":    statusCode,
 		"message": message,
 	}
-	
+
 	httpx.WriteJson(w, statusCode, response)
 }
 
@@ -279,13 +279,13 @@ func (m *IPRateLimitMiddleware) writeErrorResponse(w http.ResponseWriter, messag
 func (m *IPRateLimitMiddleware) writeRateLimitResponse(w http.ResponseWriter, remaining int, resetTime int64) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusTooManyRequests)
-	
+
 	response := map[string]interface{}{
 		"code":      429,
 		"message":   "请求过于频繁，请稍后重试",
 		"remaining": remaining,
 		"resetTime": resetTime,
 	}
-	
+
 	httpx.WriteJson(w, http.StatusTooManyRequests, response)
 }

@@ -15,16 +15,16 @@ type AdminCacheManager struct {
 
 // AdminCacheTTL 管理员缓存TTL配置
 var AdminCacheTTL = struct {
-	UserList    time.Duration // 用户列表缓存 5分钟
-	UserDetail  time.Duration // 用户详情缓存 10分钟
-	PostList    time.Duration // 文章列表缓存 3分钟
-	PostDetail  time.Duration // 文章详情缓存 5分钟
-	TagList     time.Duration // 标签列表缓存 10分钟
-	PageList    time.Duration // 页面列表缓存 5分钟
-	LoginLogs   time.Duration // 登录日志缓存 5分钟
-	Dashboard   time.Duration // 仪表盘数据缓存 15分钟
-	Analytics   time.Duration // 分析数据缓存 30分钟
-	SystemInfo  time.Duration // 系统信息缓存 5分钟
+	UserList   time.Duration // 用户列表缓存 5分钟
+	UserDetail time.Duration // 用户详情缓存 10分钟
+	PostList   time.Duration // 文章列表缓存 3分钟
+	PostDetail time.Duration // 文章详情缓存 5分钟
+	TagList    time.Duration // 标签列表缓存 10分钟
+	PageList   time.Duration // 页面列表缓存 5分钟
+	LoginLogs  time.Duration // 登录日志缓存 5分钟
+	Dashboard  time.Duration // 仪表盘数据缓存 15分钟
+	Analytics  time.Duration // 分析数据缓存 30分钟
+	SystemInfo time.Duration // 系统信息缓存 5分钟
 }{
 	UserList:   5 * time.Minute,
 	UserDetail: 10 * time.Minute,
@@ -68,7 +68,7 @@ func (acm *AdminCacheManager) InvalidateUserList(ctx context.Context) error {
 // buildUserListKey 构建用户列表缓存键
 func (acm *AdminCacheManager) buildUserListKey(page, limit int, filters map[string]interface{}) string {
 	key := fmt.Sprintf("admin:user:list:p%d:l%d", page, limit)
-	
+
 	if role, ok := filters["role"].(string); ok && role != "" {
 		key += fmt.Sprintf(":role:%s", role)
 	}
@@ -84,7 +84,7 @@ func (acm *AdminCacheManager) buildUserListKey(page, limit int, filters map[stri
 	if sortDesc, ok := filters["sortDesc"].(bool); ok && sortDesc {
 		key += ":desc"
 	}
-	
+
 	return key
 }
 
@@ -129,7 +129,7 @@ func (acm *AdminCacheManager) InvalidatePostList(ctx context.Context) error {
 // buildPostListKey 构建文章列表缓存键
 func (acm *AdminCacheManager) buildPostListKey(page, limit int, filters map[string]interface{}) string {
 	key := fmt.Sprintf("admin:post:list:p%d:l%d", page, limit)
-	
+
 	if status, ok := filters["status"].(string); ok && status != "" {
 		key += fmt.Sprintf(":status:%s", status)
 	}
@@ -148,7 +148,7 @@ func (acm *AdminCacheManager) buildPostListKey(page, limit int, filters map[stri
 	if sortDesc, ok := filters["sortDesc"].(bool); ok && sortDesc {
 		key += ":desc"
 	}
-	
+
 	return key
 }
 
@@ -193,7 +193,7 @@ func (acm *AdminCacheManager) InvalidateTagList(ctx context.Context) error {
 // buildTagListKey 构建标签列表缓存键
 func (acm *AdminCacheManager) buildTagListKey(page, limit int, filters map[string]interface{}) string {
 	key := fmt.Sprintf("admin:tag:list:p%d:l%d", page, limit)
-	
+
 	if keyword, ok := filters["keyword"].(string); ok && keyword != "" {
 		key += fmt.Sprintf(":keyword:%s", keyword)
 	}
@@ -203,7 +203,7 @@ func (acm *AdminCacheManager) buildTagListKey(page, limit int, filters map[strin
 	if sortDesc, ok := filters["sortDesc"].(bool); ok && sortDesc {
 		key += ":desc"
 	}
-	
+
 	return key
 }
 
@@ -230,7 +230,7 @@ func (acm *AdminCacheManager) InvalidatePageList(ctx context.Context) error {
 // buildPageListKey 构建页面列表缓存键
 func (acm *AdminCacheManager) buildPageListKey(page, limit int, filters map[string]interface{}) string {
 	key := fmt.Sprintf("admin:page:list:p%d:l%d", page, limit)
-	
+
 	if status, ok := filters["status"].(string); ok && status != "" {
 		key += fmt.Sprintf(":status:%s", status)
 	}
@@ -246,7 +246,7 @@ func (acm *AdminCacheManager) buildPageListKey(page, limit int, filters map[stri
 	if sortDesc, ok := filters["sortDesc"].(bool); ok && sortDesc {
 		key += ":desc"
 	}
-	
+
 	return key
 }
 
@@ -273,7 +273,7 @@ func (acm *AdminCacheManager) InvalidateLoginLogs(ctx context.Context) error {
 // buildLoginLogsKey 构建登录日志缓存键
 func (acm *AdminCacheManager) buildLoginLogsKey(page, limit int, filters map[string]interface{}) string {
 	key := fmt.Sprintf("admin:loginlog:p%d:l%d", page, limit)
-	
+
 	if userID, ok := filters["userID"].(string); ok && userID != "" {
 		key += fmt.Sprintf(":user:%s", userID)
 	}
@@ -293,7 +293,7 @@ func (acm *AdminCacheManager) buildLoginLogsKey(page, limit int, filters map[str
 	if endTime, ok := filters["endTime"].(string); ok && endTime != "" {
 		key += fmt.Sprintf(":end:%s", endTime)
 	}
-	
+
 	return key
 }
 
@@ -365,22 +365,22 @@ func (acm *AdminCacheManager) InvalidateUserRelated(ctx context.Context, userID 
 	if err := acm.InvalidateUserDetail(ctx, userID); err != nil {
 		return fmt.Errorf("failed to invalidate user detail: %w", err)
 	}
-	
+
 	// 失效用户列表
 	if err := acm.InvalidateUserList(ctx); err != nil {
 		return fmt.Errorf("failed to invalidate user list: %w", err)
 	}
-	
+
 	// 失效登录日志
 	if err := acm.InvalidateLoginLogs(ctx); err != nil {
 		return fmt.Errorf("failed to invalidate login logs: %w", err)
 	}
-	
+
 	// 失效仪表盘统计
 	if err := acm.InvalidateDashboardStats(ctx); err != nil {
 		return fmt.Errorf("failed to invalidate dashboard stats: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -390,22 +390,22 @@ func (acm *AdminCacheManager) InvalidatePostRelated(ctx context.Context, postID 
 	if err := acm.InvalidatePostDetail(ctx, postID); err != nil {
 		return fmt.Errorf("failed to invalidate post detail: %w", err)
 	}
-	
+
 	// 失效文章列表
 	if err := acm.InvalidatePostList(ctx); err != nil {
 		return fmt.Errorf("failed to invalidate post list: %w", err)
 	}
-	
+
 	// 失效仪表盘统计
 	if err := acm.InvalidateDashboardStats(ctx); err != nil {
 		return fmt.Errorf("failed to invalidate dashboard stats: %w", err)
 	}
-	
+
 	// 失效相关分析数据
 	if err := acm.InvalidateAnalyticsData(ctx, "posts"); err != nil {
 		return fmt.Errorf("failed to invalidate analytics data: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -415,11 +415,11 @@ func (acm *AdminCacheManager) InvalidateTagRelated(ctx context.Context) error {
 	if err := acm.InvalidateTagList(ctx); err != nil {
 		return fmt.Errorf("failed to invalidate tag list: %w", err)
 	}
-	
+
 	// 失效文章列表（因为可能有标签过滤）
 	if err := acm.InvalidatePostList(ctx); err != nil {
 		return fmt.Errorf("failed to invalidate post list: %w", err)
 	}
-	
+
 	return nil
 }

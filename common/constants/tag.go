@@ -8,14 +8,14 @@ const (
 
 // TagValidation 标签验证相关常量
 const (
-	TagNameMinLength               = 1   // 标签名最小长度
-	TagNameMaxLength               = 50  // 标签名最大长度
-	TagSlugMinLength               = 1   // Slug最小长度
-	TagSlugMaxLength               = 50  // Slug最大长度
-	TagDescriptionMaxLength        = 300 // 描述最大长度
-	TagMetaTitleMaxLength          = 70  // SEO标题最大长度
-	TagMetaDescMaxLength           = 160 // SEO描述最大长度
-	TagFeaturedImageMaxLength      = 500 // 特色图片URL最大长度
+	TagNameMinLength          = 1   // 标签名最小长度
+	TagNameMaxLength          = 50  // 标签名最大长度
+	TagSlugMinLength          = 1   // Slug最小长度
+	TagSlugMaxLength          = 50  // Slug最大长度
+	TagDescriptionMaxLength   = 300 // 描述最大长度
+	TagMetaTitleMaxLength     = 70  // SEO标题最大长度
+	TagMetaDescMaxLength      = 160 // SEO描述最大长度
+	TagFeaturedImageMaxLength = 500 // 特色图片URL最大长度
 )
 
 // TagDefaults 标签默认值常量

@@ -225,9 +225,9 @@ func (d *TagDAO) GetPopularTags(ctx context.Context, limit int) ([]*model.TagMod
 
 	// 查询条件：只返回公开可见且有文章的标签
 	query := bson.M{
-		"visibility":      constants.TagVisibilityPublic,
-		"postCount":       bson.M{"$gt": 0},
-		"deletedAt":       bson.M{"$exists": false},
+		"visibility": constants.TagVisibilityPublic,
+		"postCount":  bson.M{"$gt": 0},
+		"deletedAt":  bson.M{"$exists": false},
 	}
 
 	// 按文章数量降序排序
@@ -334,7 +334,7 @@ func (d *TagDAO) CreateIndexes(ctx context.Context) error {
 			Keys: bson.D{{"createdAt", -1}},
 		},
 		{
-			Keys: bson.D{{"deletedAt", 1}},
+			Keys:    bson.D{{"deletedAt", 1}},
 			Options: options.Index().SetSparse(true),
 		},
 	}
@@ -407,7 +407,7 @@ func (d *TagDAO) buildSort(sortBy, sortOrder string) bson.D {
 func (d *TagDAO) validateUpdateFields(updates map[string]interface{}) error {
 	// 不允许更新的字段
 	forbiddenFields := []string{"_id", "createdAt", "deletedAt", "postCount"}
-	
+
 	for _, field := range forbiddenFields {
 		if _, exists := updates[field]; exists {
 			return errors.New("cannot update field: " + field)

@@ -32,7 +32,7 @@ func TestTagDAO(t *testing.T) {
 		})
 
 		Convey("参数验证测试", func() {
-			
+
 			Convey("Create方法参数验证", func() {
 				Convey("空标签应该失败", func() {
 					err := tagDAO.Create(ctx, nil)
@@ -144,13 +144,13 @@ func TestTagDAO(t *testing.T) {
 		})
 
 		Convey("查询构建方法测试", func() {
-			
+
 			Convey("buildQuery方法", func() {
-				
+
 				Convey("空过滤器应该只排除已删除的标签", func() {
 					filter := TagFilter{}
 					query := tagDAO.buildQuery(filter)
-					
+
 					So(query["deletedAt"], ShouldResemble, bson.M{"$exists": false})
 					So(len(query), ShouldEqual, 1)
 				})
@@ -158,7 +158,7 @@ func TestTagDAO(t *testing.T) {
 				Convey("名称过滤应该使用正则表达式", func() {
 					filter := TagFilter{Name: "Go"}
 					query := tagDAO.buildQuery(filter)
-					
+
 					So(query["name"], ShouldResemble, bson.M{"$regex": "Go", "$options": "i"})
 					So(query["deletedAt"], ShouldResemble, bson.M{"$exists": false})
 				})
@@ -166,7 +166,7 @@ func TestTagDAO(t *testing.T) {
 				Convey("可见性过滤应该设置精确匹配", func() {
 					filter := TagFilter{Visibility: constants.TagVisibilityPublic}
 					query := tagDAO.buildQuery(filter)
-					
+
 					So(query["visibility"], ShouldEqual, constants.TagVisibilityPublic)
 					So(query["deletedAt"], ShouldResemble, bson.M{"$exists": false})
 				})
@@ -174,7 +174,7 @@ func TestTagDAO(t *testing.T) {
 				Convey("无效可见性应该被忽略", func() {
 					filter := TagFilter{Visibility: "invalid"}
 					query := tagDAO.buildQuery(filter)
-					
+
 					So(query["visibility"], ShouldBeNil)
 					So(query["deletedAt"], ShouldResemble, bson.M{"$exists": false})
 				})
@@ -185,7 +185,7 @@ func TestTagDAO(t *testing.T) {
 						Visibility: constants.TagVisibilityPublic,
 					}
 					query := tagDAO.buildQuery(filter)
-					
+
 					So(query["name"], ShouldResemble, bson.M{"$regex": "Go", "$options": "i"})
 					So(query["visibility"], ShouldEqual, constants.TagVisibilityPublic)
 					So(query["deletedAt"], ShouldResemble, bson.M{"$exists": false})
@@ -194,7 +194,7 @@ func TestTagDAO(t *testing.T) {
 			})
 
 			Convey("buildSort方法", func() {
-				
+
 				Convey("默认排序应该按创建时间降序", func() {
 					sort := tagDAO.buildSort("", "")
 					So(sort, ShouldResemble, bson.D{{"createdAt", -1}})
@@ -243,12 +243,12 @@ func TestTagDAO(t *testing.T) {
 		})
 
 		Convey("数据验证方法测试", func() {
-			
+
 			Convey("validateUpdateFields方法", func() {
-				
+
 				Convey("禁止更新的字段应该失败", func() {
 					forbiddenFields := []string{"_id", "createdAt", "deletedAt", "postCount"}
-					
+
 					for _, field := range forbiddenFields {
 						updates := map[string]interface{}{field: "test"}
 						err := tagDAO.validateUpdateFields(updates)
@@ -268,14 +268,14 @@ func TestTagDAO(t *testing.T) {
 						"metaTitle":       "Valid Meta Title",
 						"metaDescription": "Valid meta description",
 					}
-					
+
 					err := tagDAO.validateUpdateFields(updates)
 					So(err, ShouldBeNil)
 				})
 
 				Convey("无效的name字段应该失败", func() {
 					invalidNames := []interface{}{"", 123, true, nil}
-					
+
 					for _, invalidName := range invalidNames {
 						updates := map[string]interface{}{"name": invalidName}
 						err := tagDAO.validateUpdateFields(updates)
@@ -286,7 +286,7 @@ func TestTagDAO(t *testing.T) {
 
 				Convey("无效的slug字段应该失败", func() {
 					invalidSlugs := []interface{}{"", 123, true, nil}
-					
+
 					for _, invalidSlug := range invalidSlugs {
 						updates := map[string]interface{}{"slug": invalidSlug}
 						err := tagDAO.validateUpdateFields(updates)
@@ -297,7 +297,7 @@ func TestTagDAO(t *testing.T) {
 
 				Convey("无效的visibility字段应该失败", func() {
 					invalidVisibilities := []interface{}{"invalid", 123, true, nil}
-					
+
 					for _, invalidVisibility := range invalidVisibilities {
 						updates := map[string]interface{}{"visibility": invalidVisibility}
 						err := tagDAO.validateUpdateFields(updates)
@@ -311,7 +311,7 @@ func TestTagDAO(t *testing.T) {
 						constants.TagVisibilityPublic,
 						constants.TagVisibilityInternal,
 					}
-					
+
 					for _, validVisibility := range validVisibilities {
 						updates := map[string]interface{}{"visibility": validVisibility}
 						err := tagDAO.validateUpdateFields(updates)
@@ -352,7 +352,7 @@ func TestTagDAO(t *testing.T) {
 
 func TestTagFilter(t *testing.T) {
 	Convey("TagFilter结构体测试", t, func() {
-		
+
 		Convey("TagFilter字段设置", func() {
 			filter := TagFilter{
 				Name:       "Go语言",

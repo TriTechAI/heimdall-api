@@ -100,21 +100,21 @@ func (m *JWTBlacklistMiddleware) maskToken(token string) string {
 func (m *JWTBlacklistMiddleware) writeErrorResponse(w http.ResponseWriter, message string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusUnauthorized)
-	
+
 	response := map[string]interface{}{
 		"code":    401,
 		"message": message,
 	}
-	
+
 	httpx.WriteJson(w, http.StatusUnauthorized, response)
 }
 
 // SkipPaths 定义不需要检查JWT黑名单的路径
 func (m *JWTBlacklistMiddleware) SkipPaths() []string {
 	return []string{
-		"/api/v1/admin/auth/login",  // 登录接口
-		"/api/v1/admin/ping",        // 健康检查
-		"/api/v1/admin/health",      // 健康检查
+		"/api/v1/admin/auth/login", // 登录接口
+		"/api/v1/admin/ping",       // 健康检查
+		"/api/v1/admin/health",     // 健康检查
 	}
 }
 
@@ -137,7 +137,7 @@ func (m *JWTBlacklistMiddleware) HandleWithSkip(next http.HandlerFunc) http.Hand
 			next(w, r)
 			return
 		}
-		
+
 		// 执行黑名单检查
 		m.Handle(next)(w, r)
 	}

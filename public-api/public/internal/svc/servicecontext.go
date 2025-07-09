@@ -15,13 +15,14 @@ import (
 )
 
 type ServiceContext struct {
-	Config             config.Config
-	MongoDB            *mongo.Database
-	Redis              *redis.Client
-	PostDAO            *dao.PostDAO
-	UserDAO            *dao.UserDAO
-	PageDAO            *dao.PageDAO
-	TagDAO             *dao.TagDAO
+	Config              config.Config
+	MongoDB             *mongo.Database
+	Redis               *redis.Client
+	PostDAO             *dao.PostDAO
+	UserDAO             *dao.UserDAO
+	PageDAO             *dao.PageDAO
+	TagDAO              *dao.TagDAO
+	CommentDAO          *dao.CommentDAO
 	ContentCacheManager *cache.ContentCacheManager
 }
 
@@ -98,18 +99,20 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	userDAO := dao.NewUserDAO(database)
 	pageDAO := dao.NewPageDAO(database)
 	tagDAO := dao.NewTagDAO(database)
+	commentDAO := dao.NewCommentDAO(database)
 
 	// 初始化缓存管理器
 	contentCacheManager := cache.NewContentCacheManager(redisClient.GetClient(), "public")
 
 	return &ServiceContext{
-		Config:             c,
-		MongoDB:            database,
-		Redis:              redisClient.GetClient(),
-		PostDAO:            postDAO,
-		UserDAO:            userDAO,
-		PageDAO:            pageDAO,
-		TagDAO:             tagDAO,
+		Config:              c,
+		MongoDB:             database,
+		Redis:               redisClient.GetClient(),
+		PostDAO:             postDAO,
+		UserDAO:             userDAO,
+		PageDAO:             pageDAO,
+		TagDAO:              tagDAO,
+		CommentDAO:          commentDAO,
 		ContentCacheManager: contentCacheManager,
 	}
 }

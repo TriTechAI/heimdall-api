@@ -16,18 +16,18 @@ import (
 )
 
 type ServiceContext struct {
-	Config               config.Config
-	MongoDB              *mongo.Database
-	Redis                *redis.Client
-	UserDAO              *dao.UserDAO
-	LoginLogDAO          *dao.LoginLogDAO
-	PostDAO              *dao.PostDAO
-	PageDAO              *dao.PageDAO
-	TagDAO               *dao.TagDAO
-	CommentDAO           *dao.CommentDAO
-	AdminCacheManager    *cache.AdminCacheManager
-	CacheInvalidator     *cache.CacheInvalidator // 缓存失效器
-	
+	Config            config.Config
+	MongoDB           *mongo.Database
+	Redis             *redis.Client
+	UserDAO           *dao.UserDAO
+	LoginLogDAO       *dao.LoginLogDAO
+	PostDAO           *dao.PostDAO
+	PageDAO           *dao.PageDAO
+	TagDAO            *dao.TagDAO
+	CommentDAO        *dao.CommentDAO
+	AdminCacheManager *cache.AdminCacheManager
+	CacheInvalidator  *cache.CacheInvalidator // 缓存失效器
+
 	// 中间件
 	JWTBlacklistMiddleware *middleware.JWTBlacklistMiddleware
 	IPRateLimitMiddleware  *middleware.IPRateLimitMiddleware
@@ -80,9 +80,9 @@ func NewServiceContext(c config.Config) *ServiceContext {
 			LoginBurst:   c.Middleware.RateLimit.LoginBurst,
 			CreateRPS:    c.Middleware.RateLimit.CreateRPS,
 			CreateBurst:  c.Middleware.RateLimit.CreateBurst,
-			Window:       time.Minute, // 固定1分钟窗口
+			Window:       time.Minute,     // 固定1分钟窗口
 			LoginWindow:  5 * time.Minute, // 登录5分钟窗口
-			CreateWindow: time.Minute, // 创建操作1分钟窗口
+			CreateWindow: time.Minute,     // 创建操作1分钟窗口
 		}
 		ipRateLimitMiddleware = middleware.NewIPRateLimitMiddleware(redisClient, rateLimitConfig)
 	}

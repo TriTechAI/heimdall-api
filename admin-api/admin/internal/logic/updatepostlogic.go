@@ -115,7 +115,36 @@ func (l *UpdatePostLogic) validateSlug(req *types.PostUpdateRequest, existingPos
 func (l *UpdatePostLogic) buildUpdateData(req *types.PostUpdateRequest, existingPost *model.Post) (map[string]interface{}, error) {
 	updates := make(map[string]interface{})
 
-	// 只更新非空字段
+	// 处理基本信息更新
+	l.handleBasicInfoUpdates(req, updates)
+
+	// 处理内容更新
+	l.handleContentUpdates(req, updates)
+
+	// 处理状态和类型更新
+	if err := l.handleStatusAndTypeUpdates(req, updates); err != nil {
+		return nil, err
+	}
+
+	// 处理标签更新
+	l.handleTagsUpdate(req, updates)
+
+	// 处理SEO相关更新
+	l.handleSEOUpdates(req, updates)
+
+	// 处理发布时间更新
+	if err := l.handlePublishTimeUpdate(req, updates); err != nil {
+		return nil, err
+	}
+
+	// 更新修改时间
+	updates["updatedAt"] = time.Now()
+
+	return updates, nil
+}
+
+// handleBasicInfoUpdates 处理基本信息更新
+func (l *UpdatePostLogic) handleBasicInfoUpdates(req *types.PostUpdateRequest, updates map[string]interface{}) {
 	if req.Title != "" {
 		updates["title"] = req.Title
 	}
@@ -128,6 +157,13 @@ func (l *UpdatePostLogic) buildUpdateData(req *types.PostUpdateRequest, existing
 		updates["excerpt"] = req.Excerpt
 	}
 
+	if req.FeaturedImage != "" {
+		updates["featuredImage"] = req.FeaturedImage
+	}
+}
+
+// handleContentUpdates 处理内容更新
+func (l *UpdatePostLogic) handleContentUpdates(req *types.PostUpdateRequest, updates map[string]interface{}) {
 	if req.Markdown != "" {
 		// 处理Markdown内容
 		updates["markdown"] = req.Markdown
@@ -139,32 +175,36 @@ func (l *UpdatePostLogic) buildUpdateData(req *types.PostUpdateRequest, existing
 		updates["wordCount"] = wordCount
 		updates["readingTime"] = readingTime
 	}
+}
 
-	if req.FeaturedImage != "" {
-		updates["featuredImage"] = req.FeaturedImage
-	}
-
+// handleStatusAndTypeUpdates 处理状态和类型更新
+func (l *UpdatePostLogic) handleStatusAndTypeUpdates(req *types.PostUpdateRequest, updates map[string]interface{}) error {
 	if req.Type != "" {
 		if err := l.validateType(req.Type); err != nil {
-			return nil, err
+			return err
 		}
 		updates["type"] = req.Type
 	}
 
 	if req.Status != "" {
 		if err := l.validateStatus(req.Status); err != nil {
-			return nil, err
+			return err
 		}
 		updates["status"] = req.Status
 	}
 
 	if req.Visibility != "" {
 		if err := l.validateVisibility(req.Visibility); err != nil {
-			return nil, err
+			return err
 		}
 		updates["visibility"] = req.Visibility
 	}
 
+	return nil
+}
+
+// handleTagsUpdate 处理标签更新
+func (l *UpdatePostLogic) handleTagsUpdate(req *types.PostUpdateRequest, updates map[string]interface{}) {
 	if req.Tags != nil {
 		tags := make([]model.Tag, len(req.Tags))
 		for i, tag := range req.Tags {
@@ -175,7 +215,10 @@ func (l *UpdatePostLogic) buildUpdateData(req *types.PostUpdateRequest, existing
 		}
 		updates["tags"] = tags
 	}
+}
 
+// handleSEOUpdates 处理SEO相关更新
+func (l *UpdatePostLogic) handleSEOUpdates(req *types.PostUpdateRequest, updates map[string]interface{}) {
 	if req.MetaTitle != "" {
 		updates["metaTitle"] = req.MetaTitle
 	}
@@ -187,19 +230,18 @@ func (l *UpdatePostLogic) buildUpdateData(req *types.PostUpdateRequest, existing
 	if req.CanonicalURL != "" {
 		updates["canonicalUrl"] = req.CanonicalURL
 	}
+}
 
+// handlePublishTimeUpdate 处理发布时间更新
+func (l *UpdatePostLogic) handlePublishTimeUpdate(req *types.PostUpdateRequest, updates map[string]interface{}) error {
 	if req.PublishedAt != "" {
-		publishedAt, err := time.Parse(time.RFC3339, req.PublishedAt)
+		publishedAt, err := time.Parse(constants.DefaultTimeFormat, req.PublishedAt)
 		if err != nil {
-			return nil, fmt.Errorf("无效的发布时间格式: %w", err)
+			return fmt.Errorf("无效的发布时间格式: %w", err)
 		}
 		updates["publishedAt"] = publishedAt
 	}
-
-	// 更新修改时间
-	updates["updatedAt"] = time.Now()
-
-	return updates, nil
+	return nil
 }
 
 // validateType 验证文章类型

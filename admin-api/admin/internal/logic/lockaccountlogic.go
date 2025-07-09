@@ -64,7 +64,7 @@ func (l *LockAccountLogic) LockAccount(req *types.LockAccountRequest) (resp *typ
 		Timestamp: time.Now().Format(time.RFC3339),
 	}
 
-	l.Logger.Infof("账户锁定成功: userID=%s, duration=%d分钟, reason=%s", 
+	l.Logger.Infof("账户锁定成功: userID=%s, duration=%d分钟, reason=%s",
 		req.UserID, req.LockDuration, req.LockReason)
 	return resp, nil
 }

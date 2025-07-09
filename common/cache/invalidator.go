@@ -24,30 +24,30 @@ func NewCacheInvalidator(client *redisv8.Client, prefix string) *CacheInvalidato
 func (ci *CacheInvalidator) InvalidatePattern(ctx context.Context, pattern string) error {
 	// 构建完整的模式
 	fullPattern := ci.prefix + ":" + pattern
-	
+
 	// 使用SCAN命令获取匹配的键
 	var cursor uint64
 	var keys []string
-	
+
 	for {
 		result, newCursor, err := ci.client.Scan(ctx, cursor, fullPattern, 100).Result()
 		if err != nil {
 			return err
 		}
-		
+
 		keys = append(keys, result...)
 		cursor = newCursor
-		
+
 		if cursor == 0 {
 			break
 		}
 	}
-	
+
 	// 如果有匹配的键，则删除它们
 	if len(keys) > 0 {
 		return ci.client.Del(ctx, keys...).Err()
 	}
-	
+
 	return nil
 }
 
@@ -72,13 +72,13 @@ func (ci *CacheInvalidator) InvalidatePostRelated(ctx context.Context, postSlug 
 		"post:list:*",
 		"search:*",
 	}
-	
+
 	for _, pattern := range patterns {
 		if err := ci.InvalidatePattern(ctx, pattern); err != nil {
 			return err
 		}
 	}
-	
+
 	return nil
 }
 
@@ -89,13 +89,13 @@ func (ci *CacheInvalidator) InvalidateTagRelated(ctx context.Context, tagSlug st
 		"tag:list:*",
 		"post:list:*", // 标签变更可能影响文章列表
 	}
-	
+
 	for _, pattern := range patterns {
 		if err := ci.InvalidatePattern(ctx, pattern); err != nil {
 			return err
 		}
 	}
-	
+
 	return nil
 }
 
@@ -105,12 +105,12 @@ func (ci *CacheInvalidator) InvalidateUserRelated(ctx context.Context, userID st
 		"user:info:" + userID,
 		"post:list:*", // 用户变更可能影响文章列表（作者信息）
 	}
-	
+
 	for _, pattern := range patterns {
 		if err := ci.InvalidatePattern(ctx, pattern); err != nil {
 			return err
 		}
 	}
-	
+
 	return nil
 }

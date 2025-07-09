@@ -81,7 +81,7 @@ func (ccm *ContentCacheManager) InvalidatePostList(ctx context.Context) error {
 // buildPostListKey 构建文章列表缓存键
 func (ccm *ContentCacheManager) buildPostListKey(page, limit int, filters map[string]interface{}) string {
 	key := fmt.Sprintf("post:list:p%d:l%d", page, limit)
-	
+
 	// 添加过滤条件到键中
 	if tag, ok := filters["tag"].(string); ok && tag != "" {
 		key += fmt.Sprintf(":tag:%s", tag)
@@ -95,7 +95,7 @@ func (ccm *ContentCacheManager) buildPostListKey(page, limit int, filters map[st
 	if sortDesc, ok := filters["sortDesc"].(bool); ok && sortDesc {
 		key += ":desc"
 	}
-	
+
 	return key
 }
 
@@ -215,12 +215,12 @@ func (ccm *ContentCacheManager) GetViewCount(ctx context.Context, contentType, c
 		}
 		return 0, err
 	}
-	
+
 	count, err := strconv.ParseInt(countStr, 10, 64)
 	if err != nil {
 		return 0, fmt.Errorf("failed to parse view count: %w", err)
 	}
-	
+
 	return count, nil
 }
 
@@ -231,7 +231,7 @@ func (ccm *ContentCacheManager) IncrementViewCount(ctx context.Context, contentT
 	if err != nil {
 		return fmt.Errorf("failed to increment view count: %w", err)
 	}
-	
+
 	// 设置过期时间（24小时）
 	return ccm.Expire(ctx, key, 24*time.Hour)
 }
@@ -244,17 +244,17 @@ func (ccm *ContentCacheManager) InvalidatePostRelated(ctx context.Context, slug 
 	if err := ccm.InvalidatePostDetail(ctx, slug); err != nil {
 		return fmt.Errorf("failed to invalidate post detail: %w", err)
 	}
-	
+
 	// 失效文章列表
 	if err := ccm.InvalidatePostList(ctx); err != nil {
 		return fmt.Errorf("failed to invalidate post list: %w", err)
 	}
-	
+
 	// 失效搜索结果
 	if err := ccm.InvalidateSearchResults(ctx); err != nil {
 		return fmt.Errorf("failed to invalidate search results: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -264,17 +264,17 @@ func (ccm *ContentCacheManager) InvalidateTagRelated(ctx context.Context, slug s
 	if err := ccm.InvalidateTagDetail(ctx, slug); err != nil {
 		return fmt.Errorf("failed to invalidate tag detail: %w", err)
 	}
-	
+
 	// 失效标签列表
 	if err := ccm.InvalidateTagList(ctx); err != nil {
 		return fmt.Errorf("failed to invalidate tag list: %w", err)
 	}
-	
+
 	// 失效相关文章列表
 	if err := ccm.InvalidatePostList(ctx); err != nil {
 		return fmt.Errorf("failed to invalidate post list: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -291,7 +291,7 @@ func (ccm *ContentCacheManager) GetCacheHitRate(ctx context.Context) (float64, e
 	if err != nil {
 		return 0, fmt.Errorf("failed to get cache stats: %w", err)
 	}
-	
+
 	// 从连接池统计中获取命中率
 	if poolStats, ok := stats["pool_stats"].(map[string]interface{}); ok {
 		if hits, hitOk := poolStats["hits"].(uint32); hitOk {
@@ -303,6 +303,6 @@ func (ccm *ContentCacheManager) GetCacheHitRate(ctx context.Context) (float64, e
 			}
 		}
 	}
-	
+
 	return 0, nil
 }

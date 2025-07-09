@@ -149,7 +149,7 @@ func (l *RefreshTokenLogic) validateUser(userID string) (*model.User, error) {
 // blacklistOldToken 将旧token加入黑名单
 func (l *RefreshTokenLogic) blacklistOldToken(tokenString string) error {
 	jwtManager := utils.NewJWTManager(l.svcCtx.Config.Auth.AccessSecret, "heimdall-admin")
-	
+
 	tokenID, err := jwtManager.ExtractTokenIDFromToken(tokenString)
 	if err != nil {
 		return fmt.Errorf("提取token ID失败: %w", err)

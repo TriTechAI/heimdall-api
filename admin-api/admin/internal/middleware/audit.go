@@ -38,24 +38,24 @@ const (
 
 // AuditLog 审计日志结构
 type AuditLog struct {
-	ID            string                 `json:"id"`
-	UserID        string                 `json:"userId,omitempty"`
-	Username      string                 `json:"username,omitempty"`
-	Action        AuditAction            `json:"action"`
-	Resource      string                 `json:"resource,omitempty"`
-	ResourceID    string                 `json:"resourceId,omitempty"`
-	Method        string                 `json:"method"`
-	Path          string                 `json:"path"`
-	ClientIP      string                 `json:"clientIP"`
-	UserAgent     string                 `json:"userAgent"`
-	RequestBody   map[string]interface{} `json:"requestBody,omitempty"`
-	ResponseCode  int                    `json:"responseCode"`
-	Duration      int64                  `json:"duration"` // 毫秒
-	Success       bool                   `json:"success"`
-	ErrorMessage  string                 `json:"errorMessage,omitempty"`
-	Timestamp     time.Time              `json:"timestamp"`
-	SessionID     string                 `json:"sessionId,omitempty"`
-	TraceID       string                 `json:"traceId,omitempty"`
+	ID           string                 `json:"id"`
+	UserID       string                 `json:"userId,omitempty"`
+	Username     string                 `json:"username,omitempty"`
+	Action       AuditAction            `json:"action"`
+	Resource     string                 `json:"resource,omitempty"`
+	ResourceID   string                 `json:"resourceId,omitempty"`
+	Method       string                 `json:"method"`
+	Path         string                 `json:"path"`
+	ClientIP     string                 `json:"clientIP"`
+	UserAgent    string                 `json:"userAgent"`
+	RequestBody  map[string]interface{} `json:"requestBody,omitempty"`
+	ResponseCode int                    `json:"responseCode"`
+	Duration     int64                  `json:"duration"` // 毫秒
+	Success      bool                   `json:"success"`
+	ErrorMessage string                 `json:"errorMessage,omitempty"`
+	Timestamp    time.Time              `json:"timestamp"`
+	SessionID    string                 `json:"sessionId,omitempty"`
+	TraceID      string                 `json:"traceId,omitempty"`
 }
 
 // responseWriter 包装ResponseWriter以捕获响应信息
@@ -165,7 +165,7 @@ func (m *AuditMiddleware) shouldAudit(path, method string) bool {
 
 	// 审计重要的读操作
 	importantReadPaths := []string{
-		"/api/v1/admin/users",        // 用户列表查询
+		"/api/v1/admin/users",               // 用户列表查询
 		"/api/v1/admin/security/login-logs", // 登录日志查询
 	}
 
@@ -437,16 +437,16 @@ func (m *AuditMiddleware) storeAuditLog(ctx context.Context, auditLog *AuditLog)
 	// 存储到Redis List中（用于审计日志列表查询）
 	auditKey := "audit_logs"
 	pipe := m.redis.Pipeline()
-	
+
 	// 添加到列表头部
 	pipe.LPush(ctx, auditKey, auditBytes)
-	
+
 	// 限制列表长度（保留最近10000条记录）
 	pipe.LTrim(ctx, auditKey, 0, 9999)
-	
+
 	// 设置过期时间（30天）
 	pipe.Expire(ctx, auditKey, 30*24*time.Hour)
-	
+
 	_, err = pipe.Exec(ctx)
 	return err
 }

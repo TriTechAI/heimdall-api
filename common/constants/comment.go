@@ -23,20 +23,20 @@ const (
 
 // 评论字段长度限制
 const (
-	CommentContentMaxLength    = 1000 // 评论内容最大长度
-	CommentAuthorNameMaxLength = 100  // 作者姓名最大长度
-	CommentAuthorEmailMaxLength = 255 // 作者邮箱最大长度
-	CommentAuthorWebsiteMaxLength = 255 // 作者网站最大长度
-	CommentIPMaxLength         = 45   // IP地址最大长度（IPv6）
-	CommentUserAgentMaxLength  = 500  // User Agent最大长度
+	CommentContentMaxLength       = 1000 // 评论内容最大长度
+	CommentAuthorNameMaxLength    = 100  // 作者姓名最大长度
+	CommentAuthorEmailMaxLength   = 255  // 作者邮箱最大长度
+	CommentAuthorWebsiteMaxLength = 255  // 作者网站最大长度
+	CommentIPMaxLength            = 45   // IP地址最大长度（IPv6）
+	CommentUserAgentMaxLength     = 500  // User Agent最大长度
 )
 
 // 评论业务限制
 const (
-	CommentMaxNestingLevel = 3    // 最大嵌套层级
-	CommentMinInterval     = 60   // 最小评论间隔（秒）
-	CommentDefaultPageSize = 20   // 默认分页大小
-	CommentMaxPageSize     = 100  // 最大分页大小
+	CommentMaxNestingLevel = 3   // 最大嵌套层级
+	CommentMinInterval     = 60  // 最小评论间隔（秒）
+	CommentDefaultPageSize = 20  // 默认分页大小
+	CommentMaxPageSize     = 100 // 最大分页大小
 )
 
 // 评论状态验证

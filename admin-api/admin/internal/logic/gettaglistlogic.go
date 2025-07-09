@@ -9,6 +9,7 @@ import (
 	"github.com/heimdall-api/admin-api/admin/internal/types"
 	"github.com/heimdall-api/common/constants"
 	"github.com/heimdall-api/common/dao"
+	"github.com/heimdall-api/common/model"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -34,7 +35,25 @@ func (l *GetTagListLogic) GetTagList(req *types.TagListRequest) (resp *types.Tag
 		return nil, err
 	}
 
-	// 设置默认值
+	// 获取分页参数
+	page, limit := l.getPaginationParams(req)
+
+	// 构建过滤器
+	filter := l.buildFilter(req)
+
+	// 获取标签数据
+	tags, total, err := l.svcCtx.TagDAO.List(l.ctx, filter, page, limit)
+	if err != nil {
+		l.Errorf("获取标签列表失败: %v", err)
+		return nil, err
+	}
+
+	// 构建响应
+	return l.buildListResponse(tags, total, page, limit), nil
+}
+
+// getPaginationParams 获取分页参数
+func (l *GetTagListLogic) getPaginationParams(req *types.TagListRequest) (int, int) {
 	page := req.Page
 	if page < 1 {
 		page = 1
@@ -45,12 +64,15 @@ func (l *GetTagListLogic) GetTagList(req *types.TagListRequest) (resp *types.Tag
 		limit = constants.TagsPerPageDefault
 	}
 
-	// 构建过滤器
+	return page, limit
+}
+
+// buildFilter 构建过滤器
+func (l *GetTagListLogic) buildFilter(req *types.TagListRequest) dao.TagFilter {
 	filter := dao.TagFilter{
 		Name:       req.Name,
 		Visibility: req.Visibility,
 		SortBy:     req.SortBy,
-		SortOrder:  "",
 	}
 
 	if req.SortDesc {
@@ -59,14 +81,32 @@ func (l *GetTagListLogic) GetTagList(req *types.TagListRequest) (resp *types.Tag
 		filter.SortOrder = "asc"
 	}
 
-	// 调用DAO获取数据
-	tags, total, err := l.svcCtx.TagDAO.List(l.ctx, filter, page, limit)
-	if err != nil {
-		l.Errorf("获取标签列表失败: %v", err)
-		return nil, err
-	}
+	return filter
+}
 
-	// 转换为响应格式
+// buildListResponse 构建列表响应
+func (l *GetTagListLogic) buildListResponse(tags []*model.TagModel, total int64, page, limit int) *types.TagListResponse {
+	// 转换标签列表
+	tagList := l.convertTagsToDetailInfo(tags)
+
+	// 计算分页信息
+	paginationInfo := l.calculatePagination(int(total), page, limit)
+
+	l.Infof("获取标签列表成功: 页码=%d, 每页=%d, 总数=%d", page, limit, total)
+
+	return &types.TagListResponse{
+		Code:      200,
+		Message:   "获取标签列表成功",
+		Timestamp: time.Now().Format(constants.DefaultTimeFormat),
+		Data: types.TagListData{
+			List:       tagList,
+			Pagination: paginationInfo,
+		},
+	}
+}
+
+// convertTagsToDetailInfo 转换标签列表为详情信息
+func (l *GetTagListLogic) convertTagsToDetailInfo(tags []*model.TagModel) []types.TagDetailInfo {
 	tagList := make([]types.TagDetailInfo, 0, len(tags))
 	for _, tag := range tags {
 		tagList = append(tagList, types.TagDetailInfo{
@@ -80,36 +120,27 @@ func (l *GetTagListLogic) GetTagList(req *types.TagListRequest) (resp *types.Tag
 			MetaDescription: tag.MetaDescription,
 			PostCount:       tag.PostCount,
 			Visibility:      tag.Visibility,
-			CreatedAt:       tag.CreatedAt.Format(time.RFC3339),
-			UpdatedAt:       tag.UpdatedAt.Format(time.RFC3339),
+			CreatedAt:       tag.CreatedAt.Format(constants.DefaultTimeFormat),
+			UpdatedAt:       tag.UpdatedAt.Format(constants.DefaultTimeFormat),
 		})
 	}
+	return tagList
+}
 
-	// 计算分页信息
+// calculatePagination 计算分页信息
+func (l *GetTagListLogic) calculatePagination(total, page, limit int) types.PaginationInfo {
 	totalPages := int(math.Ceil(float64(total) / float64(limit)))
 	hasNext := page < totalPages
 	hasPrev := page > 1
 
-	// 构建响应
-	resp = &types.TagListResponse{
-		Code:      200,
-		Message:   "获取标签列表成功",
-		Timestamp: time.Now().Format(time.RFC3339),
-		Data: types.TagListData{
-			List: tagList,
-			Pagination: types.PaginationInfo{
-				Page:       page,
-				Limit:      limit,
-				Total:      int(total),
-				TotalPages: totalPages,
-				HasNext:    hasNext,
-				HasPrev:    hasPrev,
-			},
-		},
+	return types.PaginationInfo{
+		Page:       page,
+		Limit:      limit,
+		Total:      total,
+		TotalPages: totalPages,
+		HasNext:    hasNext,
+		HasPrev:    hasPrev,
 	}
-
-	l.Infof("获取标签列表成功: 页码=%d, 每页=%d, 总数=%d", page, limit, total)
-	return resp, nil
 }
 
 // validateListRequest 验证列表请求

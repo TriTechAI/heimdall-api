@@ -277,12 +277,12 @@ func WrapError(err error, code string) *BusinessError {
 	if err == nil {
 		return nil
 	}
-	
+
 	// 如果已经是业务错误，直接返回
 	if bizErr, ok := AsBusinessError(err); ok {
 		return bizErr
 	}
-	
+
 	// 包装为业务错误
 	msg := GetErrorMessage(code)
 	return NewWithDetails(code, msg, err.Error())
@@ -307,16 +307,16 @@ func (e *BusinessError) ToResponse() map[string]interface{} {
 		"msg":       e.Msg,
 		"timestamp": e.Timestamp,
 	}
-	
+
 	if e.Details != nil {
 		response["details"] = e.Details
 	}
-	
+
 	return response
 }
 
 // ToJSON 转换为JSON字符串
 func (e *BusinessError) ToJSON() string {
-	return fmt.Sprintf(`{"code":"%s","msg":"%s","timestamp":"%s"}`, 
+	return fmt.Sprintf(`{"code":"%s","msg":"%s","timestamp":"%s"}`,
 		e.Code, e.Msg, e.Timestamp)
 }

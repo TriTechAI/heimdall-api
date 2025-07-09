@@ -199,6 +199,114 @@ type (
 )
 
 // ===================================================================
+// 公开评论模块 (Public Comment Module)
+// ===================================================================
+type (
+	// 公开评论列表请求
+	PublicCommentListRequest {
+		PostSlug string `path:"postSlug"`                                             // 文章slug
+		Page     int    `form:"page,default=1,range=[1:]"`                            // 页码，从1开始
+		Limit    int    `form:"limit,default=20,range=[1:50]"`                        // 每页记录数，最大50
+		SortBy   string `form:"sortBy,default=createdAt,options=createdAt|likeCount"` // 排序字段
+		SortDesc bool   `form:"sortDesc,default=false"`                               // 是否降序排列
+	}
+	// 公开评论列表响应
+	PublicCommentListResponse {
+		Code      int                   `json:"code"`
+		Message   string                `json:"message"`
+		Data      PublicCommentListData `json:"data"`
+		Timestamp string                `json:"timestamp"`
+	}
+	// 公开评论列表数据
+	PublicCommentListData {
+		List       []PublicCommentInfo `json:"list"`
+		Pagination PaginationInfo      `json:"pagination"`
+	}
+	// 公开评论信息
+	PublicCommentInfo {
+		ID            string              `json:"id"`
+		Content       string              `json:"content"`
+		AuthorName    string              `json:"authorName"`
+		AuthorWebsite string              `json:"authorWebsite"`
+		Level         int                 `json:"level"`
+		ReplyCount    int                 `json:"replyCount"`
+		LikeCount     int                 `json:"likeCount"`
+		CreatedAt     string              `json:"createdAt"`
+		Replies       []PublicCommentInfo `json:"replies"`
+	}
+	// 创建评论请求
+	CreateCommentRequest {
+		PostSlug      string `path:"postSlug"`                                                // 文章slug
+		ParentID      string `json:"parentId,optional"`                                       // 父评论ID（回复时使用）
+		Content       string `json:"content" validate:"required,min=1,max=1000"`              // 评论内容
+		AuthorName    string `json:"authorName" validate:"required,min=1,max=100"`            // 作者姓名
+		AuthorEmail   string `json:"authorEmail" validate:"required,email,max=255"`           // 作者邮箱
+		AuthorWebsite string `json:"authorWebsite,optional" validate:"omitempty,url,max=255"` // 作者网站
+	}
+	// 创建评论响应
+	CreateCommentResponse {
+		Code      int               `json:"code"`
+		Message   string            `json:"message"`
+		Data      CreateCommentData `json:"data"`
+		Timestamp string            `json:"timestamp"`
+	}
+	// 创建评论数据
+	CreateCommentData {
+		ID        string `json:"id"`
+		Content   string `json:"content"`
+		Status    string `json:"status"`
+		CreatedAt string `json:"createdAt"`
+		Message   string `json:"message"`
+	}
+	// 获取评论回复请求
+	GetCommentRepliesRequest {
+		CommentID string `path:"commentId"`                     // 评论ID
+		Page      int    `form:"page,default=1,range=[1:]"`     // 页码，从1开始
+		Limit     int    `form:"limit,default=10,range=[1:30]"` // 每页记录数，最大30
+	}
+	// 获取评论回复响应
+	GetCommentRepliesResponse {
+		Code      int                   `json:"code"`
+		Message   string                `json:"message"`
+		Data      PublicCommentListData `json:"data"`
+		Timestamp string                `json:"timestamp"`
+	}
+	// 提交回复请求
+	CreateReplyRequest {
+		CommentID     string `path:"commentId"`                                               // 父评论ID
+		Content       string `json:"content" validate:"required,min=1,max=1000"`              // 回复内容
+		AuthorName    string `json:"authorName" validate:"required,min=1,max=100"`            // 作者姓名
+		AuthorEmail   string `json:"authorEmail" validate:"required,email,max=255"`           // 作者邮箱
+		AuthorWebsite string `json:"authorWebsite,optional" validate:"omitempty,url,max=255"` // 作者网站
+	}
+	// 提交回复响应
+	CreateReplyResponse {
+		Code      int               `json:"code"`
+		Message   string            `json:"message"`
+		Data      CreateCommentData `json:"data"`
+		Timestamp string            `json:"timestamp"`
+	}
+)
+
+// ===================================================================
+// SEO标准接口模块 (SEO Standard Interfaces)
+// ===================================================================
+type (
+	// Robots.txt请求
+	RobotsRequest {
+	}
+	// Sitemap.xml请求
+	SitemapRequest {
+	}
+	// RSS Feed请求
+	RSSFeedRequest {
+	}
+	// JSON Feed请求
+	JSONFeedRequest {
+	}
+)
+
+// ===================================================================
 // API 接口定义 (API Interface Definition)
 // ===================================================================
 @server (
@@ -224,6 +332,249 @@ service public-api {
 	@doc "根据slug获取公开标签详情"
 	@handler GetPublicTagDetailHandler
 	get /tags/:slug (PublicTagDetailRequest) returns (PublicTagDetailResponse)
+	
+	@doc "获取文章评论列表"
+	@handler GetPublicCommentListHandler
+	get /posts/:postSlug/comments (PublicCommentListRequest) returns (PublicCommentListResponse)
+	
+	@doc "提交文章评论"
+	@handler CreateCommentHandler
+	post /posts/:postSlug/comments (CreateCommentRequest) returns (CreateCommentResponse)
+	
+	@doc "获取评论回复列表"
+	@handler GetCommentRepliesHandler
+	get /comments/:commentId/replies (GetCommentRepliesRequest) returns (GetCommentRepliesResponse)
+	
+	@doc "提交评论回复"
+	@handler CreateReplyHandler
+	post /comments/:commentId/replies (CreateReplyRequest) returns (CreateReplyResponse)
+}
+
+// ===================================================================
+// 站点配置模块 (Site Configuration Module)
+// ===================================================================
+type (
+	// 站点信息请求
+	SiteInfoRequest {
+	}
+	// 站点信息响应
+	SiteInfoResponse {
+		Code      int          `json:"code"`
+		Message   string       `json:"message"`
+		Data      SiteInfoData `json:"data"`
+		Timestamp string       `json:"timestamp"`
+	}
+	// 站点信息数据
+	SiteInfoData {
+		Title       string      `json:"title"`
+		Description string      `json:"description"`
+		Keywords    string      `json:"keywords"`
+		Author      string      `json:"author"`
+		Logo        string      `json:"logo"`
+		Favicon     string      `json:"favicon"`
+		Language    string      `json:"language"`
+		Timezone    string      `json:"timezone"`
+		Domain      string      `json:"domain"`
+		Email       string      `json:"email"`
+		Social      SocialLinks `json:"social"`
+		SEO         SEOSettings `json:"seo"`
+	}
+	// 社交媒体链接
+	SocialLinks {
+		Twitter  string `json:"twitter"`
+		GitHub   string `json:"github"`
+		LinkedIn string `json:"linkedin"`
+		WeChat   string `json:"wechat"`
+		Email    string `json:"email"`
+	}
+	// SEO设置
+	SEOSettings {
+		MetaTitle       string `json:"metaTitle"`
+		MetaDescription string `json:"metaDescription"`
+		MetaKeywords    string `json:"metaKeywords"`
+		OgTitle         string `json:"ogTitle"`
+		OgDescription   string `json:"ogDescription"`
+		OgImage         string `json:"ogImage"`
+		TwitterCard     string `json:"twitterCard"`
+		TwitterCreator  string `json:"twitterCreator"`
+	}
+	// 导航菜单请求
+	NavigationMenuRequest {
+		Type string `form:"type,default=header,options=header|footer"` // 菜单类型
+	}
+	// 导航菜单响应
+	NavigationMenuResponse {
+		Code      int                `json:"code"`
+		Message   string             `json:"message"`
+		Data      NavigationMenuData `json:"data"`
+		Timestamp string             `json:"timestamp"`
+	}
+	// 导航菜单数据
+	NavigationMenuData {
+		Items []NavigationItem `json:"items"`
+	}
+	// 导航项目
+	NavigationItem {
+		ID       string           `json:"id"`
+		Label    string           `json:"label"`
+		URL      string           `json:"url"`
+		Icon     string           `json:"icon"`
+		Target   string           `json:"target"`
+		Order    int              `json:"order"`
+		Parent   string           `json:"parent"`
+		Children []NavigationItem `json:"children"`
+	}
+	// 公开设置请求
+	PublicSettingsRequest {
+	}
+	// 公开设置响应
+	PublicSettingsResponse {
+		Code      int                `json:"code"`
+		Message   string             `json:"message"`
+		Data      PublicSettingsData `json:"data"`
+		Timestamp string             `json:"timestamp"`
+	}
+	// 公开设置数据
+	PublicSettingsData {
+		AllowComments     bool `json:"allowComments"`
+		AllowRegistration bool `json:"allowRegistration"`
+		RequireApproval   bool `json:"requireApproval"`
+		EnableRSS         bool `json:"enableRSS"`
+		EnableJSONFeed    bool `json:"enableJSONFeed"`
+		EnableSitemap     bool `json:"enableSitemap"`
+		PostsPerPage      int  `json:"postsPerPage"`
+		CommentsPerPage   int  `json:"commentsPerPage"`
+		MaxCommentDepth   int  `json:"maxCommentDepth"`
+		CommentTimeout    int  `json:"commentTimeout"`
+	}
+
+	// ===================================================================
+	// 内容发现模块 (Content Discovery Module)
+	// ===================================================================
+
+	// 热门文章请求
+	PopularPostsRequest {
+		Limit int `form:"limit,default=10,range=[1:20]"` // 返回数量，最大20
+		Days  int `form:"days,default=30,range=[1:365]"` // 统计天数，最大365天
+	}
+	// 热门文章响应
+	PopularPostsResponse {
+		Code      int              `json:"code"`
+		Message   string           `json:"message"`
+		Data      PopularPostsData `json:"data"`
+		Timestamp string           `json:"timestamp"`
+	}
+	// 热门文章数据
+	PopularPostsData {
+		Posts []PublicPostListItem `json:"posts"`
+	}
+
+	// 最新文章请求
+	RecentPostsRequest {
+		Limit int `form:"limit,default=10,range=[1:20]"` // 返回数量，最大20
+	}
+	// 最新文章响应
+	RecentPostsResponse {
+		Code      int             `json:"code"`
+		Message   string          `json:"message"`
+		Data      RecentPostsData `json:"data"`
+		Timestamp string          `json:"timestamp"`
+	}
+	// 最新文章数据
+	RecentPostsData {
+		Posts []PublicPostListItem `json:"posts"`
+	}
+
+	// 趋势文章请求
+	TrendingPostsRequest {
+		Limit int `form:"limit,default=10,range=[1:20]"` // 返回数量，最大20
+		Days  int `form:"days,default=7,range=[1:30]"`   // 统计天数，最大30天
+	}
+	// 趋势文章响应
+	TrendingPostsResponse {
+		Code      int               `json:"code"`
+		Message   string            `json:"message"`
+		Data      TrendingPostsData `json:"data"`
+		Timestamp string            `json:"timestamp"`
+	}
+	// 趋势文章数据
+	TrendingPostsData {
+		Posts []PublicPostListItem `json:"posts"`
+	}
+
+	// 相关文章请求
+	RelatedPostsRequest {
+		Slug  string `path:"slug"`                         // 文章slug
+		Limit int    `form:"limit,default=5,range=[1:10]"` // 返回数量，最大10
+	}
+	// 相关文章响应
+	RelatedPostsResponse {
+		Code      int              `json:"code"`
+		Message   string           `json:"message"`
+		Data      RelatedPostsData `json:"data"`
+		Timestamp string           `json:"timestamp"`
+	}
+	// 相关文章数据
+	RelatedPostsData {
+		Posts []PublicPostListItem `json:"posts"`
+	}
+)
+
+@server (
+	prefix: /api/v1/public
+)
+service public-api {
+	@doc "获取站点信息"
+	@handler SiteInfoHandler
+	get /site/info (SiteInfoRequest) returns (SiteInfoResponse)
+	
+	@doc "获取导航菜单"
+	@handler NavigationMenuHandler
+	get /site/navigation (NavigationMenuRequest) returns (NavigationMenuResponse)
+	
+	@doc "获取公开设置"
+	@handler PublicSettingsHandler
+	get /site/settings (PublicSettingsRequest) returns (PublicSettingsResponse)
+	
+	@doc "获取热门文章"
+	@handler PopularPostsHandler
+	get /posts/popular (PopularPostsRequest) returns (PopularPostsResponse)
+	
+	@doc "获取最新文章"
+	@handler RecentPostsHandler
+	get /posts/recent (RecentPostsRequest) returns (RecentPostsResponse)
+	
+	@doc "获取趋势文章"
+	@handler TrendingPostsHandler
+	get /posts/trending (TrendingPostsRequest) returns (TrendingPostsResponse)
+	
+	@doc "获取相关文章"
+	@handler RelatedPostsHandler
+	get /posts/:slug/related (RelatedPostsRequest) returns (RelatedPostsResponse)
+}
+
+// ===================================================================
+// SEO和站点相关接口 (不使用/api/v1前缀)
+// ===================================================================
+@server (
+	prefix: /
+)
+service public-api {
+	@doc "Robots.txt文件"
+	@handler RobotsHandler
+	get /robots.txt (RobotsRequest)
+	
+	@doc "Sitemap.xml文件"
+	@handler SitemapHandler
+	get /sitemap.xml (SitemapRequest)
+	
+	@doc "RSS订阅源"
+	@handler RSSFeedHandler
+	get /rss.xml (RSSFeedRequest)
+	
+	@doc "JSON Feed订阅源"
+	@handler JSONFeedHandler
+	get /feed.json (JSONFeedRequest)
 }
 
 // ===================================================================

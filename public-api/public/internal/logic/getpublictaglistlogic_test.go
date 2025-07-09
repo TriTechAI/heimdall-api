@@ -99,7 +99,7 @@ func TestGetPublicTagListLogic(t *testing.T) {
 
 		Convey("Success - Get empty tag list", func() {
 			mockey.UnPatchAll()
-			
+
 			// Mock返回空结果
 			mockey.Mock((*dao.TagDAO).GetPublishedList).To(func(tagDAO *dao.TagDAO, ctx context.Context, filter dao.TagFilter, page, limit int) ([]*model.TagModel, int64, error) {
 				return []*model.TagModel{}, 0, nil
@@ -123,17 +123,17 @@ func TestGetPublicTagListLogic(t *testing.T) {
 
 		Convey("Success - Test pagination with large dataset", func() {
 			mockey.UnPatchAll()
-			
+
 			// Mock返回大量数据的第二页
 			mockTags := make([]*model.TagModel, 20)
 			for i := 0; i < 20; i++ {
 				mockTags[i] = &model.TagModel{
-					ID:          primitive.NewObjectID(),
-					Name:        "Tag " + string(rune(65+i)),
-					Slug:        "tag-" + string(rune(97+i)),
-					PostCount:   i + 1,
-					Visibility:  constants.TagVisibilityPublic,
-					CreatedAt:   time.Now(),
+					ID:         primitive.NewObjectID(),
+					Name:       "Tag " + string(rune(65+i)),
+					Slug:       "tag-" + string(rune(97+i)),
+					PostCount:  i + 1,
+					Visibility: constants.TagVisibilityPublic,
+					CreatedAt:  time.Now(),
 				}
 			}
 
@@ -161,7 +161,7 @@ func TestGetPublicTagListLogic(t *testing.T) {
 
 		Convey("Error - Invalid sort field", func() {
 			mockey.UnPatchAll()
-			
+
 			req := &types.PublicTagListRequest{
 				Page:     1,
 				Limit:    20,
@@ -180,7 +180,7 @@ func TestGetPublicTagListLogic(t *testing.T) {
 
 		Convey("Error - Database error", func() {
 			mockey.UnPatchAll()
-			
+
 			// Mock数据库错误
 			mockey.Mock((*dao.TagDAO).GetPublishedList).To(func(tagDAO *dao.TagDAO, ctx context.Context, filter dao.TagFilter, page, limit int) ([]*model.TagModel, int64, error) {
 				return nil, 0, errors.New("database connection failed")

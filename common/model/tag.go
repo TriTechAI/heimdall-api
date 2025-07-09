@@ -222,29 +222,29 @@ func (t *TagModel) GenerateSlugFromName() {
 func generateSlugFromText(text string) string {
 	// 转换为小写
 	slug := strings.ToLower(text)
-	
+
 	// 将下划线替换为连字符
 	slug = strings.ReplaceAll(slug, "_", "-")
-	
+
 	// 移除特殊字符，保留字母、数字、空格和连字符
 	reg := regexp.MustCompile(`[^a-z0-9\s-]+`)
 	slug = reg.ReplaceAllString(slug, "")
-	
+
 	// 将空格替换为连字符
 	slug = regexp.MustCompile(`\s+`).ReplaceAllString(slug, "-")
-	
+
 	// 合并多个连续连字符为单个连字符
 	slug = regexp.MustCompile(`-+`).ReplaceAllString(slug, "-")
-	
+
 	// 移除开头和结尾的连字符
 	slug = strings.Trim(slug, "-")
-	
+
 	// 限制长度
 	if len(slug) > constants.TagSlugMaxLength {
 		slug = slug[:constants.TagSlugMaxLength]
 		slug = strings.TrimRight(slug, "-")
 	}
-	
+
 	return slug
 }
 

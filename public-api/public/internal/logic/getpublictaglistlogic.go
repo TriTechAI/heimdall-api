@@ -78,7 +78,7 @@ func (l *GetPublicTagListLogic) GetPublicTagList(req *types.PublicTagListRequest
 // validateRequest 验证请求参数
 func (l *GetPublicTagListLogic) validateRequest(req *types.PublicTagListRequest) error {
 	// Page和Limit的验证由go-zero框架处理
-	
+
 	// 验证排序字段
 	if !l.isValidSortBy(req.SortBy) {
 		return errors.New("invalid sort field")
@@ -128,7 +128,7 @@ func (l *GetPublicTagListLogic) buildTagInfos(tags []*model.TagModel) []types.Pu
 // buildPagination 构建分页信息
 func (l *GetPublicTagListLogic) buildPagination(page, limit int, total int64) types.PaginationInfo {
 	totalPages := int(total+int64(limit)-1) / limit
-	
+
 	return types.PaginationInfo{
 		Page:       page,
 		Limit:      limit,

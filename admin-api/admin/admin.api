@@ -78,16 +78,16 @@ type (
 	}
 	// 文章列表查询请求
 	PostListRequest {
-		Page       int    `form:"page,default=1,range=[1:]"` // 页码，从1开始
-		Limit      int    `form:"limit,default=10,range=[1:50]"` // 每页记录数，最大50
-		Status     string `form:"status,optional,options=draft|published|scheduled|archived"` // 状态过滤
-		Type       string `form:"type,optional,options=post|page"` // 类型过滤
-		Visibility string `form:"visibility,optional,options=public|members_only|private"` // 可见性过滤
-		AuthorID   string `form:"authorId,optional"` // 作者ID过滤
-		Tag        string `form:"tag,optional"` // 标签slug过滤
-		Keyword    string `form:"keyword,optional"` // 关键词搜索（标题、摘要）
+		Page       int    `form:"page,default=1,range=[1:]"`                                                        // 页码，从1开始
+		Limit      int    `form:"limit,default=10,range=[1:50]"`                                                    // 每页记录数，最大50
+		Status     string `form:"status,optional,options=draft|published|scheduled|archived"`                       // 状态过滤
+		Type       string `form:"type,optional,options=post|page"`                                                  // 类型过滤
+		Visibility string `form:"visibility,optional,options=public|members_only|private"`                          // 可见性过滤
+		AuthorID   string `form:"authorId,optional"`                                                                // 作者ID过滤
+		Tag        string `form:"tag,optional"`                                                                     // 标签slug过滤
+		Keyword    string `form:"keyword,optional"`                                                                 // 关键词搜索（标题、摘要）
 		SortBy     string `form:"sortBy,default=updatedAt,options=createdAt|updatedAt|publishedAt|viewCount|title"` // 排序字段
-		SortDesc   bool   `form:"sortDesc,default=true"` // 是否降序排列
+		SortDesc   bool   `form:"sortDesc,default=true"`                                                            // 是否降序排列
 	}
 	// 文章列表响应
 	PostListResponse {
@@ -242,14 +242,14 @@ type (
 type (
 	// 页面列表查询请求
 	PageListRequest {
-		Page     int    `form:"page,default=1,range=[1:]"` // 页码，从1开始
-		Limit    int    `form:"limit,default=10,range=[1:50]"` // 每页记录数，最大50
-		Status   string `form:"status,optional,options=draft|published|scheduled"` // 状态过滤
-		Template string `form:"template,optional"` // 模板过滤
-		AuthorID string `form:"authorId,optional"` // 作者ID过滤
-		Keyword  string `form:"keyword,optional"` // 关键词搜索（标题、内容）
+		Page     int    `form:"page,default=1,range=[1:]"`                                              // 页码，从1开始
+		Limit    int    `form:"limit,default=10,range=[1:50]"`                                          // 每页记录数，最大50
+		Status   string `form:"status,optional,options=draft|published|scheduled"`                      // 状态过滤
+		Template string `form:"template,optional"`                                                      // 模板过滤
+		AuthorID string `form:"authorId,optional"`                                                      // 作者ID过滤
+		Keyword  string `form:"keyword,optional"`                                                       // 关键词搜索（标题、内容）
 		SortBy   string `form:"sortBy,default=updatedAt,options=createdAt|updatedAt|publishedAt|title"` // 排序字段
-		SortDesc bool   `form:"sortDesc,default=true"` // 是否降序排列
+		SortDesc bool   `form:"sortDesc,default=true"`                                                  // 是否降序排列
 	}
 	// 页面列表响应
 	PageListResponse {
@@ -476,13 +476,13 @@ type (
 type (
 	// 用户列表查询请求
 	UserListRequest {
-		Page     int    `form:"page,default=1,range=[1:]"` // 页码，从1开始
-		Limit    int    `form:"limit,default=10,range=[1:100]"` // 每页记录数，最大100
-		Role     string `form:"role,optional"` // 角色过滤
-		Status   string `form:"status,optional"` // 状态过滤
-		Keyword  string `form:"keyword,optional"` // 关键词搜索（用户名、邮箱、显示名）
+		Page     int    `form:"page,default=1,range=[1:]"`                                       // 页码，从1开始
+		Limit    int    `form:"limit,default=10,range=[1:100]"`                                  // 每页记录数，最大100
+		Role     string `form:"role,optional"`                                                   // 角色过滤
+		Status   string `form:"status,optional"`                                                 // 状态过滤
+		Keyword  string `form:"keyword,optional"`                                                // 关键词搜索（用户名、邮箱、显示名）
 		SortBy   string `form:"sortBy,default=createdAt,options=username|createdAt|lastLoginAt"` // 排序字段
-		SortDesc bool   `form:"sortDesc,default=true"` // 是否降序排列
+		SortDesc bool   `form:"sortDesc,default=true"`                                           // 是否降序排列
 	}
 	// 用户列表响应
 	UserListResponse {
@@ -606,19 +606,19 @@ type (
 type (
 	// 登录日志查询请求
 	LoginLogsRequest {
-		Page       int    `form:"page,default=1,range=[1:]"` // 页码，从1开始
-		Limit      int    `form:"limit,default=20,range=[1:100]"` // 每页记录数，最大100
-		UserID     string `form:"userId,optional"` // 用户ID过滤
-		Username   string `form:"username,optional"` // 用户名过滤（模糊搜索）
-		Status     string `form:"status,optional,options=success|failed"` // 登录状态过滤
-		IPAddress  string `form:"ipAddress,optional"` // IP地址过滤
-		StartTime  string `form:"startTime,optional"` // 开始时间（RFC3339格式）
-		EndTime    string `form:"endTime,optional"` // 结束时间（RFC3339格式）
-		Country    string `form:"country,optional"` // 国家过滤
-		DeviceType string `form:"deviceType,optional"` // 设备类型过滤
-		Browser    string `form:"browser,optional"` // 浏览器过滤
+		Page       int    `form:"page,default=1,range=[1:]"`                                        // 页码，从1开始
+		Limit      int    `form:"limit,default=20,range=[1:100]"`                                   // 每页记录数，最大100
+		UserID     string `form:"userId,optional"`                                                  // 用户ID过滤
+		Username   string `form:"username,optional"`                                                // 用户名过滤（模糊搜索）
+		Status     string `form:"status,optional,options=success|failed"`                           // 登录状态过滤
+		IPAddress  string `form:"ipAddress,optional"`                                               // IP地址过滤
+		StartTime  string `form:"startTime,optional"`                                               // 开始时间（RFC3339格式）
+		EndTime    string `form:"endTime,optional"`                                                 // 结束时间（RFC3339格式）
+		Country    string `form:"country,optional"`                                                 // 国家过滤
+		DeviceType string `form:"deviceType,optional"`                                              // 设备类型过滤
+		Browser    string `form:"browser,optional"`                                                 // 浏览器过滤
 		SortBy     string `form:"sortBy,default=loginAt,options=loginAt|username|ipAddress|status"` // 排序字段
-		SortDesc   bool   `form:"sortDesc,default=true"` // 是否降序排列
+		SortDesc   bool   `form:"sortDesc,default=true"`                                            // 是否降序排列
 	}
 	// 登录日志响应
 	LoginLogsResponse {
@@ -677,179 +677,179 @@ service admin-api {
 	@doc "获取当前用户信息"
 	@handler ProfileHandler
 	get /auth/profile returns (ProfileResponse)
-
+	
 	@doc "用户登出"
 	@handler LogoutHandler
 	post /auth/logout (LogoutRequest) returns (LogoutResponse)
-
+	
 	@doc "刷新Token"
 	@handler RefreshTokenHandler
 	post /auth/refresh (RefreshTokenRequest) returns (RefreshTokenResponse)
-
+	
 	@doc "修改密码"
 	@handler ChangePasswordHandler
 	post /auth/change-password (ChangePasswordRequest) returns (ChangePasswordResponse)
-
+	
 	@doc "获取用户列表"
 	@handler GetUserListHandler
 	get /users (UserListRequest) returns (UserListResponse)
-
+	
 	@doc "创建用户"
 	@handler CreateUserHandler
 	post /users (UserCreateRequest) returns (UserCreateResponse)
-
+	
 	@doc "获取用户详情"
 	@handler GetUserDetailHandler
 	get /users/:id (UserDetailRequest) returns (UserDetailResponse)
-
+	
 	@doc "更新用户信息"
 	@handler UpdateUserHandler
 	put /users/:id (UserUpdateRequest) returns (UserUpdateResponse)
-
+	
 	@doc "删除用户"
 	@handler DeleteUserHandler
 	delete /users/:id (UserDeleteRequest) returns (UserDeleteResponse)
-
+	
 	@doc "修改用户状态"
 	@handler UpdateUserStatusHandler
 	put /users/:id/status (UserStatusRequest) returns (UserStatusResponse)
-
+	
 	@doc "修改用户角色"
 	@handler UpdateUserRoleHandler
 	put /users/:id/role (UserRoleRequest) returns (UserRoleResponse)
-
+	
 	@doc "重置用户密码"
 	@handler ResetUserPasswordHandler
 	post /users/:id/reset-password (ResetUserPasswordRequest) returns (ResetUserPasswordResponse)
-
+	
 	@doc "锁定用户账户"
 	@handler LockAccountHandler
 	post /users/:id/lock (LockAccountRequest) returns (LockAccountResponse)
-
+	
 	@doc "解锁用户账户"
 	@handler UnlockAccountHandler
 	post /users/:id/unlock (UnlockAccountRequest) returns (UnlockAccountResponse)
-
+	
 	@doc "获取登录日志列表"
 	@handler GetLoginLogsHandler
 	get /security/login-logs (LoginLogsRequest) returns (LoginLogsResponse)
-
+	
 	// ===================================================================
 	// 文章管理接口 (Post Management APIs)
 	// ===================================================================
 	@doc "获取文章列表"
 	@handler GetPostListHandler
 	get /posts (PostListRequest) returns (PostListResponse)
-
+	
 	@doc "创建文章"
 	@handler CreatePostHandler
 	post /posts (PostCreateRequest) returns (PostCreateResponse)
-
+	
 	@doc "获取文章详情"
 	@handler GetPostDetailHandler
 	get /posts/:id (PostDetailRequest) returns (PostDetailResponse)
-
+	
 	@doc "更新文章"
 	@handler UpdatePostHandler
 	put /posts/:id (PostUpdateRequest) returns (PostUpdateResponse)
-
+	
 	@doc "删除文章"
 	@handler DeletePostHandler
 	delete /posts/:id (PostDeleteRequest) returns (PostDeleteResponse)
-
+	
 	@doc "发布文章"
 	@handler PublishPostHandler
 	post /posts/:id/publish (PostPublishRequest) returns (PostPublishResponse)
-
+	
 	@doc "取消发布文章"
 	@handler UnpublishPostHandler
 	post /posts/:id/unpublish (PostUnpublishRequest) returns (PostUnpublishResponse)
-
+	
 	// ===================================================================
 	// 页面管理接口 (Page Management APIs)
 	// ===================================================================
 	@doc "获取页面列表"
 	@handler GetPageListHandler
 	get /pages (PageListRequest) returns (PageListResponse)
-
+	
 	@doc "创建页面"
 	@handler CreatePageHandler
 	post /pages (PageCreateRequest) returns (PageCreateResponse)
-
+	
 	@doc "获取页面详情"
 	@handler GetPageDetailHandler
 	get /pages/:id (PageDetailRequest) returns (PageDetailResponse)
-
+	
 	@doc "更新页面"
 	@handler UpdatePageHandler
 	put /pages/:id (PageUpdateRequest) returns (PageUpdateResponse)
-
+	
 	@doc "删除页面"
 	@handler DeletePageHandler
 	delete /pages/:id (PageDeleteRequest) returns (PageDeleteResponse)
-
+	
 	@doc "发布页面"
 	@handler PublishPageHandler
 	post /pages/:id/publish (PagePublishRequest) returns (PagePublishResponse)
-
+	
 	@doc "取消发布页面"
 	@handler UnpublishPageHandler
 	post /pages/:id/unpublish (PageUnpublishRequest) returns (PageUnpublishResponse)
-
+	
 	// ===================================================================
 	// 标签管理接口 (Tag Management APIs)
 	// ===================================================================
 	@doc "获取标签列表"
 	@handler GetTagListHandler
 	get /tags (TagListRequest) returns (TagListResponse)
-
+	
 	@doc "创建标签"
 	@handler CreateTagHandler
 	post /tags (TagCreateRequest) returns (TagCreateResponse)
-
+	
 	@doc "获取标签详情"
 	@handler GetTagDetailHandler
 	get /tags/:id (TagDetailRequest) returns (TagDetailResponse)
-
+	
 	@doc "更新标签"
 	@handler UpdateTagHandler
 	put /tags/:id (TagUpdateRequest) returns (TagUpdateResponse)
-
+	
 	@doc "删除标签"
 	@handler DeleteTagHandler
 	delete /tags/:id (TagDeleteRequest) returns (TagDeleteResponse)
-
+	
 	// ===================================================================
 	// 评论管理接口 (Comment Management APIs)
 	// ===================================================================
 	@doc "获取评论列表"
 	@handler GetCommentListHandler
 	get /comments (CommentListRequest) returns (CommentListResponse)
-
+	
 	@doc "获取评论详情"
 	@handler GetCommentDetailHandler
 	get /comments/:id (CommentDetailRequest) returns (CommentDetailResponse)
-
+	
 	@doc "更新评论"
 	@handler UpdateCommentHandler
 	put /comments/:id (CommentUpdateRequest) returns (CommentUpdateResponse)
-
+	
 	@doc "审核通过评论"
 	@handler ApproveCommentHandler
 	put /comments/:id/approve (CommentApproveRequest) returns (CommentApproveResponse)
-
+	
 	@doc "拒绝评论"
 	@handler RejectCommentHandler
 	put /comments/:id/reject (CommentRejectRequest) returns (CommentRejectResponse)
-
+	
 	@doc "标记垃圾评论"
 	@handler SpamCommentHandler
 	put /comments/:id/spam (CommentSpamRequest) returns (CommentSpamResponse)
-
+	
 	@doc "删除评论"
 	@handler DeleteCommentHandler
 	delete /comments/:id (CommentDeleteRequest) returns (CommentDeleteResponse)
-
+	
 	@doc "批量操作评论"
 	@handler BatchCommentHandler
 	post /comments/batch (CommentBatchRequest) returns (CommentBatchResponse)
@@ -861,12 +861,12 @@ service admin-api {
 type (
 	// 标签列表查询请求
 	TagListRequest {
-		Page       int    `form:"page,default=1,range=[1:]"` // 页码，从1开始
-		Limit      int    `form:"limit,default=20,range=[1:100]"` // 每页记录数，最大100
-		Name       string `form:"name,optional"` // 标签名称过滤（模糊搜索）
-		Visibility string `form:"visibility,optional,options=public|internal"` // 可见性过滤
+		Page       int    `form:"page,default=1,range=[1:]"`                                                // 页码，从1开始
+		Limit      int    `form:"limit,default=20,range=[1:100]"`                                           // 每页记录数，最大100
+		Name       string `form:"name,optional"`                                                            // 标签名称过滤（模糊搜索）
+		Visibility string `form:"visibility,optional,options=public|internal"`                              // 可见性过滤
 		SortBy     string `form:"sortBy,default=createdAt,options=name|slug|postCount|createdAt|updatedAt"` // 排序字段
-		SortDesc   bool   `form:"sortDesc,default=true"` // 是否降序排列
+		SortDesc   bool   `form:"sortDesc,default=true"`                                                    // 是否降序排列
 	}
 	// 标签列表响应
 	TagListResponse {
@@ -1114,4 +1114,3 @@ service admin-api {
 	@handler AdminHandler
 	get /test/:name (TestRequest) returns (TestResponse)
 }
-

@@ -27,12 +27,12 @@ type RateLimitConfig struct {
 
 // RateLimitResult 限流检查结果
 type RateLimitResult struct {
-	Allowed      bool          // 是否允许请求
-	Current      int           // 当前计数
-	Limit        int           // 限制数量
-	Remaining    int           // 剩余数量
-	ResetAt      time.Time     // 重置时间
-	RetryAfter   time.Duration // 重试间隔
+	Allowed    bool          // 是否允许请求
+	Current    int           // 当前计数
+	Limit      int           // 限制数量
+	Remaining  int           // 剩余数量
+	ResetAt    time.Time     // 重置时间
+	RetryAfter time.Duration // 重试间隔
 }
 
 // NewRateLimiterCache 创建限流缓存实例
@@ -43,7 +43,7 @@ func NewRateLimiterCache(client redis.Cmdable, prefix string) *RateLimiterCache 
 	if prefix == "" {
 		prefix = "rate_limit:"
 	}
-	
+
 	return &RateLimiterCache{
 		client: client,
 		prefix: prefix,
@@ -56,11 +56,11 @@ func (r *RateLimiterCache) CheckRateLimit(ctx context.Context, key string, confi
 	if err := r.validateConfig(config); err != nil {
 		return nil, err
 	}
-	
+
 	redisKey := r.buildRateLimitKey(key)
 	now := time.Now()
 	windowStart := now.Add(-config.Window)
-	
+
 	// 使用Lua脚本确保原子性
 	luaScript := `
 		local key = KEYS[1]
@@ -91,14 +91,14 @@ func (r *RateLimiterCache) CheckRateLimit(ctx context.Context, key string, confi
 			return {0, current, limit, remaining, reset_at}
 		end
 	`
-	
-	result, err := r.client.Eval(ctx, luaScript, []string{redisKey}, 
+
+	result, err := r.client.Eval(ctx, luaScript, []string{redisKey},
 		windowStart.Unix(), now.Unix(), config.Limit, int(config.Window.Seconds())).Result()
 	if err != nil {
 		r.logger.Errorf("Rate limit check failed for key %s: %v", key, err)
 		return nil, fmt.Errorf("rate limit check failed: %w", err)
 	}
-	
+
 	// 解析结果
 	return r.parseRateLimitResult(result, config)
 }
@@ -108,10 +108,10 @@ func (r *RateLimiterCache) CheckRateLimitFixed(ctx context.Context, key string, 
 	if err := r.validateConfig(config); err != nil {
 		return nil, err
 	}
-	
+
 	now := time.Now()
 	windowKey := r.buildFixedWindowKey(key, now, config.Window)
-	
+
 	// 使用Lua脚本确保原子性
 	luaScript := `
 		local key = KEYS[1]
@@ -143,14 +143,14 @@ func (r *RateLimiterCache) CheckRateLimitFixed(ctx context.Context, key string, 
 			return {0, current, limit, remaining, reset_at}
 		end
 	`
-	
-	result, err := r.client.Eval(ctx, luaScript, []string{windowKey}, 
+
+	result, err := r.client.Eval(ctx, luaScript, []string{windowKey},
 		config.Limit, int(config.Window.Seconds()), now.Unix()).Result()
 	if err != nil {
 		r.logger.Errorf("Fixed rate limit check failed for key %s: %v", key, err)
 		return nil, fmt.Errorf("fixed rate limit check failed: %w", err)
 	}
-	
+
 	return r.parseRateLimitResult(result, config)
 }
 
@@ -159,20 +159,20 @@ func (r *RateLimiterCache) IncrementCounter(ctx context.Context, key string, exp
 	if key == "" {
 		return 0, errors.New("key cannot be empty")
 	}
-	
+
 	redisKey := r.buildCounterKey(key)
-	
+
 	// 使用Pipeline确保原子性
 	pipe := r.client.TxPipeline()
 	incrCmd := pipe.Incr(ctx, redisKey)
 	pipe.Expire(ctx, redisKey, expiration)
-	
+
 	_, err := pipe.Exec(ctx)
 	if err != nil {
 		r.logger.Errorf("Failed to increment counter for key %s: %v", key, err)
 		return 0, fmt.Errorf("failed to increment counter: %w", err)
 	}
-	
+
 	return incrCmd.Val(), nil
 }
 
@@ -181,9 +181,9 @@ func (r *RateLimiterCache) GetCounter(ctx context.Context, key string) (int64, e
 	if key == "" {
 		return 0, errors.New("key cannot be empty")
 	}
-	
+
 	redisKey := r.buildCounterKey(key)
-	
+
 	result := r.client.Get(ctx, redisKey)
 	if err := result.Err(); err != nil {
 		if errors.Is(err, redis.Nil) {
@@ -192,13 +192,13 @@ func (r *RateLimiterCache) GetCounter(ctx context.Context, key string) (int64, e
 		r.logger.Errorf("Failed to get counter for key %s: %v", key, err)
 		return 0, fmt.Errorf("failed to get counter: %w", err)
 	}
-	
+
 	count, err := strconv.ParseInt(result.Val(), 10, 64)
 	if err != nil {
 		r.logger.Errorf("Failed to parse counter value for key %s: %v", key, err)
 		return 0, fmt.Errorf("failed to parse counter: %w", err)
 	}
-	
+
 	return count, nil
 }
 
@@ -207,15 +207,15 @@ func (r *RateLimiterCache) ResetCounter(ctx context.Context, key string) error {
 	if key == "" {
 		return errors.New("key cannot be empty")
 	}
-	
+
 	redisKey := r.buildCounterKey(key)
-	
+
 	err := r.client.Del(ctx, redisKey).Err()
 	if err != nil {
 		r.logger.Errorf("Failed to reset counter for key %s: %v", key, err)
 		return fmt.Errorf("failed to reset counter: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -230,16 +230,16 @@ func (r *RateLimiterCache) SetCustomLimit(ctx context.Context, key string, limit
 	if window <= 0 {
 		return errors.New("window must be positive")
 	}
-	
+
 	configKey := r.buildConfigKey(key)
 	configValue := fmt.Sprintf("%d:%d", limit, int(window.Seconds()))
-	
+
 	err := r.client.Set(ctx, configKey, configValue, 24*time.Hour).Err()
 	if err != nil {
 		r.logger.Errorf("Failed to set custom limit for key %s: %v", key, err)
 		return fmt.Errorf("failed to set custom limit: %w", err)
 	}
-	
+
 	r.logger.Infof("Custom limit set for key %s: %d requests per %v", key, limit, window)
 	return nil
 }
@@ -249,9 +249,9 @@ func (r *RateLimiterCache) GetCustomLimit(ctx context.Context, key string) (*Rat
 	if key == "" {
 		return nil, errors.New("key cannot be empty")
 	}
-	
+
 	configKey := r.buildConfigKey(key)
-	
+
 	result := r.client.Get(ctx, configKey)
 	if err := result.Err(); err != nil {
 		if errors.Is(err, redis.Nil) {
@@ -260,24 +260,24 @@ func (r *RateLimiterCache) GetCustomLimit(ctx context.Context, key string) (*Rat
 		r.logger.Errorf("Failed to get custom limit for key %s: %v", key, err)
 		return nil, fmt.Errorf("failed to get custom limit: %w", err)
 	}
-	
+
 	return r.parseCustomLimit(result.Val())
 }
 
 // ClearAllLimits 清理所有限流数据（谨慎使用）
 func (r *RateLimiterCache) ClearAllLimits(ctx context.Context) error {
 	pattern := r.prefix + "*"
-	
+
 	var cursor uint64
 	var deletedCount int64
-	
+
 	for {
 		keys, nextCursor, err := r.client.Scan(ctx, cursor, pattern, 100).Result()
 		if err != nil {
 			r.logger.Errorf("Failed to scan rate limit keys: %v", err)
 			return fmt.Errorf("failed to scan rate limit keys: %w", err)
 		}
-		
+
 		if len(keys) > 0 {
 			deleted, err := r.client.Del(ctx, keys...).Result()
 			if err != nil {
@@ -286,13 +286,13 @@ func (r *RateLimiterCache) ClearAllLimits(ctx context.Context) error {
 			}
 			deletedCount += deleted
 		}
-		
+
 		cursor = nextCursor
 		if cursor == 0 {
 			break
 		}
 	}
-	
+
 	r.logger.Infof("Cleared %d rate limit keys", deletedCount)
 	return nil
 }
@@ -317,13 +317,13 @@ func (r *RateLimiterCache) parseRateLimitResult(result interface{}, config RateL
 	if !ok || len(values) != 5 {
 		return nil, errors.New("invalid rate limit result format")
 	}
-	
+
 	allowed, _ := values[0].(int64)
 	current, _ := values[1].(int64)
 	limit, _ := values[2].(int64)
 	remaining, _ := values[3].(int64)
 	resetAt, _ := values[4].(int64)
-	
+
 	retryAfter := time.Duration(0)
 	if allowed == 0 {
 		retryAfter = time.Until(time.Unix(resetAt, 0))
@@ -331,13 +331,13 @@ func (r *RateLimiterCache) parseRateLimitResult(result interface{}, config RateL
 			retryAfter = config.Window
 		}
 	}
-	
+
 	return &RateLimitResult{
-		Allowed:   allowed == 1,
-		Current:   int(current),
-		Limit:     int(limit),
-		Remaining: int(remaining),
-		ResetAt:   time.Unix(resetAt, 0),
+		Allowed:    allowed == 1,
+		Current:    int(current),
+		Limit:      int(limit),
+		Remaining:  int(remaining),
+		ResetAt:    time.Unix(resetAt, 0),
 		RetryAfter: retryAfter,
 	}, nil
 }
@@ -348,7 +348,7 @@ func (r *RateLimiterCache) parseCustomLimit(configValue string) (*RateLimitConfi
 	if _, err := fmt.Sscanf(configValue, "%d:%d", &limit, &windowSeconds); err != nil {
 		return nil, fmt.Errorf("invalid config format: %w", err)
 	}
-	
+
 	return &RateLimitConfig{
 		Limit:  limit,
 		Window: time.Duration(windowSeconds) * time.Second,

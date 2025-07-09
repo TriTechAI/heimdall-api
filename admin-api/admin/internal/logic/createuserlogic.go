@@ -8,6 +8,7 @@ import (
 
 	"github.com/heimdall-api/admin-api/admin/internal/svc"
 	"github.com/heimdall-api/admin-api/admin/internal/types"
+	"github.com/heimdall-api/common/constants"
 	"github.com/heimdall-api/common/model"
 	"github.com/heimdall-api/common/utils"
 
@@ -66,7 +67,7 @@ func (l *CreateUserLogic) CreateUser(req *types.UserCreateRequest) (resp *types.
 		Code:      201,
 		Message:   "用户创建成功",
 		Data:      l.buildUserInfo(user),
-		Timestamp: time.Now().Format(time.RFC3339),
+		Timestamp: time.Now().Format(constants.DefaultTimeFormat),
 	}
 
 	l.Logger.Infof("用户创建成功: username=%s, email=%s", req.Username, req.Email)
@@ -87,7 +88,7 @@ func (l *CreateUserLogic) checkPermission() error {
 	}
 
 	// 只有管理员可以创建用户
-	if userRole != "admin" {
+	if userRole != constants.UserRoleAdmin {
 		return errors.New("权限不足，只有管理员可以创建用户")
 	}
 
@@ -132,7 +133,7 @@ func (l *CreateUserLogic) validateRequest(req *types.UserCreateRequest) error {
 
 // validateUsername 验证用户名格式
 func (l *CreateUserLogic) validateUsername(username string) error {
-	if len(username) < 3 || len(username) > 50 {
+	if len(username) < constants.UsernameMinLength || len(username) > constants.UsernameMaxLength {
 		return errors.New("用户名长度必须在3-50个字符之间")
 	}
 
@@ -157,7 +158,7 @@ func (l *CreateUserLogic) validateEmail(email string) error {
 
 // validateRole 验证用户角色
 func (l *CreateUserLogic) validateRole(role string) error {
-	validRoles := []string{"admin", "editor", "author"}
+	validRoles := []string{constants.UserRoleAdmin, constants.UserRoleEditor, constants.UserRoleAuthor}
 	for _, validRole := range validRoles {
 		if role == validRole {
 			return nil
@@ -193,7 +194,7 @@ func (l *CreateUserLogic) checkUniqueness(username, email string) error {
 
 // validatePassword 验证密码强度
 func (l *CreateUserLogic) validatePassword(password string) error {
-	if len(password) < 8 || len(password) > 50 {
+	if len(password) < constants.PasswordMinLength || len(password) > constants.PasswordMaxLength {
 		return errors.New("密码长度必须在8-50个字符之间")
 	}
 
@@ -245,7 +246,7 @@ func (l *CreateUserLogic) buildUser(req *types.UserCreateRequest) (*model.User, 
 
 	// 如果状态为空，设置默认值
 	if user.Status == "" {
-		user.Status = "active"
+		user.Status = constants.UserStatusActive
 	}
 
 	return user, nil
@@ -275,7 +276,7 @@ func (l *CreateUserLogic) buildUserInfo(user *model.User) types.UserInfo {
 		Twitter:      user.Twitter,
 		Facebook:     user.Facebook,
 		Status:       user.Status,
-		CreatedAt:    user.CreatedAt.Format(time.RFC3339),
-		UpdatedAt:    user.UpdatedAt.Format(time.RFC3339),
+		CreatedAt:    user.CreatedAt.Format(constants.DefaultTimeFormat),
+		UpdatedAt:    user.UpdatedAt.Format(constants.DefaultTimeFormat),
 	}
 }
