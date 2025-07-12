@@ -5,6 +5,45 @@ info:
   title: Heimdall Admin API
   version: v1.0.0
 paths:
+  /api/v1/admin/auth/change-password:
+    post:
+      consumes:
+      - application/json
+      operationId: changePasswordHandler
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            confirmPassword:
+              type: string
+            currentPassword:
+              type: string
+            newPassword:
+              type: string
+          required:
+          - currentPassword
+          - newPassword
+          - confirmPassword
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 修改密码
   /api/v1/admin/auth/login:
     post:
       consumes:
@@ -25,7 +64,6 @@ paths:
           required:
           - username
           - password
-          - rememberMe
           type: object
       produces:
       - application/json
@@ -209,6 +247,2571 @@ paths:
       schemes:
       - https
       summary: 获取当前用户信息
+  /api/v1/admin/auth/refresh:
+    post:
+      consumes:
+      - application/json
+      operationId: refreshTokenHandler
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            refreshToken:
+              type: string
+          required:
+          - refreshToken
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              data:
+                properties:
+                  expiresIn:
+                    type: integer
+                  refreshToken:
+                    type: string
+                  token:
+                    type: string
+                  user:
+                    properties:
+                      bio:
+                        type: string
+                      createdAt:
+                        type: string
+                      displayName:
+                        type: string
+                      email:
+                        type: string
+                      facebook:
+                        type: string
+                      id:
+                        type: string
+                      lastLoginAt:
+                        type: string
+                      location:
+                        type: string
+                      profileImage:
+                        type: string
+                      role:
+                        type: string
+                      status:
+                        type: string
+                      twitter:
+                        type: string
+                      updatedAt:
+                        type: string
+                      username:
+                        type: string
+                      website:
+                        type: string
+                    required:
+                    - id
+                    - username
+                    - displayName
+                    - email
+                    - role
+                    - profileImage
+                    - bio
+                    - location
+                    - website
+                    - twitter
+                    - facebook
+                    - status
+                    - lastLoginAt
+                    - createdAt
+                    - updatedAt
+                    type: object
+                required:
+                - token
+                - refreshToken
+                - expiresIn
+                - user
+                type: object
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 刷新Token
+  /api/v1/admin/comments:
+    get:
+      operationId: getCommentListHandler
+      parameters:
+      - allowEmptyValue: true
+        in: query
+        name: postId
+        type: string
+      - allowEmptyValue: true
+        in: query
+        name: parentId
+        type: string
+      - allowEmptyValue: true
+        in: query
+        name: authorEmail
+        type: string
+      - allowEmptyValue: true
+        in: query
+        name: authorIP
+        type: string
+      - allowEmptyValue: true
+        enum:
+        - pending
+        - approved
+        - rejected
+        - spam
+        in: query
+        name: status
+        type: string
+      - allowEmptyValue: true
+        enum:
+        - public
+        - private
+        in: query
+        name: visibility
+        type: string
+      - allowEmptyValue: true
+        enum:
+        - comment
+        - reply
+        in: query
+        name: type
+        type: string
+      - allowEmptyValue: true
+        in: query
+        maximum: 3
+        minimum: 0
+        name: level
+        type: integer
+      - allowEmptyValue: true
+        in: query
+        name: keyword
+        type: string
+      - allowEmptyValue: true
+        in: query
+        name: startTime
+        type: string
+      - allowEmptyValue: true
+        in: query
+        name: endTime
+        type: string
+      - allowEmptyValue: true
+        default: createdAt
+        enum:
+        - createdAt
+        - updatedAt
+        - approvedAt
+        - replyCount
+        - likeCount
+        - level
+        in: query
+        name: sortBy
+        type: string
+      - allowEmptyValue: true
+        default: true
+        in: query
+        name: sortDesc
+        type: boolean
+      - allowEmptyValue: true
+        default: 1
+        in: query
+        minimum: 1
+        name: page
+        type: integer
+      - allowEmptyValue: true
+        default: 20
+        in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              data:
+                items:
+                  properties:
+                    approvedAt:
+                      type: string
+                    authorEmail:
+                      type: string
+                    authorIP:
+                      type: string
+                    authorName:
+                      type: string
+                    authorWebsite:
+                      type: string
+                    content:
+                      type: string
+                    createdAt:
+                      type: string
+                    id:
+                      type: string
+                    level:
+                      type: integer
+                    likeCount:
+                      type: integer
+                    parentId:
+                      type: string
+                    postId:
+                      type: string
+                    replyCount:
+                      type: integer
+                    status:
+                      type: string
+                    type:
+                      type: string
+                    updatedAt:
+                      type: string
+                    userAgent:
+                      type: string
+                    visibility:
+                      type: string
+                  required:
+                  - id
+                  - postId
+                  - parentId
+                  - content
+                  - authorName
+                  - authorEmail
+                  - authorWebsite
+                  - authorIP
+                  - userAgent
+                  - status
+                  - visibility
+                  - type
+                  - level
+                  - replyCount
+                  - likeCount
+                  - createdAt
+                  - updatedAt
+                  - approvedAt
+                  type: object
+                type: array
+              message:
+                type: string
+              pagination:
+                properties:
+                  hasNext:
+                    type: boolean
+                  hasPrev:
+                    type: boolean
+                  limit:
+                    type: integer
+                  page:
+                    type: integer
+                  total:
+                    type: integer
+                  totalPages:
+                    type: integer
+                required:
+                - page
+                - limit
+                - total
+                - totalPages
+                - hasNext
+                - hasPrev
+                type: object
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 获取评论列表
+  /api/v1/admin/comments/{id}:
+    delete:
+      consumes:
+      - application/json
+      operationId: deleteCommentHandler
+      parameters:
+      - in: path
+        name: id
+        required: true
+        type: string
+      - in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            reason:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 删除评论
+    get:
+      operationId: getCommentDetailHandler
+      parameters:
+      - in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              data:
+                properties:
+                  approvedAt:
+                    type: string
+                  authorEmail:
+                    type: string
+                  authorIP:
+                    type: string
+                  authorName:
+                    type: string
+                  authorWebsite:
+                    type: string
+                  content:
+                    type: string
+                  createdAt:
+                    type: string
+                  id:
+                    type: string
+                  level:
+                    type: integer
+                  likeCount:
+                    type: integer
+                  parentId:
+                    type: string
+                  postId:
+                    type: string
+                  replyCount:
+                    type: integer
+                  status:
+                    type: string
+                  type:
+                    type: string
+                  updatedAt:
+                    type: string
+                  userAgent:
+                    type: string
+                  visibility:
+                    type: string
+                required:
+                - id
+                - postId
+                - parentId
+                - content
+                - authorName
+                - authorEmail
+                - authorWebsite
+                - authorIP
+                - userAgent
+                - status
+                - visibility
+                - type
+                - level
+                - replyCount
+                - likeCount
+                - createdAt
+                - updatedAt
+                - approvedAt
+                type: object
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 获取评论详情
+    put:
+      consumes:
+      - application/json
+      operationId: updateCommentHandler
+      parameters:
+      - in: path
+        name: id
+        required: true
+        type: string
+      - in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            authorEmail:
+              type: string
+            authorName:
+              type: string
+            authorWebsite:
+              type: string
+            content:
+              type: string
+            status:
+              enum:
+              - pending
+              - approved
+              - rejected
+              - spam
+              type: string
+            visibility:
+              enum:
+              - public
+              - private
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              data:
+                properties:
+                  approvedAt:
+                    type: string
+                  authorEmail:
+                    type: string
+                  authorIP:
+                    type: string
+                  authorName:
+                    type: string
+                  authorWebsite:
+                    type: string
+                  content:
+                    type: string
+                  createdAt:
+                    type: string
+                  id:
+                    type: string
+                  level:
+                    type: integer
+                  likeCount:
+                    type: integer
+                  parentId:
+                    type: string
+                  postId:
+                    type: string
+                  replyCount:
+                    type: integer
+                  status:
+                    type: string
+                  type:
+                    type: string
+                  updatedAt:
+                    type: string
+                  userAgent:
+                    type: string
+                  visibility:
+                    type: string
+                required:
+                - id
+                - postId
+                - parentId
+                - content
+                - authorName
+                - authorEmail
+                - authorWebsite
+                - authorIP
+                - userAgent
+                - status
+                - visibility
+                - type
+                - level
+                - replyCount
+                - likeCount
+                - createdAt
+                - updatedAt
+                - approvedAt
+                type: object
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 更新评论
+  /api/v1/admin/comments/{id}/approve:
+    put:
+      consumes:
+      - application/json
+      operationId: approveCommentHandler
+      parameters:
+      - in: path
+        name: id
+        required: true
+        type: string
+      - in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            reason:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 审核通过评论
+  /api/v1/admin/comments/{id}/reject:
+    put:
+      consumes:
+      - application/json
+      operationId: rejectCommentHandler
+      parameters:
+      - in: path
+        name: id
+        required: true
+        type: string
+      - in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            reason:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 拒绝评论
+  /api/v1/admin/comments/{id}/reply:
+    post:
+      consumes:
+      - application/json
+      operationId: replyCommentHandler
+      parameters:
+      - in: path
+        name: id
+        required: true
+        type: string
+      - in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            content:
+              type: string
+          required:
+          - content
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              data:
+                properties:
+                  approvedAt:
+                    type: string
+                  authorEmail:
+                    type: string
+                  authorIP:
+                    type: string
+                  authorName:
+                    type: string
+                  authorWebsite:
+                    type: string
+                  content:
+                    type: string
+                  createdAt:
+                    type: string
+                  id:
+                    type: string
+                  level:
+                    type: integer
+                  likeCount:
+                    type: integer
+                  parentId:
+                    type: string
+                  postId:
+                    type: string
+                  replyCount:
+                    type: integer
+                  status:
+                    type: string
+                  type:
+                    type: string
+                  updatedAt:
+                    type: string
+                  userAgent:
+                    type: string
+                  visibility:
+                    type: string
+                required:
+                - id
+                - postId
+                - parentId
+                - content
+                - authorName
+                - authorEmail
+                - authorWebsite
+                - authorIP
+                - userAgent
+                - status
+                - visibility
+                - type
+                - level
+                - replyCount
+                - likeCount
+                - createdAt
+                - updatedAt
+                - approvedAt
+                type: object
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 回复评论
+  /api/v1/admin/comments/{id}/spam:
+    put:
+      consumes:
+      - application/json
+      operationId: spamCommentHandler
+      parameters:
+      - in: path
+        name: id
+        required: true
+        type: string
+      - in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            reason:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 标记垃圾评论
+  /api/v1/admin/comments/batch:
+    post:
+      consumes:
+      - application/json
+      operationId: batchCommentHandler
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            action:
+              type: string
+            ids:
+              items:
+                type: string
+              type: array
+            reason:
+              type: string
+          required:
+          - ids
+          - action
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              failed:
+                type: integer
+              message:
+                type: string
+              successful:
+                type: integer
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 批量操作评论
+  /api/v1/admin/comments/batch/status:
+    patch:
+      consumes:
+      - application/json
+      operationId: batchUpdateCommentStatusHandler
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            ids:
+              items:
+                type: string
+              type: array
+            status:
+              type: string
+          required:
+          - ids
+          - status
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              data:
+                properties:
+                  failed:
+                    type: integer
+                  success:
+                    type: integer
+                required:
+                - success
+                - failed
+                type: object
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 批量更新评论状态
+  /api/v1/admin/comments/stats:
+    get:
+      operationId: getCommentStatsHandler
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              data:
+                properties:
+                  approved:
+                    type: integer
+                  pending:
+                    type: integer
+                  rejected:
+                    type: integer
+                  spam:
+                    type: integer
+                  total:
+                    type: integer
+                required:
+                - total
+                - pending
+                - approved
+                - rejected
+                - spam
+                type: object
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 获取评论统计
+  /api/v1/admin/pages:
+    get:
+      operationId: getPageListHandler
+      parameters:
+      - default: 1
+        description: 页码，从1开始
+        in: query
+        minimum: 1
+        name: page
+        required: true
+        type: integer
+      - default: 10
+        description: 每页记录数，最大50
+        in: query
+        maximum: 50
+        minimum: 1
+        name: limit
+        required: true
+        type: integer
+      - allowEmptyValue: true
+        description: 状态过滤
+        enum:
+        - draft
+        - published
+        - scheduled
+        in: query
+        name: status
+        type: string
+      - allowEmptyValue: true
+        description: 模板过滤
+        in: query
+        name: template
+        type: string
+      - allowEmptyValue: true
+        description: 作者ID过滤
+        in: query
+        name: authorId
+        type: string
+      - allowEmptyValue: true
+        description: 关键词搜索（标题、内容）
+        in: query
+        name: keyword
+        type: string
+      - default: updatedAt
+        description: 排序字段
+        enum:
+        - createdAt
+        - updatedAt
+        - publishedAt
+        - title
+        in: query
+        name: sortBy
+        required: true
+        type: string
+      - default: true
+        description: 是否降序排列
+        in: query
+        name: sortDesc
+        required: true
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              data:
+                properties:
+                  list:
+                    items:
+                      properties:
+                        author:
+                          properties:
+                            bio:
+                              type: string
+                            displayName:
+                              type: string
+                            id:
+                              type: string
+                            profileImage:
+                              type: string
+                            username:
+                              type: string
+                          required:
+                          - id
+                          - username
+                          - displayName
+                          - profileImage
+                          - bio
+                          type: object
+                        createdAt:
+                          type: string
+                        featuredImage:
+                          type: string
+                        id:
+                          type: string
+                        publishedAt:
+                          type: string
+                        slug:
+                          type: string
+                        status:
+                          type: string
+                        template:
+                          type: string
+                        title:
+                          type: string
+                        updatedAt:
+                          type: string
+                      required:
+                      - id
+                      - title
+                      - slug
+                      - author
+                      - status
+                      - template
+                      - featuredImage
+                      - publishedAt
+                      - createdAt
+                      - updatedAt
+                      type: object
+                    type: array
+                  pagination:
+                    properties:
+                      hasNext:
+                        type: boolean
+                      hasPrev:
+                        type: boolean
+                      limit:
+                        type: integer
+                      page:
+                        type: integer
+                      total:
+                        type: integer
+                      totalPages:
+                        type: integer
+                    required:
+                    - page
+                    - limit
+                    - total
+                    - totalPages
+                    - hasNext
+                    - hasPrev
+                    type: object
+                required:
+                - list
+                - pagination
+                type: object
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 获取页面列表
+    post:
+      consumes:
+      - application/json
+      operationId: createPageHandler
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            canonicalUrl:
+              type: string
+            content:
+              type: string
+            featuredImage:
+              type: string
+            metaDescription:
+              type: string
+            metaTitle:
+              type: string
+            publishedAt:
+              type: string
+            slug:
+              type: string
+            status:
+              type: string
+            template:
+              type: string
+            title:
+              type: string
+          required:
+          - title
+          - content
+          - status
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              data:
+                properties:
+                  author:
+                    properties:
+                      bio:
+                        type: string
+                      displayName:
+                        type: string
+                      id:
+                        type: string
+                      profileImage:
+                        type: string
+                      username:
+                        type: string
+                    required:
+                    - id
+                    - username
+                    - displayName
+                    - profileImage
+                    - bio
+                    type: object
+                  canonicalUrl:
+                    type: string
+                  content:
+                    type: string
+                  createdAt:
+                    type: string
+                  featuredImage:
+                    type: string
+                  html:
+                    type: string
+                  id:
+                    type: string
+                  metaDescription:
+                    type: string
+                  metaTitle:
+                    type: string
+                  publishedAt:
+                    type: string
+                  slug:
+                    type: string
+                  status:
+                    type: string
+                  template:
+                    type: string
+                  title:
+                    type: string
+                  updatedAt:
+                    type: string
+                required:
+                - id
+                - title
+                - slug
+                - content
+                - html
+                - author
+                - status
+                - template
+                - metaTitle
+                - metaDescription
+                - featuredImage
+                - canonicalUrl
+                - publishedAt
+                - createdAt
+                - updatedAt
+                type: object
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 创建页面
+  /api/v1/admin/pages/{id}:
+    delete:
+      consumes:
+      - application/x-www-form-urlencoded
+      operationId: deletePageHandler
+      parameters:
+      - in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 删除页面
+    get:
+      operationId: getPageDetailHandler
+      parameters:
+      - in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              data:
+                properties:
+                  author:
+                    properties:
+                      bio:
+                        type: string
+                      displayName:
+                        type: string
+                      id:
+                        type: string
+                      profileImage:
+                        type: string
+                      username:
+                        type: string
+                    required:
+                    - id
+                    - username
+                    - displayName
+                    - profileImage
+                    - bio
+                    type: object
+                  canonicalUrl:
+                    type: string
+                  content:
+                    type: string
+                  createdAt:
+                    type: string
+                  featuredImage:
+                    type: string
+                  html:
+                    type: string
+                  id:
+                    type: string
+                  metaDescription:
+                    type: string
+                  metaTitle:
+                    type: string
+                  publishedAt:
+                    type: string
+                  slug:
+                    type: string
+                  status:
+                    type: string
+                  template:
+                    type: string
+                  title:
+                    type: string
+                  updatedAt:
+                    type: string
+                required:
+                - id
+                - title
+                - slug
+                - content
+                - html
+                - author
+                - status
+                - template
+                - metaTitle
+                - metaDescription
+                - featuredImage
+                - canonicalUrl
+                - publishedAt
+                - createdAt
+                - updatedAt
+                type: object
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 获取页面详情
+    put:
+      consumes:
+      - application/json
+      operationId: updatePageHandler
+      parameters:
+      - in: path
+        name: id
+        required: true
+        type: string
+      - in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            canonicalUrl:
+              type: string
+            content:
+              type: string
+            featuredImage:
+              type: string
+            metaDescription:
+              type: string
+            metaTitle:
+              type: string
+            publishedAt:
+              type: string
+            slug:
+              type: string
+            status:
+              type: string
+            template:
+              type: string
+            title:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              data:
+                properties:
+                  author:
+                    properties:
+                      bio:
+                        type: string
+                      displayName:
+                        type: string
+                      id:
+                        type: string
+                      profileImage:
+                        type: string
+                      username:
+                        type: string
+                    required:
+                    - id
+                    - username
+                    - displayName
+                    - profileImage
+                    - bio
+                    type: object
+                  canonicalUrl:
+                    type: string
+                  content:
+                    type: string
+                  createdAt:
+                    type: string
+                  featuredImage:
+                    type: string
+                  html:
+                    type: string
+                  id:
+                    type: string
+                  metaDescription:
+                    type: string
+                  metaTitle:
+                    type: string
+                  publishedAt:
+                    type: string
+                  slug:
+                    type: string
+                  status:
+                    type: string
+                  template:
+                    type: string
+                  title:
+                    type: string
+                  updatedAt:
+                    type: string
+                required:
+                - id
+                - title
+                - slug
+                - content
+                - html
+                - author
+                - status
+                - template
+                - metaTitle
+                - metaDescription
+                - featuredImage
+                - canonicalUrl
+                - publishedAt
+                - createdAt
+                - updatedAt
+                type: object
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 更新页面
+  /api/v1/admin/pages/{id}/publish:
+    post:
+      consumes:
+      - application/json
+      operationId: publishPageHandler
+      parameters:
+      - in: path
+        name: id
+        required: true
+        type: string
+      - in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            publishedAt:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              data:
+                properties:
+                  author:
+                    properties:
+                      bio:
+                        type: string
+                      displayName:
+                        type: string
+                      id:
+                        type: string
+                      profileImage:
+                        type: string
+                      username:
+                        type: string
+                    required:
+                    - id
+                    - username
+                    - displayName
+                    - profileImage
+                    - bio
+                    type: object
+                  canonicalUrl:
+                    type: string
+                  content:
+                    type: string
+                  createdAt:
+                    type: string
+                  featuredImage:
+                    type: string
+                  html:
+                    type: string
+                  id:
+                    type: string
+                  metaDescription:
+                    type: string
+                  metaTitle:
+                    type: string
+                  publishedAt:
+                    type: string
+                  slug:
+                    type: string
+                  status:
+                    type: string
+                  template:
+                    type: string
+                  title:
+                    type: string
+                  updatedAt:
+                    type: string
+                required:
+                - id
+                - title
+                - slug
+                - content
+                - html
+                - author
+                - status
+                - template
+                - metaTitle
+                - metaDescription
+                - featuredImage
+                - canonicalUrl
+                - publishedAt
+                - createdAt
+                - updatedAt
+                type: object
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 发布页面
+  /api/v1/admin/pages/{id}/unpublish:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      operationId: unpublishPageHandler
+      parameters:
+      - in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              data:
+                properties:
+                  author:
+                    properties:
+                      bio:
+                        type: string
+                      displayName:
+                        type: string
+                      id:
+                        type: string
+                      profileImage:
+                        type: string
+                      username:
+                        type: string
+                    required:
+                    - id
+                    - username
+                    - displayName
+                    - profileImage
+                    - bio
+                    type: object
+                  canonicalUrl:
+                    type: string
+                  content:
+                    type: string
+                  createdAt:
+                    type: string
+                  featuredImage:
+                    type: string
+                  html:
+                    type: string
+                  id:
+                    type: string
+                  metaDescription:
+                    type: string
+                  metaTitle:
+                    type: string
+                  publishedAt:
+                    type: string
+                  slug:
+                    type: string
+                  status:
+                    type: string
+                  template:
+                    type: string
+                  title:
+                    type: string
+                  updatedAt:
+                    type: string
+                required:
+                - id
+                - title
+                - slug
+                - content
+                - html
+                - author
+                - status
+                - template
+                - metaTitle
+                - metaDescription
+                - featuredImage
+                - canonicalUrl
+                - publishedAt
+                - createdAt
+                - updatedAt
+                type: object
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 取消发布页面
+  /api/v1/admin/posts:
+    get:
+      operationId: getPostListHandler
+      parameters:
+      - default: 1
+        description: 页码，从1开始
+        in: query
+        minimum: 1
+        name: page
+        required: true
+        type: integer
+      - default: 10
+        description: 每页记录数，最大50
+        in: query
+        maximum: 50
+        minimum: 1
+        name: limit
+        required: true
+        type: integer
+      - allowEmptyValue: true
+        description: 状态过滤
+        enum:
+        - draft
+        - published
+        - scheduled
+        - archived
+        in: query
+        name: status
+        type: string
+      - allowEmptyValue: true
+        description: 类型过滤
+        enum:
+        - post
+        - page
+        in: query
+        name: type
+        type: string
+      - allowEmptyValue: true
+        description: 可见性过滤
+        enum:
+        - public
+        - members_only
+        - private
+        in: query
+        name: visibility
+        type: string
+      - allowEmptyValue: true
+        description: 作者ID过滤
+        in: query
+        name: authorId
+        type: string
+      - allowEmptyValue: true
+        description: 标签slug过滤
+        in: query
+        name: tag
+        type: string
+      - allowEmptyValue: true
+        description: 关键词搜索（标题、摘要）
+        in: query
+        name: keyword
+        type: string
+      - default: updatedAt
+        description: 排序字段
+        enum:
+        - createdAt
+        - updatedAt
+        - publishedAt
+        - viewCount
+        - title
+        in: query
+        name: sortBy
+        required: true
+        type: string
+      - default: true
+        description: 是否降序排列
+        in: query
+        name: sortDesc
+        required: true
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              data:
+                properties:
+                  list:
+                    items:
+                      properties:
+                        author:
+                          properties:
+                            bio:
+                              type: string
+                            displayName:
+                              type: string
+                            id:
+                              type: string
+                            profileImage:
+                              type: string
+                            username:
+                              type: string
+                          required:
+                          - id
+                          - username
+                          - displayName
+                          - profileImage
+                          - bio
+                          type: object
+                        createdAt:
+                          type: string
+                        excerpt:
+                          type: string
+                        featuredImage:
+                          type: string
+                        id:
+                          type: string
+                        publishedAt:
+                          type: string
+                        readingTime:
+                          type: integer
+                        slug:
+                          type: string
+                        status:
+                          type: string
+                        tags:
+                          items:
+                            properties:
+                              name:
+                                type: string
+                              slug:
+                                type: string
+                            required:
+                            - name
+                            - slug
+                            type: object
+                          type: array
+                        title:
+                          type: string
+                        type:
+                          type: string
+                        updatedAt:
+                          type: string
+                        viewCount:
+                          type: integer
+                        visibility:
+                          type: string
+                      required:
+                      - id
+                      - title
+                      - slug
+                      - excerpt
+                      - featuredImage
+                      - type
+                      - status
+                      - visibility
+                      - author
+                      - tags
+                      - readingTime
+                      - viewCount
+                      - publishedAt
+                      - createdAt
+                      - updatedAt
+                      type: object
+                    type: array
+                  pagination:
+                    properties:
+                      hasNext:
+                        type: boolean
+                      hasPrev:
+                        type: boolean
+                      limit:
+                        type: integer
+                      page:
+                        type: integer
+                      total:
+                        type: integer
+                      totalPages:
+                        type: integer
+                    required:
+                    - page
+                    - limit
+                    - total
+                    - totalPages
+                    - hasNext
+                    - hasPrev
+                    type: object
+                required:
+                - list
+                - pagination
+                type: object
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 获取文章列表
+    post:
+      consumes:
+      - application/json
+      operationId: createPostHandler
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            canonicalUrl:
+              type: string
+            excerpt:
+              type: string
+            featuredImage:
+              type: string
+            markdown:
+              type: string
+            metaDescription:
+              type: string
+            metaTitle:
+              type: string
+            publishedAt:
+              type: string
+            slug:
+              type: string
+            status:
+              type: string
+            tags:
+              items:
+                properties:
+                  name:
+                    type: string
+                  slug:
+                    type: string
+                required:
+                - name
+                - slug
+                type: object
+              type: array
+            title:
+              type: string
+            type:
+              type: string
+            visibility:
+              type: string
+          required:
+          - title
+          - markdown
+          - type
+          - status
+          - visibility
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              data:
+                properties:
+                  author:
+                    properties:
+                      bio:
+                        type: string
+                      displayName:
+                        type: string
+                      id:
+                        type: string
+                      profileImage:
+                        type: string
+                      username:
+                        type: string
+                    required:
+                    - id
+                    - username
+                    - displayName
+                    - profileImage
+                    - bio
+                    type: object
+                  canonicalUrl:
+                    type: string
+                  createdAt:
+                    type: string
+                  excerpt:
+                    type: string
+                  featuredImage:
+                    type: string
+                  html:
+                    type: string
+                  id:
+                    type: string
+                  markdown:
+                    type: string
+                  metaDescription:
+                    type: string
+                  metaTitle:
+                    type: string
+                  publishedAt:
+                    type: string
+                  readingTime:
+                    type: integer
+                  slug:
+                    type: string
+                  status:
+                    type: string
+                  tags:
+                    items:
+                      properties:
+                        name:
+                          type: string
+                        slug:
+                          type: string
+                      required:
+                      - name
+                      - slug
+                      type: object
+                    type: array
+                  title:
+                    type: string
+                  type:
+                    type: string
+                  updatedAt:
+                    type: string
+                  viewCount:
+                    type: integer
+                  visibility:
+                    type: string
+                  wordCount:
+                    type: integer
+                required:
+                - id
+                - title
+                - slug
+                - excerpt
+                - markdown
+                - html
+                - featuredImage
+                - type
+                - status
+                - visibility
+                - author
+                - tags
+                - metaTitle
+                - metaDescription
+                - canonicalUrl
+                - readingTime
+                - wordCount
+                - viewCount
+                - publishedAt
+                - createdAt
+                - updatedAt
+                type: object
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 创建文章
+  /api/v1/admin/posts/{id}:
+    delete:
+      consumes:
+      - application/x-www-form-urlencoded
+      operationId: deletePostHandler
+      parameters:
+      - in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 删除文章
+    get:
+      operationId: getPostDetailHandler
+      parameters:
+      - in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              data:
+                properties:
+                  author:
+                    properties:
+                      bio:
+                        type: string
+                      displayName:
+                        type: string
+                      id:
+                        type: string
+                      profileImage:
+                        type: string
+                      username:
+                        type: string
+                    required:
+                    - id
+                    - username
+                    - displayName
+                    - profileImage
+                    - bio
+                    type: object
+                  canonicalUrl:
+                    type: string
+                  createdAt:
+                    type: string
+                  excerpt:
+                    type: string
+                  featuredImage:
+                    type: string
+                  html:
+                    type: string
+                  id:
+                    type: string
+                  markdown:
+                    type: string
+                  metaDescription:
+                    type: string
+                  metaTitle:
+                    type: string
+                  publishedAt:
+                    type: string
+                  readingTime:
+                    type: integer
+                  slug:
+                    type: string
+                  status:
+                    type: string
+                  tags:
+                    items:
+                      properties:
+                        name:
+                          type: string
+                        slug:
+                          type: string
+                      required:
+                      - name
+                      - slug
+                      type: object
+                    type: array
+                  title:
+                    type: string
+                  type:
+                    type: string
+                  updatedAt:
+                    type: string
+                  viewCount:
+                    type: integer
+                  visibility:
+                    type: string
+                  wordCount:
+                    type: integer
+                required:
+                - id
+                - title
+                - slug
+                - excerpt
+                - markdown
+                - html
+                - featuredImage
+                - type
+                - status
+                - visibility
+                - author
+                - tags
+                - metaTitle
+                - metaDescription
+                - canonicalUrl
+                - readingTime
+                - wordCount
+                - viewCount
+                - publishedAt
+                - createdAt
+                - updatedAt
+                type: object
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 获取文章详情
+    put:
+      consumes:
+      - application/json
+      operationId: updatePostHandler
+      parameters:
+      - in: path
+        name: id
+        required: true
+        type: string
+      - in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            canonicalUrl:
+              type: string
+            excerpt:
+              type: string
+            featuredImage:
+              type: string
+            markdown:
+              type: string
+            metaDescription:
+              type: string
+            metaTitle:
+              type: string
+            publishedAt:
+              type: string
+            slug:
+              type: string
+            status:
+              type: string
+            tags:
+              items:
+                properties:
+                  name:
+                    type: string
+                  slug:
+                    type: string
+                required:
+                - name
+                - slug
+                type: object
+              type: array
+            title:
+              type: string
+            type:
+              type: string
+            visibility:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              data:
+                properties:
+                  author:
+                    properties:
+                      bio:
+                        type: string
+                      displayName:
+                        type: string
+                      id:
+                        type: string
+                      profileImage:
+                        type: string
+                      username:
+                        type: string
+                    required:
+                    - id
+                    - username
+                    - displayName
+                    - profileImage
+                    - bio
+                    type: object
+                  canonicalUrl:
+                    type: string
+                  createdAt:
+                    type: string
+                  excerpt:
+                    type: string
+                  featuredImage:
+                    type: string
+                  html:
+                    type: string
+                  id:
+                    type: string
+                  markdown:
+                    type: string
+                  metaDescription:
+                    type: string
+                  metaTitle:
+                    type: string
+                  publishedAt:
+                    type: string
+                  readingTime:
+                    type: integer
+                  slug:
+                    type: string
+                  status:
+                    type: string
+                  tags:
+                    items:
+                      properties:
+                        name:
+                          type: string
+                        slug:
+                          type: string
+                      required:
+                      - name
+                      - slug
+                      type: object
+                    type: array
+                  title:
+                    type: string
+                  type:
+                    type: string
+                  updatedAt:
+                    type: string
+                  viewCount:
+                    type: integer
+                  visibility:
+                    type: string
+                  wordCount:
+                    type: integer
+                required:
+                - id
+                - title
+                - slug
+                - excerpt
+                - markdown
+                - html
+                - featuredImage
+                - type
+                - status
+                - visibility
+                - author
+                - tags
+                - metaTitle
+                - metaDescription
+                - canonicalUrl
+                - readingTime
+                - wordCount
+                - viewCount
+                - publishedAt
+                - createdAt
+                - updatedAt
+                type: object
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 更新文章
+  /api/v1/admin/posts/{id}/publish:
+    post:
+      consumes:
+      - application/json
+      operationId: publishPostHandler
+      parameters:
+      - in: path
+        name: id
+        required: true
+        type: string
+      - in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            publishedAt:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              data:
+                properties:
+                  author:
+                    properties:
+                      bio:
+                        type: string
+                      displayName:
+                        type: string
+                      id:
+                        type: string
+                      profileImage:
+                        type: string
+                      username:
+                        type: string
+                    required:
+                    - id
+                    - username
+                    - displayName
+                    - profileImage
+                    - bio
+                    type: object
+                  canonicalUrl:
+                    type: string
+                  createdAt:
+                    type: string
+                  excerpt:
+                    type: string
+                  featuredImage:
+                    type: string
+                  html:
+                    type: string
+                  id:
+                    type: string
+                  markdown:
+                    type: string
+                  metaDescription:
+                    type: string
+                  metaTitle:
+                    type: string
+                  publishedAt:
+                    type: string
+                  readingTime:
+                    type: integer
+                  slug:
+                    type: string
+                  status:
+                    type: string
+                  tags:
+                    items:
+                      properties:
+                        name:
+                          type: string
+                        slug:
+                          type: string
+                      required:
+                      - name
+                      - slug
+                      type: object
+                    type: array
+                  title:
+                    type: string
+                  type:
+                    type: string
+                  updatedAt:
+                    type: string
+                  viewCount:
+                    type: integer
+                  visibility:
+                    type: string
+                  wordCount:
+                    type: integer
+                required:
+                - id
+                - title
+                - slug
+                - excerpt
+                - markdown
+                - html
+                - featuredImage
+                - type
+                - status
+                - visibility
+                - author
+                - tags
+                - metaTitle
+                - metaDescription
+                - canonicalUrl
+                - readingTime
+                - wordCount
+                - viewCount
+                - publishedAt
+                - createdAt
+                - updatedAt
+                type: object
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 发布文章
+  /api/v1/admin/posts/{id}/unpublish:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      operationId: unpublishPostHandler
+      parameters:
+      - in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              data:
+                properties:
+                  author:
+                    properties:
+                      bio:
+                        type: string
+                      displayName:
+                        type: string
+                      id:
+                        type: string
+                      profileImage:
+                        type: string
+                      username:
+                        type: string
+                    required:
+                    - id
+                    - username
+                    - displayName
+                    - profileImage
+                    - bio
+                    type: object
+                  canonicalUrl:
+                    type: string
+                  createdAt:
+                    type: string
+                  excerpt:
+                    type: string
+                  featuredImage:
+                    type: string
+                  html:
+                    type: string
+                  id:
+                    type: string
+                  markdown:
+                    type: string
+                  metaDescription:
+                    type: string
+                  metaTitle:
+                    type: string
+                  publishedAt:
+                    type: string
+                  readingTime:
+                    type: integer
+                  slug:
+                    type: string
+                  status:
+                    type: string
+                  tags:
+                    items:
+                      properties:
+                        name:
+                          type: string
+                        slug:
+                          type: string
+                      required:
+                      - name
+                      - slug
+                      type: object
+                    type: array
+                  title:
+                    type: string
+                  type:
+                    type: string
+                  updatedAt:
+                    type: string
+                  viewCount:
+                    type: integer
+                  visibility:
+                    type: string
+                  wordCount:
+                    type: integer
+                required:
+                - id
+                - title
+                - slug
+                - excerpt
+                - markdown
+                - html
+                - featuredImage
+                - type
+                - status
+                - visibility
+                - author
+                - tags
+                - metaTitle
+                - metaDescription
+                - canonicalUrl
+                - readingTime
+                - wordCount
+                - viewCount
+                - publishedAt
+                - createdAt
+                - updatedAt
+                type: object
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 取消发布文章
+  /api/v1/admin/posts/batch:
+    delete:
+      consumes:
+      - application/json
+      operationId: batchDeletePostHandler
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            ids:
+              items:
+                type: string
+              type: array
+          required:
+          - ids
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              data:
+                properties:
+                  failed:
+                    type: integer
+                  success:
+                    type: integer
+                required:
+                - success
+                - failed
+                type: object
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 批量删除文章
+  /api/v1/admin/posts/batch/status:
+    patch:
+      consumes:
+      - application/json
+      operationId: batchUpdatePostStatusHandler
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            ids:
+              items:
+                type: string
+              type: array
+            status:
+              type: string
+          required:
+          - ids
+          - status
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              data:
+                properties:
+                  failed:
+                    type: integer
+                  success:
+                    type: integer
+                required:
+                - success
+                - failed
+                type: object
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 批量更新文章状态
   /api/v1/admin/security/login-logs:
     get:
       operationId: getLoginLogsHandler
@@ -398,6 +3001,547 @@ paths:
       schemes:
       - https
       summary: 获取登录日志列表
+  /api/v1/admin/tags:
+    get:
+      operationId: getTagListHandler
+      parameters:
+      - default: 1
+        description: 页码，从1开始
+        in: query
+        minimum: 1
+        name: page
+        required: true
+        type: integer
+      - default: 20
+        description: 每页记录数，最大100
+        in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        required: true
+        type: integer
+      - allowEmptyValue: true
+        description: 标签名称过滤（模糊搜索）
+        in: query
+        name: name
+        type: string
+      - allowEmptyValue: true
+        description: 可见性过滤
+        enum:
+        - public
+        - internal
+        in: query
+        name: visibility
+        type: string
+      - default: createdAt
+        description: 排序字段
+        enum:
+        - name
+        - slug
+        - postCount
+        - createdAt
+        - updatedAt
+        in: query
+        name: sortBy
+        required: true
+        type: string
+      - default: true
+        description: 是否降序排列
+        in: query
+        name: sortDesc
+        required: true
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              data:
+                properties:
+                  list:
+                    items:
+                      properties:
+                        color:
+                          type: string
+                        createdAt:
+                          type: string
+                        description:
+                          type: string
+                        featuredImage:
+                          type: string
+                        id:
+                          type: string
+                        metaDescription:
+                          type: string
+                        metaTitle:
+                          type: string
+                        name:
+                          type: string
+                        postCount:
+                          type: integer
+                        slug:
+                          type: string
+                        updatedAt:
+                          type: string
+                        visibility:
+                          type: string
+                      required:
+                      - id
+                      - name
+                      - slug
+                      - description
+                      - color
+                      - featuredImage
+                      - metaTitle
+                      - metaDescription
+                      - postCount
+                      - visibility
+                      - createdAt
+                      - updatedAt
+                      type: object
+                    type: array
+                  pagination:
+                    properties:
+                      hasNext:
+                        type: boolean
+                      hasPrev:
+                        type: boolean
+                      limit:
+                        type: integer
+                      page:
+                        type: integer
+                      total:
+                        type: integer
+                      totalPages:
+                        type: integer
+                    required:
+                    - page
+                    - limit
+                    - total
+                    - totalPages
+                    - hasNext
+                    - hasPrev
+                    type: object
+                required:
+                - list
+                - pagination
+                type: object
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 获取标签列表
+    post:
+      consumes:
+      - application/json
+      operationId: createTagHandler
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            color:
+              type: string
+            description:
+              type: string
+            featuredImage:
+              type: string
+            metaDescription:
+              type: string
+            metaTitle:
+              type: string
+            name:
+              type: string
+            slug:
+              type: string
+            visibility:
+              default: public
+              enum:
+              - public
+              - internal
+              example: public
+              type: string
+          required:
+          - name
+          - visibility
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              data:
+                properties:
+                  color:
+                    type: string
+                  createdAt:
+                    type: string
+                  description:
+                    type: string
+                  featuredImage:
+                    type: string
+                  id:
+                    type: string
+                  metaDescription:
+                    type: string
+                  metaTitle:
+                    type: string
+                  name:
+                    type: string
+                  postCount:
+                    type: integer
+                  slug:
+                    type: string
+                  updatedAt:
+                    type: string
+                  visibility:
+                    type: string
+                required:
+                - id
+                - name
+                - slug
+                - description
+                - color
+                - featuredImage
+                - metaTitle
+                - metaDescription
+                - postCount
+                - visibility
+                - createdAt
+                - updatedAt
+                type: object
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 创建标签
+  /api/v1/admin/tags/{id}:
+    delete:
+      consumes:
+      - application/x-www-form-urlencoded
+      operationId: deleteTagHandler
+      parameters:
+      - in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 删除标签
+    get:
+      operationId: getTagDetailHandler
+      parameters:
+      - in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              data:
+                properties:
+                  color:
+                    type: string
+                  createdAt:
+                    type: string
+                  description:
+                    type: string
+                  featuredImage:
+                    type: string
+                  id:
+                    type: string
+                  metaDescription:
+                    type: string
+                  metaTitle:
+                    type: string
+                  name:
+                    type: string
+                  postCount:
+                    type: integer
+                  slug:
+                    type: string
+                  updatedAt:
+                    type: string
+                  visibility:
+                    type: string
+                required:
+                - id
+                - name
+                - slug
+                - description
+                - color
+                - featuredImage
+                - metaTitle
+                - metaDescription
+                - postCount
+                - visibility
+                - createdAt
+                - updatedAt
+                type: object
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 获取标签详情
+    put:
+      consumes:
+      - application/json
+      operationId: updateTagHandler
+      parameters:
+      - in: path
+        name: id
+        required: true
+        type: string
+      - in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            color:
+              type: string
+            description:
+              type: string
+            featuredImage:
+              type: string
+            metaDescription:
+              type: string
+            metaTitle:
+              type: string
+            name:
+              type: string
+            slug:
+              type: string
+            visibility:
+              enum:
+              - public
+              - internal
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              data:
+                properties:
+                  color:
+                    type: string
+                  createdAt:
+                    type: string
+                  description:
+                    type: string
+                  featuredImage:
+                    type: string
+                  id:
+                    type: string
+                  metaDescription:
+                    type: string
+                  metaTitle:
+                    type: string
+                  name:
+                    type: string
+                  postCount:
+                    type: integer
+                  slug:
+                    type: string
+                  updatedAt:
+                    type: string
+                  visibility:
+                    type: string
+                required:
+                - id
+                - name
+                - slug
+                - description
+                - color
+                - featuredImage
+                - metaTitle
+                - metaDescription
+                - postCount
+                - visibility
+                - createdAt
+                - updatedAt
+                type: object
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 更新标签
+  /api/v1/admin/tags/all:
+    get:
+      operationId: getAllTagsHandler
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              data:
+                items:
+                  properties:
+                    id:
+                      type: string
+                    name:
+                      type: string
+                    slug:
+                      type: string
+                  required:
+                  - id
+                  - name
+                  - slug
+                  type: object
+                type: array
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 获取所有标签（不分页）
+  /api/v1/admin/tags/batch:
+    delete:
+      consumes:
+      - application/json
+      operationId: batchDeleteTagHandler
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            ids:
+              items:
+                type: string
+              type: array
+          required:
+          - ids
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              data:
+                properties:
+                  failed:
+                    type: integer
+                  success:
+                    type: integer
+                required:
+                - success
+                - failed
+                type: object
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 批量删除标签
+  /api/v1/admin/tags/search:
+    get:
+      operationId: searchTagsHandler
+      parameters:
+      - in: query
+        name: keyword
+        required: true
+        type: string
+      - default: 10
+        in: query
+        maximum: 50
+        minimum: 1
+        name: limit
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              data:
+                items:
+                  properties:
+                    id:
+                      type: string
+                    name:
+                      type: string
+                    postCount:
+                      type: integer
+                    slug:
+                      type: string
+                  required:
+                  - id
+                  - name
+                  - slug
+                  - postCount
+                  type: object
+                type: array
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 搜索标签
   /api/v1/admin/test/{name}:
     get:
       operationId: adminHandler
@@ -422,6 +3566,88 @@ paths:
       schemes:
       - https
       summary: 测试接口
+  /api/v1/admin/upload/file:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      operationId: uploadFileHandler
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              data:
+                properties:
+                  filename:
+                    type: string
+                  mimeType:
+                    type: string
+                  size:
+                    type: integer
+                  url:
+                    type: string
+                required:
+                - url
+                - filename
+                - size
+                - mimeType
+                type: object
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 上传文件
+  /api/v1/admin/upload/image:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      operationId: uploadImageHandler
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              data:
+                properties:
+                  filename:
+                    type: string
+                  height:
+                    type: integer
+                  mimeType:
+                    type: string
+                  size:
+                    type: integer
+                  url:
+                    type: string
+                  width:
+                    type: integer
+                required:
+                - url
+                - filename
+                - size
+                - mimeType
+                - width
+                - height
+                type: object
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 上传图片
   /api/v1/admin/users:
     get:
       operationId: getUserListHandler
@@ -568,7 +3794,147 @@ paths:
       schemes:
       - https
       summary: 获取用户列表
+    post:
+      consumes:
+      - application/json
+      operationId: createUserHandler
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            bio:
+              type: string
+            displayName:
+              type: string
+            email:
+              type: string
+            facebook:
+              type: string
+            location:
+              type: string
+            password:
+              type: string
+            profileImage:
+              type: string
+            role:
+              type: string
+            status:
+              default: active
+              enum:
+              - active
+              - inactive
+              - locked
+              example: active
+              type: string
+            twitter:
+              type: string
+            username:
+              type: string
+            website:
+              type: string
+          required:
+          - username
+          - email
+          - password
+          - displayName
+          - role
+          - status
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              data:
+                properties:
+                  bio:
+                    type: string
+                  createdAt:
+                    type: string
+                  displayName:
+                    type: string
+                  email:
+                    type: string
+                  facebook:
+                    type: string
+                  id:
+                    type: string
+                  lastLoginAt:
+                    type: string
+                  location:
+                    type: string
+                  profileImage:
+                    type: string
+                  role:
+                    type: string
+                  status:
+                    type: string
+                  twitter:
+                    type: string
+                  updatedAt:
+                    type: string
+                  username:
+                    type: string
+                  website:
+                    type: string
+                required:
+                - id
+                - username
+                - displayName
+                - email
+                - role
+                - profileImage
+                - bio
+                - location
+                - website
+                - twitter
+                - facebook
+                - status
+                - lastLoginAt
+                - createdAt
+                - updatedAt
+                type: object
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 创建用户
   /api/v1/admin/users/{id}:
+    delete:
+      consumes:
+      - application/x-www-form-urlencoded
+      operationId: deleteUserHandler
+      parameters:
+      - in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 删除用户
     get:
       operationId: getUserDetailHandler
       parameters:
@@ -642,12 +4008,312 @@ paths:
       schemes:
       - https
       summary: 获取用户详情
+    put:
+      consumes:
+      - application/json
+      operationId: updateUserHandler
+      parameters:
+      - in: path
+        name: id
+        required: true
+        type: string
+      - in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            bio:
+              type: string
+            displayName:
+              type: string
+            email:
+              type: string
+            facebook:
+              type: string
+            location:
+              type: string
+            profileImage:
+              type: string
+            role:
+              type: string
+            status:
+              type: string
+            twitter:
+              type: string
+            username:
+              type: string
+            website:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              data:
+                properties:
+                  bio:
+                    type: string
+                  createdAt:
+                    type: string
+                  displayName:
+                    type: string
+                  email:
+                    type: string
+                  facebook:
+                    type: string
+                  id:
+                    type: string
+                  lastLoginAt:
+                    type: string
+                  location:
+                    type: string
+                  profileImage:
+                    type: string
+                  role:
+                    type: string
+                  status:
+                    type: string
+                  twitter:
+                    type: string
+                  updatedAt:
+                    type: string
+                  username:
+                    type: string
+                  website:
+                    type: string
+                required:
+                - id
+                - username
+                - displayName
+                - email
+                - role
+                - profileImage
+                - bio
+                - location
+                - website
+                - twitter
+                - facebook
+                - status
+                - lastLoginAt
+                - createdAt
+                - updatedAt
+                type: object
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 更新用户信息
+  /api/v1/admin/users/{id}/lock:
+    post:
+      consumes:
+      - application/json
+      operationId: lockAccountHandler
+      parameters:
+      - in: path
+        name: id
+        required: true
+        type: string
+      - in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            lockDuration:
+              description: 锁定时长（分钟），最大1年
+              type: integer
+            lockReason:
+              type: string
+          required:
+          - lockDuration
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 锁定用户账户
+  /api/v1/admin/users/{id}/reset-password:
+    post:
+      consumes:
+      - application/json
+      operationId: resetUserPasswordHandler
+      parameters:
+      - in: path
+        name: id
+        required: true
+        type: string
+      - in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            forceChange:
+              default: true
+              example: true
+              type: boolean
+            newPassword:
+              type: string
+            reason:
+              type: string
+          required:
+          - newPassword
+          - forceChange
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 重置用户密码
+  /api/v1/admin/users/{id}/role:
+    put:
+      consumes:
+      - application/json
+      operationId: updateUserRoleHandler
+      parameters:
+      - in: path
+        name: id
+        required: true
+        type: string
+      - in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            reason:
+              type: string
+            role:
+              type: string
+          required:
+          - role
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 修改用户角色
+  /api/v1/admin/users/{id}/status:
+    put:
+      consumes:
+      - application/json
+      operationId: updateUserStatusHandler
+      parameters:
+      - in: path
+        name: id
+        required: true
+        type: string
+      - in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            reason:
+              type: string
+            status:
+              type: string
+          required:
+          - status
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 修改用户状态
+  /api/v1/admin/users/{id}/unlock:
+    post:
+      consumes:
+      - application/json
+      operationId: unlockAccountHandler
+      parameters:
+      - in: path
+        name: id
+        required: true
+        type: string
+      - in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            reason:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+          schema:
+            properties:
+              code:
+                type: integer
+              message:
+                type: string
+              timestamp:
+                type: string
+            type: object
+      schemes:
+      - https
+      summary: 解锁用户账户
 produces:
 - application/json
 schemes:
 - https
 swagger: "2.0"
-x-date: "2025-07-04 23:18:09"
+x-date: "2025-07-12 22:33:36"
 x-description: This is a goctl generated swagger file.
 x-github: https://github.com/zeromicro/go-zero
 x-go-zero-doc: https://go-zero.dev/
